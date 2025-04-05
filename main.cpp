@@ -7,6 +7,7 @@
 #include "mips.hpp"
 
 #include "hdr.h"
+#include "test.hpp"
 
 //static inline uintptr_t EEMainMemoryStart = 0/*0x20000000*/;
 //static inline uintptr_t EEMainMemoryEnd = 0/*0x21ffffff*/;
@@ -79,6 +80,8 @@ template <typename T, typename R = uint32_t> R inline _stackcast(T v) { return *
 #define GET_BYTE(num, n) ((num >> (8 * n)) & 0xFF) // 0-lob, 1-midlob, 2-midhib, 3-hib BYTE[0123] (x86 Little Endian)
 #define SET_BYTE(num, n, val) ((num) = ((num) & ~(0xFF << (8 * (n)))) | ((val) << (8 * (n))))
 #define SWAP_BIT(num, n) SET_BIT(num, n, !GET_BIT(num, n))
+#define DUMP_BITS(num) (printf("%d%d%d%d%d%d%d%d", GET_BIT(num, 7), GET_BIT(num, 6), \
+	GET_BIT(num, 5), GET_BIT(num, 4), GET_BIT(num, 3), GET_BIT(num, 2), GET_BIT(num, 1), GET_BIT(num, 0)))
 #define SWAP_ENDIAN(x) ( \
     (((uint32_t) (x) & 0x000000ff) << 24) | \
     (((uint32_t) (x) & 0x0000ff00) <<  8) | \
@@ -146,6 +149,23 @@ bool is_valid_pointer(void* ptr)
 	if (VirtualQuery(ptr, &mbi, sizeof(mbi)) == 0) { return false; }
 	return (mbi.State == MEM_COMMIT) && !(mbi.Protect & PAGE_NOACCESS);
 }
+
+bool
+IsCurrentProcessWindowIsFocused()
+{
+	//HWND window = PSGLOBAL(window); 
+	HWND activeWindow = GetForegroundWindow();
+
+	DWORD foregroundPID = 0;
+	GetWindowThreadProcessId(activeWindow, &foregroundPID);
+
+	return (foregroundPID == GetCurrentProcessId());
+
+	////bool IsMinimized = (IsIconic(window) != 0); // no used here
+	//bool IsActive = (window == activeWindow);
+	//return IsActive;
+}
+
 
 class MemoryPatcher
 {
@@ -274,8 +294,11 @@ void U_SetCurrentDirectory()
 
 #define gpStreaming ((char*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x489FF8)))
 
-#define TheEmpireHudInstance ((CEmpireHud*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48F370)))
+#define pEmpireHud ((CEmpireHud*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48F370)))
 // todo empire mgr
+#define SampleManager ((cSampleManager*)IDATRANSLATE(0x4CDA08))
+#define gAm_sfxgxt ((sfxgxtstuff*)IDATRANSLATE(0x4CDA40))
+#define TOTAL_AUDIO_SAMPLES 7721
 
 #define TheCamera ((uint32_t*)IDATRANSLATE(0x6F44D0))
 //#define CMBlur_Drunkness ((float*)IDATRANSLATE(0x6F50A8)) // wrong. todo int32
@@ -283,7 +306,19 @@ void U_SetCurrentDirectory()
 
 #define CPools_ms_pPedPool ((CPool*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x487A94))) // 3360
 #define CPools_ms_pVehiclePool ((CPool*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x487A98))) // 2240
-inline void* CPools_GetAt(CPool* p, int32_t i, int32_t maxentsize) { return p ? (void*)(PCSX2POINTER(p->m_Objects) + (i * maxentsize)) : null; }
+#define POOLFLAG_ID 0x7f
+#define POOLFLAG_ISFREE 0x80
+// get entity by pool handle
+inline void* CPools_GetAt(CPool* p, int32_t h, int32_t maxe) { return (h == -1) ? null : ((uint8_t*)PCSX2POINTER(p->m_ByteMap))[h >> 8] == (h & 0xFF) ? &((uint8_t*)PCSX2POINTER(p->m_Objects))[(h >> 8) * maxe] : null; }
+// get entity by array index (slot)
+inline void* CPools_GetSlot(CPool* p, int32_t i, int32_t maxentsize) { return p ? (void*)(PCSX2POINTER(p->m_Objects) + (i * maxentsize)) : null; }
+// index (number object in pool (array index))
+inline int CPools_GetJustIndex(CPool* p, void* pE, int32_t maxe) { return pE ? (((uintptr_t)pE) - ((uintptr_t)PCSX2POINTER(p->m_Objects))) / maxe : 0; }
+// index (pool handle)
+inline int CPools_GetIndex(CPool* p, void* pE, int32_t maxe) { int i = CPools_GetJustIndex(p, pE, maxe); return ((uint8_t*)PCSX2POINTER(p->m_ByteMap))[i] + (i << 8); }
+// is slot free
+inline bool CPools_GetSlotIsFree(CPool* p, int32_t i) { return !!(((uint8_t*)PCSX2POINTER(p->m_ByteMap))[i] & POOLFLAG_ISFREE); }
+
 
 #define CTheScripts_aCommandsHandlers ((int64_t*)IDATRANSLATE(0x4BEAF0))
 #define CTheScripts_ScriptSpace ((char*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48741C))) // CScriptThread :)
@@ -297,6 +332,7 @@ bool& gbGlassCheat = *(bool*)IDATRANSLATE(0x489EB4);
 bool& CSpecialFX_bLiftCam = *(bool*)IDATRANSLATE(0x481CD8);
 bool& CPad_bHasPlayerCheated = *(bool*)IDATRANSLATE(0x487A54);
 float& CTimer_ms_fTimeScale = *(float*)IDATRANSLATE(0x4CD168);
+RwObjectNameIdAssocation** CVehicleModelInfo_ms_vehicleDescs = (RwObjectNameIdAssocation**)IDATRANSLATE(0x489E38); // size 10
 #elif defined(SLES_54622) 
 #elif defined(SLES_54623) 
 #elif defined(SLPM_66917) 
@@ -319,7 +355,7 @@ void inline DumpController(CControllerState* p) {
 		p->Start, p->Select, p->Square, p->Triangle,
 		p->Cross, p->Circle, p->LeftShock, p->RightShock);
 }
-CPlayerPed* FindPlayerPed() {	return EMUPOINTER<CPlayerPed*>(((CPlayerInfo*)CWorld_Players)[CWorld_PlayerInFocus].m_pPed); }
+CPlayerPed* FindPlayerPed() { return EMUPOINTER<CPlayerPed*>(((CPlayerInfo*)CWorld_Players)[CWorld_PlayerInFocus].m_pPed); }
 CVehicle* FindPlayerVehicle() {
 	CPed* pPed = EMUPOINTER<CPed*>(((CPlayerInfo*)CWorld_Players)[CWorld_PlayerInFocus].m_pPed);
 	return EMUPOINTER<CVehicle*>(pPed ? pPed->m_pMyVehicle : null);
@@ -403,7 +439,11 @@ void InitPatches()
 		//MemoryPatcher(IDATRANSLATE(0x0031C8E8), 0, 0x0031C928 - 0x0031C8E8), // nop
 
 		//MemoryPatcher(IDATRANSLATE(0x00230664), 0, 0x00230670 - 0x00230664), // nop
-		MemoryPatcher(IDATRANSLATE(0x00104C4C), 0, 8), // nop cfont
+		//MemoryPatcher(IDATRANSLATE(0x00104C4C), 0, 8), // nop cfont
+		//MemoryPatcher(IDATRANSLATE(0x00104D1C), 0, 0x00104D30 - 0x00104D1C), // nop
+		//MemoryPatcher(IDATRANSLATE(0x00104CA0), 0, 0x00104D50 - 0x00104CA0), // nop
+		//MemoryPatcher(IDATRANSLATE(0x00104D3C), 0, 4), // nop
+		MemoryPatcher(IDATRANSLATE(0x003F41F8), 0, 0x003F4224 - 0x003F41F8), // nop
 	};
 }
 void inline SetPatchesState(bool state) { for (size_t i = 0; i < patches.size(); i++) { if (state) { patches[i].ApplyPatch(); } else { patches[i].RemovePatch(); } } }
@@ -446,7 +486,7 @@ void GeneratorTeleporterTick()
 	if (prev && !gbTeleportHold)
 	{
 		--giTeleportIndex;
-		gbTeleportHold = tp =true;
+		gbTeleportHold = tp = true;
 	}
 	else if (next && !gbTeleportHold)
 	{
@@ -667,31 +707,58 @@ enum CP_flags_J // bitpos for SET_BIT
 
 void EmpireTest(int mode)
 {
-	//if (mode == 1) { return; } // dll loop
-	CEmpireHud* pEmpireHudInstance = TheEmpireHudInstance;
+	if (mode == 1) { return; } // dll loop
+	//system("cls");
+	CEmpireHud* pEmpireHudInstance = pEmpireHud;
 	printf("EmpireHud: 0x%p\n", pEmpireHudInstance);
 	if (!pEmpireHudInstance) { return; }
 	//printf("start: 0x%p  end: 0x%p\n", pEmpireHudInstance->pHudNodeArrayList, pEmpireHudInstance->pHudNodeArrayListEnd);
-	tHudProp** current = EMUPOINTER<tHudProp**>(pEmpireHudInstance->pHudNodeArrayList); // fixed array pointer
-	tHudProp** end = EMUPOINTER<tHudProp**>(pEmpireHudInstance->pHudNodeArrayListEnd);
+	tHudElement** current = EMUPOINTER<tHudElement**>(pEmpireHudInstance->hudElementList); // fixed array pointer
+	tHudElement** end = EMUPOINTER<tHudElement**>(pEmpireHudInstance->hudElementListEnd);
 	if (!current || !*current || !end || !*end) { return; }
 	int i = 0;
 	while (current != end)
 	{
 		//printf("curr[%d]: 0x%p\n", i, current);
 		if (!current) { continue; }
-		tHudProp* node = EMUPOINTER<tHudProp*>(*current); // fixing array element pointer
+		tHudElement* node = EMUPOINTER<tHudElement*>(*current); // fixing array element pointer
 		if (node)
 		{
-			//printf("val[%d]: 0x%p  val %d\n", i, node, node->isVisible);
-			printf("[%d]: %d\n", i, node->isVisible);
-			node->isVisible = false;
+			printf("-----------------------------\n");
+			printf("val[%d]: 0x%p  val %d\n", i, node, node->isVisible);
+			//printf("[%d]: %d\n", i, node->isVisible);
+			//node->isVisible = false;
+
+			tHudElementInfo* infoCurrent = EMUPOINTER<tHudElementInfo*>(node->pHudElementInfoList);
+			tHudElementInfo* infoEnd = EMUPOINTER<tHudElementInfo*>(node->pHudElementInfoListEnd);
+			printf("info: start 0x%p  end 0x%p\n", infoCurrent, infoEnd);
+			int j = 0;
+			while (infoCurrent != infoEnd) {
+				// Print details for each tHudElementInfo
+				printf("  pHudElementInfo[%d]: 0x%p\n", j, infoCurrent);
+				printf("    type: %d\n",infoCurrent->type);
+				printf("    pointer_textkey_field_4: 0x%p\n", EMUPOINTER<void*>(infoCurrent->pointer_textkey_field_4));
+				printf("    field_8: %d\n", infoCurrent->field_8);
+				printf("    some_x_field_C: %d\n", infoCurrent->some_x_field_C);
+				printf("    some_y_field_10: %d\n", infoCurrent->some_y_field_10);
+				printf("    field_14: %d\n", infoCurrent->field_14);
+				printf("    font_style_field_18: %d\n", infoCurrent->font_style_field_18);
+				printf("    float_font_field_1C: %.3f\n", infoCurrent->font_size_field_1C);
+				printf("    font_crgba_col_field_20: (R: %d, G: %d, B: %d, A: %d)\n\n",
+					infoCurrent->font_crgba_col_field_20.red,
+					infoCurrent->font_crgba_col_field_20.green,
+					infoCurrent->font_crgba_col_field_20.blue,
+					infoCurrent->font_crgba_col_field_20.alpha);
+
+				// Move to the next element in pHudElementInfoList
+				++infoCurrent;
+				++j;
+			}
 		}
 		//else printf("!node\n");
 		++current;
 		++i;
 	}
-	system("cls");
 }
 
 
@@ -700,14 +767,17 @@ bool tmp = false;
 bool tmp2 = false;
 bool tmp3 = false;
 bool tmp4 = false;
+bool can_update = true;
 int itmp = 0;
 void OnKey(int mode)
 {
+	if (!IsCurrentProcessWindowIsFocused()) { return; }
 	switch (mode)
 	{
 	case 0:
 	{
 		tmp3 = !tmp3;
+		can_update = !can_update;
 		//printf("[SPAWNER]: Enter type mi: ");
 		//scanf("%hhu %hhu", &tmppedspawntype, &tmppedspawnmi);
 
@@ -717,6 +787,85 @@ void OnKey(int mode)
 		//PatchSCM();
 		//PatchMIPS();
 		RunTestSCM();
+
+		// dbg
+		CPlayerPed* pPlayer = FindPlayerPed();
+		int playerhandle = CPools_GetIndex(CPools_ms_pPedPool, pPlayer, 3360); // pool handle
+		printf("player : 0x%p handle %d\n\n", pPlayer, playerhandle);
+
+		for (int32_t i = CPools_ms_pPedPool->m_nSize - 1; i >= 0; i--)
+		{
+			CPed* pPed = (CPed*)CPools_GetSlot(CPools_ms_pPedPool, i, 3360);
+			int index = CPools_GetJustIndex(CPools_ms_pPedPool, pPed, 3360); // array index (slot)
+			int handle = CPools_GetIndex(CPools_ms_pPedPool, pPed, 3360); // pool handle
+			CPed* pTesteddd = (CPed*)CPools_GetAt(CPools_ms_pPedPool, handle, 3360);
+			bool isFree = CPools_GetSlotIsFree(CPools_ms_pPedPool, index);
+			//printf("i: %d  handle %d isfree %d\n", i, handle, isFree);
+			printf("ped[%d]: handle %d isfree %d 0x%p health %f\n\n", i, handle, isFree, pTesteddd, pTesteddd->m_fHealth);
+			//if(!isFree) pTested->m_fHealth = 0.0f;
+		}
+		//DUMPSCRVAR(1568); // on off
+		//DUMPSCRVAR(1571); // num
+		//DUMPSCRVAR(1572+0); // handles recruit
+		//DUMPSCRVAR(1572+1);
+		//DUMPSCRVAR(1572+2);
+		//DUMPSCRVAR(1575);
+		//DUMPSCRVAR(1576);
+		//printf("\n");
+
+		// tester ped handles
+		int pedh = 0;
+		printf("[~]: Enter ped handle: ");
+		scanf("%d", &pedh);
+		printf("[~]: h %d \n", pedh);
+		CPed* pTested = (CPed*)CPools_GetAt(CPools_ms_pPedPool, pedh, 3360);
+		if (pTested)
+		{
+			int index = CPools_GetJustIndex(CPools_ms_pPedPool, pTested, 3360); // array index (slot)
+			bool isFree = CPools_GetSlotIsFree(CPools_ms_pPedPool, index);
+			printf("tested : 0x%p health %f  isfree %d\n\n", pTested, pTested->m_fHealth, isFree);
+			//if(!isFree) pTested->m_fHealth = 0.0f;
+		}
+		else { printf("!!!!!!not found\n"); }
+
+		printf("desc 0x%p\n", EMUPOINTER<tSample*>(SampleManager->n_pSampleDesc_stuff));
+		printf("sfxgxt 0x%p\n", gAm_sfxgxt);
+
+		//printf("[");
+		//for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->field_0[i]); }
+		//printf("]");
+
+		//int rndsfx = rand() % TOTAL_AUDIO_SAMPLES; // bred
+		//tSample tmp = EMUPOINTER<tSample*>(SampleManager->n_pSamplesDesc)[rndsfx];
+		//for (int i = 0; i < TOTAL_AUDIO_SAMPLES; i++)
+		//{
+		//	//printf("%d %d\n", i, EMUPOINTER<tSample*>(SampleManager->n_pSamplesDesc)[i].nOffset);
+		//	//EMUPOINTER<tSample*>(SampleManager->n_pSamplesDesc)[i].nFrequency = 5000;
+		//	//EMUPOINTER<tSample*>(SampleManager->n_pSamplesDesc)[i].nSize = 500000;
+		//	//EMUPOINTER<tSample*>(SampleManager->n_pSamplesDesc)[i].nOffset = 500000;
+		//	//EMUPOINTER<tSample*>(SampleManager->n_pSamplesDesc)[i] = tmp;
+		//}
+
+		return;
+		//---------------------------------------------------------------------------------------------------------------------------------------
+		printf("\n");
+		const char* desc[] = { "carIds", "boatIds", "jetskiIds", "trainIds", "heliIds", "planeIds", "bikeIds", "ferryIds", "bmxIds", "quadIds" };
+		for (int i = 0; i < ARRAY_SIZE(desc); i++)
+		{
+			//printf("%s------\n", desc[i]);
+			printf("RwObjectNameIdAssocation %s[] = {\n", desc[i]);
+			RwObjectNameIdAssocation* pIdAssoc = (EMUPOINTER<RwObjectNameIdAssocation*>(CVehicleModelInfo_ms_vehicleDescs[i]));
+			while(pIdAssoc && (*(uint32_t*)pIdAssoc))
+			{
+				//printf("\t%s\n", EMUPOINTER<char*>(pIdAssoc->name));
+				printf("    { \"%s\", %d, 0x%x },\n", EMUPOINTER<char*>((char*)pIdAssoc->name), pIdAssoc->hierId, pIdAssoc->flags);
+				++pIdAssoc;
+			}
+			++pIdAssoc;
+			//printf("\n");
+			printf("    { nil, 0, 0 }\n");
+			printf("};\n\n");
+		}
 
 		if (FindPlayerVehicle())
 		{
@@ -753,7 +902,7 @@ void OnKey(int mode)
 		printf("vehpobj: 0x%p\n", PCSX2POINTER(CPools_ms_pVehiclePool->m_Objects));
 		//for (int32_t i = CPools_ms_pVehiclePool->m_nSize - 1; i >= 0; i--)
 		//{
-		//	CVehicle* vehicle = (CVehicle*)CPools_GetAt(CPools_ms_pVehiclePool, i, 2240);
+		//	CVehicle* vehicle = (CVehicle*)CPools_GetSlot(CPools_ms_pVehiclePool, i, 2240);
 		//	if (vehicle) {
 		//		printf("mi %d  vehtype %d\n", vehicle->CPhysical.CEntity.m_modelIndex, vehicle->m_vehType);
 		//		vehicle->m_fHealth = 0.0f;
@@ -762,10 +911,19 @@ void OnKey(int mode)
 
 		for (int32_t i = CPools_ms_pPedPool->m_nSize - 1; i >= 0; i--)
 		{
-			CPed* pPed = (CPed*)CPools_GetAt(CPools_ms_pPedPool, i, 3360);
+			CPed* pPed = (CPed*)CPools_GetSlot(CPools_ms_pPedPool, i, 3360);
 			if (pPed && pPed->CPhysical.CEntity.m_modelIndex == 89) {
 				printf("0x%p leader(&0x%p): 0x%p\n", pPed, &pPed->m_leader, EMUPOINTER<CPed*>(pPed->m_leader));
-				printf("0x%p m_threatEntity(&0x%p): 0x%p\n", pPed, &pPed->m_threatEntity, EMUPOINTER<CPed*>(pPed->m_threatEntity));
+				printf("0x%p m_threatEntity(&0x%p): 0x%p\n\n", pPed, &pPed->m_threatEntity, EMUPOINTER<CPed*>(pPed->m_threatEntity));
+				printf("\n fF1 ");
+				DUMP_BITS(pPed->m_fearFlags1);
+				printf("\n fF2 ");
+				DUMP_BITS(pPed->m_fearFlags2);
+				printf("\n fF3 ");
+				DUMP_BITS(pPed->m_fearFlags3);
+				printf("\n fF4 ");
+				DUMP_BITS(pPed->m_fearFlags4);
+				printf("\n");
 			}
 		}
 
@@ -890,7 +1048,33 @@ void OnKey(int mode)
 		RESET_RECOMP_EE(); // update pcsx2 cached mips
 		break;
 	}
+	case 3:
+	{
+		testhpp();
+		break;
 	}
+	}
+}
+
+void UpdNonSyncStuff()
+{
+	if (!can_update) { return; }
+	//return; //-------------------------------------
+
+	//printf("desc 0x%p\n", EMUPOINTER<tSample*>(SampleManager->n_pSampleDesc_stuff));
+	//printf("sfxgxt 0x%p\n", gAm_sfxgxt);
+	system("cls");
+	printf("0\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->field_0[i]); } printf("]\n");
+	printf("18\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->field_18[i]); } printf("]\n");
+	printf("unk\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->unk[i]); } printf("]\n");
+	//printf("gxt\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->gxt[i]); } printf("]\n");
+	printf("gxt\t["); for (size_t i = 0; i < 6; i++) { printf("0x%p ", EMUPOINTER<void*>(gAm_sfxgxt->gxt[i])); } printf("]\n");
+	printf("60\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->_0_field_60[i]); } printf("]\n");
+	//printf("len\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->len_field_74[i]); } printf("]\n");
+	printf("1\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->_1_field_78[i]); } printf("]\n");
+	printf("snd\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->sound_length[i]); } printf("]\n");
+	printf("0\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->_0_field_A8[i]); } printf("]\n");
+	printf("\n\n");
 }
 
 
@@ -935,15 +1119,21 @@ void PluginLoop()
 		OnKey(2);
 		gbKeyHold = true;
 	}
+	else if (d && !gbKeyHold)
+	{
+		OnKey(3);
+		gbKeyHold = true;
+	}
 	else if (o && !gbKeyHold)
 	{
 		PatchTest();
 		gbKeyHold = true;
 	}
-	else if (!key && !key2 && !key3 && !o) { gbKeyHold = false; }
+	else if (!key && !key2 && !key3 && !o && !d) { gbKeyHold = false; }
 
 	GeneratorTeleporterTick();
 	if (tmp3) { EmpireTest(1); }
+	UpdNonSyncStuff();
 	patch<uint32_t>(SCRVAR(5547), 0); // PHI_A2 float
 	//OnKey(1);
 	//Patch(); // quick load reload space
@@ -1026,7 +1216,7 @@ void PluginLoop()
 	{
 		for (int32_t i = CPools_ms_pVehiclePool->m_nSize - 1; i >= 0; i--)
 		{
-			CVehicle* vehicle = (CVehicle*)CPools_GetAt(CPools_ms_pVehiclePool, i, 2240);
+			CVehicle* vehicle = (CVehicle*)CPools_GetSlot(CPools_ms_pVehiclePool, i, 2240);
 			//if (vehicle && (vehicle->field_170 || vehicle->field_174) && vehicle->CPhysical.CEntity.m_modelIndex == 219) {
 			//	CVector pv = *(CVector*)&vehicle->CPhysical.CEntity.CPlaceable.m_pMat.pos;
 			//	CVector pp = FindPlayerPos();

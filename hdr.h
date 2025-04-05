@@ -80,6 +80,14 @@ struct CRGBA
 	unsigned __int8 alpha;
 };
 
+/* 181 */
+struct CVector2D
+{
+	float x;
+	float y;
+};
+
+
 /* 182 */
 struct __declspec(align(4)) CVector
 {
@@ -129,8 +137,29 @@ struct CStoredCollPoly
 {
 	CVectorVU_align16 verts[3];
 	char valid;
-	char pad[3];
+	char pad[15];
 };
+
+/* 581 */
+struct LimbOrientation
+{
+	float yaw;
+	float pitch;
+};
+
+/* 580 */
+struct CPed;
+struct CPedIK
+{
+	CPed* m_ped;
+	LimbOrientation field_4;
+	LimbOrientation m_torsoOrient;
+	LimbOrientation field_14;
+	LimbOrientation field_1C;
+	LimbOrientation ____field_24;
+	int m_flags;
+};
+
 
 /* 501 */
 struct CPlaceable
@@ -318,53 +347,90 @@ struct CPed
 {
 	CPhysical CPhysical;
 	CStoredCollPoly m_collPoly;
-	char field_194[12];
-	int m_fCollisionSpeed;
+	float m_fCollisionSpeed;
 	char field_1A4[36];
-	char flags11[8];
-	int field_1D0;
-	int flags1;
-	char aa___flags2[168];
+	char _CP_flags_E;
+	char CP_flags_F;
+	char CP_flags_G;
+	char CP_flags_H;
+	char CP_flags_I;
+	char CP_flags_J;
+	char CP_flags_K;
+	char CP_flags_L;
+	char _CP_flags_field_1D0;
+	char CP_flags_field_1D1;
+	char CP_flags_field_1D2;
+	char CP_flags_field_1D3;
+	char CP_flags_field_1D4;
+	char CP_flags_field_1D5;
+	char CP_flags_field_1D6;
+	char CP_flags_field_1D7;
+	char _flags_field_1D8;
+	char field_1D9;
+	char field_1DA;
+	char field_1DB;
+	char flags_field_1DC;
+	char field_1DD;
+	__int16 m_gangFlags;
+	char field_1E0[160];
 	int m_prevObjective;
 	char field_284[32];
 	CPed* m_leader;
 	int m_pedFormation;
-	char field_2AC[8];
+	char m_fearFlags1;
+	char m_fearFlags2;
+	char m_fearFlags3;
+	char m_fearFlags4;
+	char field_2B0[4];
 	int m_pEventEntity;
-	char field_2B8[80];
+	char field_2B8[4];
+	int m_pFrames[18];
+	char field_304[4];
 	AssocGroupId m_animGroup;
-	char field_30C[36];
-	int m_pedIK;
-	char m_pedIK_field_334[40];
-	int m_pedIK_m_flags;
+	char blendstuff_field_30C[4];
+	int field_310;
+	int field_314;
+	char field_318[24];
+	CPedIK m_ik__m_pedIK;
 	char field_360[36];
 	int field_384;
-	char field_388[128];
+	int field_388;
+	char field_38C[116];
+	int field_400;
+	char field_404[4];
 	int m_pNextPathNode;
 	char field_40C[52];
 	CVectorVU_align16 m_vecSeekPos;
 	int m_pSeekTarget;
-	char field_454[20];
+	char field_454[12];
+	CVector2D m_eventOrThreat;
 	int m_threatEntity;
-	int field_46C;
+	int m_pathNodeTimer;
 	int m_followPathTargetEnt;
 	char field_474[12];
 	CVehicle* m_pMyVehicle;
 	CVehicle* m_carInObjective;
-	char field_488[92];
+	char field_488[88];
+	int m_followPathMoveState;
 	float m_fHealth;
 	float m_fArmour;
 	char field_4EC[4];
-	int field_4F0;
-	int todo_setpedtimersswitch_field_4F4;
-	char field_4F8[28];
+	int m_nScriptShootTimer;
+	int m_nScriptAttackTimer;
+	float m_fSprintControlCounter;
+	char field_4FC[24];
 	int m_pCurrentPhysSurface;
-	char field_518[56];
+	char field_518[36];
+	int m_attractor;
+	char field_540[16];
 	int m_nPedType;
 	CPedStats* m_pedStats;
 	int m_fleeTimer;
 	CWeapon m_weapons[10];
-	char field_674[64];
+	char field_674[24];
+	int possible_m_storedWeapon_field_68C;
+	char field_690[32];
+	int m_pFire;
 	int m_pLookTarget;
 	int m_fLookDirection;
 	char field_6BC[4];
@@ -376,11 +442,18 @@ struct CPed
 	int m_shootTimer;
 	int m_carJackTimer;
 	int m_objectiveTimer;
-	char field_6E0[8];
+	int m_duckTimer;
+	char field_6E4[4];
 	int m_bloodyFootprintCountOrDeathTime;
-	char field_6EC[12];
+	char field_6EC[4];
+	int m_ceaseAttackTimer;
+	char field_6F4[4];
 	void* m_nearPeds[10];
-	char field_720[76];
+	char field_720[40];
+	int m_lastDamEntity;
+	char field_74C[20];
+	float f_angleThreshold_field_760;
+	char field_764[8];
 	int m_threatFlags;
 	int m_threatCheckTimer;
 	int m_threatCheckInterval;
@@ -388,21 +461,29 @@ struct CPed
 	__int16 m_numNearPeds;
 	char field_77C[2];
 	__int16 m_nPedMoney;
-	char field_780[9];
+	__int16 vectormatrixtypestuff_field_780;
+	char field_782[7];
 	char m_currentWeapon;
 	char m_nPathDir;
-	char field_78B;
+	char _m_holdPositionState;
 	__int16 field_78C;
-	char field_78E;
-	char field_78F[21];
+	char m_wepAccuracy;
+	char field_78F[5];
+	float field_794;
+	float field_798;
+	char field_79C[8];
 	int time_field_7A4;
 	char field_7A8[116];
 	int m_nPedStateTimer;
 	int m_pPointGunAt;
-	char field_824[12];
+	int _z_pointer_stuff_field_824;
+	int m_fMaxHealth;
+	char field_82C[4];
 	float m_fBreath;
-	char field_834[36];
-	int attachedTo;
+	char field_834[12];
+	CVectorVU_align16 m_vecSpotToGuard;
+	char field_850[8];
+	CEntity* m_attachedTo;
 	char field_85C[68];
 	int m_pedInObjective;
 	int m_objective;
@@ -516,10 +597,10 @@ struct CCarGenerator
 /* 269 */
 struct __declspec(align(4)) CPool
 {
-	int m_Objects;
-	unsigned __int8* m_ByteMap;
-	int m_nSize;
-	int m_nFirstFree;
+	void* m_Objects; // m_entries
+	unsigned __int8* m_ByteMap; // m_flags
+	int m_nSize; // m_size
+	int m_nFirstFree; // m_allocPtr
 };
 
 /* 507 */
@@ -614,17 +695,47 @@ struct __declspec(align(1)) CBaseModelInfo
 };
 
 
+/* 583 */
+struct tHudElementInfo
+{
+	int type;
+	int pointer_textkey_field_4;
+	int field_8;
+	int some_x_field_C;
+	int some_y_field_10;
+	int field_14;
+	int font_style_field_18;
+	float font_size_field_1C;
+	CRGBA font_crgba_col_field_20;
+	char bfield_24;
+	char bfield_25;
+	char _field_26[2];
+	char field_28;
+	char bfield_29;
+	char _field_2A[2];
+	int bfield_2C;
+	int field_30;
+	int field_34;
+	int field_38;
+	int field_3C;
+	int field_40;
+	int field_44;
+	int field_48;
+};
+
 /* 524 */
-struct __declspec(align(1)) tHudProp
+struct tHudElement
 {
 	int isVisible;
-	int xoffset_field_4;
-	int yoffset_field_8;
-	int some_x_size_field_C;
-	int some_y_size_field_10;
-	int field_14;
-	int field_18;
-	char field_1C[777];
+	int xstart_field_4;
+	int ystart_field_8;
+	int xsize_field_C;
+	int ysize_field_10;
+	int __z_field_14;
+	CRGBA BackgroundColour_crect;
+	CRGBA BorderColour_crect;
+	tHudElementInfo* pHudElementInfoList;
+	tHudElementInfo* pHudElementInfoListEnd;
 };
 
 /* 525 */
@@ -633,21 +744,56 @@ struct CEmpireHud
 	int pointer_some_alloc_next_field_0;
 	int pointer_field_4;
 	int vftable;
-	tHudProp** pHudNodeArrayList; // save 3 cnt10
-	tHudProp** pHudNodeArrayListEnd; // ptr to afterarray->Lst[nodes10], ->LstEnd[nextxmldata]
-	int field_14;
-	int pointer_some_fe_xml_field_18;
-	int some_timer;
-	float some_X_size_val_field_20;
-	float some_Y_size_val_field_24;
-	int some_decr_timer_byedit_field_28;
+	tHudElement** hudElementList;
+	tHudElement** hudElementListEnd;
+	int __field_14;
+	int xmlConfig;
+	int updateTimer;
+	float scaleX;
+	float scaleY;
+	int texListRefCount;
 };
 
+struct RwObjectNameIdAssocation
+{
+	const char* name;
+	int32_t hierId;
+	uint32_t flags;
+};
 
+/* 504 */
+struct tSample
+{
+	int nOffset;
+	int nSize;
+	int nFrequency;
+};
 
+/* 322 */
+struct __declspec(align(1)) cSampleManager
+{
+	char field_0[6];
+	char field_6;
+	char field_7;
+	char field_8;
+	char field_9[11];
+	tSample* n_pSampleDesc_stuff;
+	char field_18[77777];
+};
 
-
-
+/* 596 */
+struct sfxgxtstuff
+{
+	int field_0[6];
+	int field_18[6];
+	int unk[6];
+	int gxt[6];
+	int _0_field_60[5];
+	int len_field_74;
+	int _1_field_78[6];
+	int sound_length[6];
+	int _0_field_A8[6];
+};
 
 
 
