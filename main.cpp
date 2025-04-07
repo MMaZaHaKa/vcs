@@ -9,6 +9,21 @@
 #include "hdr.h"
 #include "test.hpp"
 
+void SetColor(WORD wAttributes)
+{
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleTextAttribute(hConsole, wAttributes);
+}
+
+#define CW_R() SetColor(FOREGROUND_RED)                               // Красный
+#define CW_G() SetColor(FOREGROUND_GREEN)                             // Зеленый
+#define CW_B() SetColor(FOREGROUND_BLUE)                              // Синий
+#define CW_Y() SetColor(FOREGROUND_RED | FOREGROUND_GREEN)            // Желтый
+#define CW_C() SetColor(FOREGROUND_GREEN | FOREGROUND_BLUE)           // Голубой (Cyan)
+#define CW_M() SetColor(FOREGROUND_RED | FOREGROUND_BLUE)             // Магента (Magenta)
+#define CW_W() SetColor(FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE) // Белый
+#define CW_K() SetColor(0)                                            // Черный (выключить все цвета)
+
 //static inline uintptr_t EEMainMemoryStart = 0/*0x20000000*/;
 //static inline uintptr_t EEMainMemoryEnd = 0/*0x21ffffff*/;
 
@@ -342,7 +357,13 @@ RwObjectNameIdAssocation** CVehicleModelInfo_ms_vehicleDescs = (RwObjectNameIdAs
 #define CTheScripts_pMissionScript (&CTheScripts_ScriptSpace[CTheScripts_MainScriptSize]) // mission scm
 //#define SCRVAR(i) ((uint32_t*)(((uintptr_t)CTheScripts_ScriptSpace) + (sizeof(uint32_t) * i)))
 #define SCRVAR(i) (&((uint32_t*)CTheScripts_ScriptSpace)[i])
+#define SCRBYTEVAR(i) (&((uint8_t*)CTheScripts_ScriptSpace)[i])
 #define DUMPSCRVAR(i) printf("SCR_%d: %d\n", i, *SCRVAR(i))
+#define SCRIPRANGE(ip) ((ip >= 0) && (ip < CTheScripts_MainScriptSize + CTheScripts_LargestMissionScriptSize))
+#define SCRSTRIP(ip) (SCRIPRANGE(ip) ? ip : 0)
+#define DUMPSCRSTRVAR(i) printf("SCRSTR_%d: %.7s\n", i, SCRBYTEVAR(SCRSTRIP(*SCRVAR(i)))) // strvar is ip in scm where str
+#define DUMPSCRARRAY(i, sz) printf("SCR_%d [", i); for (int j = 0; j < sz; j++) { printf("%d ", *SCRVAR(i+j)); } printf("]\n");
+#define DUMPSCRSTRARRAY(i, sz) printf("SCRSTR_%d [", i); for (int j = 0; j < sz; j++) { printf("%.7s ", SCRBYTEVAR(SCRSTRIP(*SCRVAR(i+j)))); } printf("]\n");
 #define DUMPVEC(s, vec) printf("%s %f %f %f\n", s, vec.x, vec.y, vec.z)
 void inline SETCHEAT(uintptr_t p, const char* c) { // T S X C  L R U D  (L1)1 (R1)2
 	if (p && c)	{ char ch[100] = { 0 }; strcpy(ch, c); reverseString(ch); transformCheat(ch); patchstring(IDATRANSLATE(p), ch); }
@@ -1064,17 +1085,49 @@ void UpdNonSyncStuff()
 	//printf("desc 0x%p\n", EMUPOINTER<tSample*>(SampleManager->n_pSampleDesc_stuff));
 	//printf("sfxgxt 0x%p\n", gAm_sfxgxt);
 	system("cls");
-	printf("0\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->field_0[i]); } printf("]\n");
-	printf("18\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->field_18[i]); } printf("]\n");
-	printf("unk\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->unk[i]); } printf("]\n");
-	//printf("gxt\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->gxt[i]); } printf("]\n");
-	printf("gxt\t["); for (size_t i = 0; i < 6; i++) { printf("0x%p ", EMUPOINTER<void*>(gAm_sfxgxt->gxt[i])); } printf("]\n");
-	printf("60\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->_0_field_60[i]); } printf("]\n");
-	//printf("len\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->len_field_74[i]); } printf("]\n");
-	printf("1\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->_1_field_78[i]); } printf("]\n");
-	printf("snd\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->sound_length[i]); } printf("]\n");
-	printf("0\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->_0_field_A8[i]); } printf("]\n");
+
+	//if(0)
+	{
+		//system("cls"); for (size_t i = 0; i < 106; i++) { printf("%d ", CTheScripts_pActiveScripts->m_anLocalVariables[i]); } printf("\n");
+		//printf("SCR_%d: %d\n", 5375, *SCRVAR(5375));
+		//////printf("SCR_%d: %d\n", 5376, *SCRVAR(5376)); // r3 done
+		//printf("SCR_%d: %d\n", 5414, *SCRVAR(5414));
+
+		// todo 0457:   player $player_char aiming_at_actor $854 vc
+		//DUMPSCRVAR(1568); // on off
+		//DUMPSCRVAR(1571); // num
+		//DUMPSCRVAR(1572+0); // handles
+		//DUMPSCRVAR(1572+1);
+		//DUMPSCRVAR(1572+2);
+		//DUMPSCRVAR(1575);
+		//DUMPSCRVAR(1576);
+
+		// audio slots
+		DUMPSCRARRAY(1542, 5); // flags 1 1 1 1 1  (1 free, 2loading??, 4 loaded/prepared4play, 8 playing)
+		//DUMPSCRSTRVAR(1547);
+		DUMPSCRSTRARRAY(1547, 5); // sfx str
+		DUMPSCRSTRARRAY(1552, 5); // gxt str
+		DUMPSCRARRAY(1557, 5); // -99 ped handle
+		DUMPSCRARRAY(1562, 5); // 0 0 0 1 0 playing/busy flag
+	}
+
+	if(0)
+	{
+		printf("+0x00\t\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->field_0[i]); } printf("]\n");
+		printf("+0x18\t\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->field_18[i]); } printf("]\n");
+		printf("+0x30 peds\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->unk[i]); } printf("]\n");
+		//printf("gxt\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->gxt[i]); } printf("]\n");
+		printf("+0x48 gxts\t["); for (size_t i = 0; i < 6; i++) { printf("0x%p ", EMUPOINTER<void*>(gAm_sfxgxt->gxt[i])); } printf("]\n");
+		printf("+0x60 \t\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->_0_field_60[i]); } printf("]\n");
+		//printf("len\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->len_field_74[i]); } printf("]\n");
+		printf("+0x78 \t\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->_1_field_78[i]); } printf("]\n");
+		printf("+0x90 len\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->sound_length[i]); } printf("]\n");
+		printf("+0xA8 \t\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->_0_field_A8[i]); } printf("]\n");
+	}
 	printf("\n\n");
+	//for (size_t i = 0; i < 6; i++) {gAm_sfxgxt->unk[i] = 777; } // paused?
+	//for (size_t i = 0; i < 6; i++) {gAm_sfxgxt->_1_field_78[i] = 0; } //
+	//for (size_t i = 0; i < 6; i++) {gAm_sfxgxt->_0_field_60[i] = 1; } //
 }
 
 
