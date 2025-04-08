@@ -8,6 +8,8 @@
 #include <clocale>    // для setlocale
 #include <algorithm>  // для std::transform
 #include <limits>     // для std::numeric_limits
+#include <regex>
+#include <sstream>
 
 HANDLE InitConsole() // with proto
 {
@@ -37,12 +39,8 @@ void U_SetCurrentDirectory()
 }
 
 
-int main()
+void FoundSubstringRaws()
 {
-    //std::setlocale(LC_ALL, "");
-    U_SetCurrentDirectory();
-    InitConsole();
-
     // 1. Запрос имени входного файла
     std::string input_filename;
     std::cout << "Введите имя входного файла (с расширением или без): ";
@@ -55,7 +53,7 @@ int main()
     std::ifstream fin_bin(input_filename, std::ios::binary | std::ios::ate);
     if (!fin_bin) {
         std::cerr << "Не удалось открыть файл \"" << input_filename << "\" для чтения.\n";
-        return 1;
+        return;
     }
     std::streampos size = fin_bin.tellg();
     fin_bin.close();
@@ -157,7 +155,7 @@ int main()
     std::ofstream fout(output_filename, std::ios::trunc);
     if (!fout) {
         std::cerr << "Не удалось открыть файл \"" << output_filename << "\" для записи.\n";
-        return 1;
+        return;
     }
     //for (const auto& l : found) {
     //    fout << l << "\n";
@@ -168,5 +166,109 @@ int main()
     fout.close();
 
     std::cout << "Результаты сохранены в файл \"" << output_filename << "\".\n";
+}
+
+void convbase()
+{
+    std::string input_path, output_path;
+    int choice;
+
+    // 1. Запрос входного файла
+    std::cout << "Введите путь к входному файлу: ";
+    std::getline(std::cin, input_path);
+
+    // 2. Запрос направления конвертации
+    std::cout << "Выберите конвертацию (1: hex->dec, 2: dec->hex): ";
+    std::cin >> choice;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+    // 3. Запрос выходного файла
+    std::cout << "Введите путь к выходному файлу: ";
+    std::getline(std::cin, output_path);
+
+    std::ifstream fin(input_path);
+    if (!fin) {
+        std::cerr << "Не удалось открыть входной файл: " << input_path << "\n";
+        return;
+    }
+    std::ofstream fout(output_path);
+    if (!fout) {
+        std::cerr << "Не удалось открыть выходной файл: " << output_path << "\n";
+        return;
+    }
+
+    // Регулярки для поиска литералов
+    std::regex re_line_prefix(R"(^\s*\d+\.\s*)");
+    std::regex re_hex(R"(0x([0-9A-Fa-f]+)([uUlL]*))");
+    std::regex re_dec(R"(\b(\d+)([uUlL]*)\b)");
+
+    std::string line;
+    while (std::getline(fin, line)) {
+        std::smatch m;
+        std::string prefix, rest;
+
+        // Отделяем номер строки в начале (если есть)
+        if (std::regex_search(line, m, re_line_prefix)) {
+            prefix = m.str(0);
+            rest = line.substr(m.length());
+        }
+        else {
+            rest = line;
+        }
+
+        // Выбираем нужную конвертацию
+        std::string result;
+        std::size_t last_pos = 0;
+        if (choice == 1) {
+            // hex -> dec
+            for (auto it = std::sregex_iterator(rest.begin(), rest.end(), re_hex);
+                it != std::sregex_iterator();
+                ++it)
+            {
+                auto match = *it;
+                // добавляем текст до совпадения
+                result += rest.substr(last_pos, match.position() - last_pos);
+                // конвертация
+                unsigned long val = std::stoul(match[1].str(), nullptr, 16);
+                result += std::to_string(val) + match[2].str();
+                last_pos = match.position() + match.length();
+            }
+        }
+        else {
+            // dec -> hex
+            for (auto it = std::sregex_iterator(rest.begin(), rest.end(), re_dec);
+                it != std::sregex_iterator();
+                ++it)
+            {
+                auto match = *it;
+                // добавляем текст до совпадения
+                result += rest.substr(last_pos, match.position() - last_pos);
+                // конвертация
+                unsigned long val = std::stoul(match[1].str());
+                std::ostringstream oss;
+                oss << "0x" << std::uppercase << std::hex << val << match[2].str();
+                result += oss.str();
+                last_pos = match.position() + match.length();
+            }
+        }
+        // добавляем остаток строки
+        result += rest.substr(last_pos);
+
+        // Пишем в выходной файл
+        fout << prefix << result << "\n";
+    }
+
+    std::cout << "Готово! Результат записан в: " << output_path << "\n";
+}
+
+int main()
+{
+    //std::setlocale(LC_ALL, "");
+    U_SetCurrentDirectory();
+    InitConsole();
+
+    FoundSubstringRaws();
+    //convbase();
+
     return 0;
 }
