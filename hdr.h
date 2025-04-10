@@ -105,6 +105,28 @@ struct CVectorVU_align16
 	int pad;
 };
 
+/* 200 */
+struct __declspec(align(4)) RwV3d
+{
+	float x;
+	float y;
+	float z;
+};
+
+
+/* 470 */
+struct RwMatrix
+{
+	RwV3d right;
+	int field_C;
+	RwV3d up;
+	int field_1C;
+	RwV3d forvard_at;
+	int field_2C;
+	RwV3d pos;
+	int field_3C;
+};
+
 /* 471 */
 struct CMatrix
 {
@@ -112,9 +134,10 @@ struct CMatrix
 	CVectorVU_align16 at_forward;
 	CVectorVU_align16 up;
 	CVectorVU_align16 pos;
-	void* m_pRwMat;
+	RwMatrix* m_pRwMat;
 };
-void inline SetCVector4VU(CVectorVU_align16* p1, CVector* p2) { memcpy(p1, p2, 3 * 4); }
+void inline SetCVector4VU(CVectorVU_align16* p1, CVector* p2) { if (p1 && p2) { memcpy(p1, p2, 3 * 4); } }
+void inline SetRWV3D(RwV3d* p1, CVector* p2) { memcpy(p1, p2, 3 * 4); }
 
 /* 450 */
 struct CPedStats
@@ -782,20 +805,57 @@ struct __declspec(align(1)) cSampleManager
 };
 
 /* 596 */
-struct sfxgxtstuff
+struct sMissionAudioManager
 {
-	int field_0[6];
-	int field_18[6];
-	int unk[6];
-	int gxt[6];
-	int _0_field_60[5];
-	int len_field_74;
-	int _1_field_78[6];
-	int sound_length[6];
-	int _0_field_A8[6];
+	int bSlotDurationSet[5];
+	int _pad14;
+	int bSlotBusy[5];
+	int _pad2C;
+	int pedsHandles[5];
+	int _pad44;
+	int pGxtTextKeys[5];
+	int _pad5C;
+	int bLockSlotsRelease[5];
+	int totalDuration;
+	int bCanUseSlots[5];
+	int _pad8C;
+	int slotAudioDuration[5];
+	int _padA4;
+	int bSlotsResetFlags[5];
+	int _padBC;
 };
 
+struct CPtrNode
+{
+	void* item;
+	CPtrNode* prev;
+	CPtrNode* next;
+};
 
+/* 603 */
+struct CPtrList
+{
+	CPtrNode* first;
+};
+
+/* 602 */
+struct CSector // (14) todo m_empireList  m_empireOverlapList
+{
+	CPtrList m_buildingList;
+	CPtrList m_buildingOverlapList;
+	CPtrList m_multiplayerList;
+	CPtrList m_objectList;
+	CPtrList m_objectOverlapList;
+	CPtrList unk1;
+	CPtrList unk2;
+	CPtrList m_vehicleList;
+	CPtrList m_vehicleOverlapList;
+	CPtrList m_pedList;
+	CPtrList m_pedOverlapList;
+	CPtrList unk3;
+	CPtrList m_dummyList;
+	CPtrList m_dummyOverlapList;
+};
 
 
 

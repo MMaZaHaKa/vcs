@@ -14,6 +14,18 @@ void SetColor(WORD wAttributes)
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 	SetConsoleTextAttribute(hConsole, wAttributes);
 }
+void copyToClipboard(const char* text)
+{
+	if (OpenClipboard(NULL))
+	{
+		EmptyClipboard();
+		size_t len = strlen(text) + 1;
+		HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len);
+		if (hMem) { memcpy(GlobalLock(hMem), text, len); GlobalUnlock(hMem); SetClipboardData(CF_TEXT, hMem); }
+		CloseClipboard();
+	}
+}
+void MboxSTD(std::string msg, std::string title = "") { MessageBoxA(HWND_DESKTOP, msg.c_str(), title.c_str(), MB_SYSTEMMODAL | MB_ICONWARNING); }
 
 #define CW_R() SetColor(FOREGROUND_RED)                               // Красный
 #define CW_G() SetColor(FOREGROUND_GREEN)                             // Зеленый
@@ -288,6 +300,12 @@ void U_SetCurrentDirectory()
 	SetCurrentDirectoryA(std::string(currentDir).substr(0, pos).c_str());
 }
 
+#define NUMSECTORS_X 50
+#define NUMSECTORS_Y 50
+#define SECTOR_SIZE_X 80.0f
+#define SECTOR_SIZE_Y 80.0f
+#define WORLD_MIN_X -2400.0f
+#define WORLD_MIN_Y -2000.0f
 
 
 #define SLUS_21590 // ntsc
@@ -295,9 +313,10 @@ void U_SetCurrentDirectory()
 //#define SLES_54623 // pal unk
 //#define SLPM_66917 // ntsc jap
 
-#ifdef SLUS_21590
+#ifdef SLUS_21590 // define для того чтобы когда нужно читать с памяти данные, в ините плагина не было краша, читать только когда нужно
 #define CWorld_Players ((void*)IDATRANSLATE(0x4E4910))
 #define CWorld_PlayerInFocus ((*(uint8_t*)IDATRANSLATE(0x4CD128)))
+#define CWorld_ms_aSectors ((CSector*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x486464))) // 50*50 2500
 
 #define CPad_Pads ((CPad*)IDATRANSLATE(0x5147A8))
 
@@ -312,7 +331,7 @@ void U_SetCurrentDirectory()
 #define pEmpireHud ((CEmpireHud*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48F370)))
 // todo empire mgr
 #define SampleManager ((cSampleManager*)IDATRANSLATE(0x4CDA08))
-#define gAm_sfxgxt ((sfxgxtstuff*)IDATRANSLATE(0x4CDA40))
+#define gAm_sfxgxt ((sMissionAudioManager*)IDATRANSLATE(0x4CDA40))
 #define TOTAL_AUDIO_SAMPLES 7721
 
 #define TheCamera ((uint32_t*)IDATRANSLATE(0x6F44D0))
@@ -321,6 +340,7 @@ void U_SetCurrentDirectory()
 
 #define CPools_ms_pPedPool ((CPool*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x487A94))) // 3360
 #define CPools_ms_pVehiclePool ((CPool*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x487A98))) // 2240
+
 #define POOLFLAG_ID 0x7f
 #define POOLFLAG_ISFREE 0x80
 // get entity by pool handle
@@ -347,6 +367,8 @@ bool& gbGlassCheat = *(bool*)IDATRANSLATE(0x489EB4);
 bool& CSpecialFX_bLiftCam = *(bool*)IDATRANSLATE(0x481CD8);
 bool& CPad_bHasPlayerCheated = *(bool*)IDATRANSLATE(0x487A54);
 float& CTimer_ms_fTimeScale = *(float*)IDATRANSLATE(0x4CD168);
+int& CGame_currArea = *(int*)IDATRANSLATE(0x489F7C);
+//int& CWorld_ms_aSectors[50][50] = *(int*)IDATRANSLATE();
 RwObjectNameIdAssocation** CVehicleModelInfo_ms_vehicleDescs = (RwObjectNameIdAssocation**)IDATRANSLATE(0x489E38); // size 10
 #elif defined(SLES_54622) 
 #elif defined(SLES_54623) 
@@ -365,6 +387,7 @@ RwObjectNameIdAssocation** CVehicleModelInfo_ms_vehicleDescs = (RwObjectNameIdAs
 #define DUMPSCRARRAY(i, sz) printf("SCR_%d [", i); for (int j = 0; j < sz; j++) { printf("%d ", *SCRVAR(i+j)); } printf("]\n");
 #define DUMPSCRSTRARRAY(i, sz) printf("SCRSTR_%d [", i); for (int j = 0; j < sz; j++) { printf("%.7s ", SCRBYTEVAR(SCRSTRIP(*SCRVAR(i+j)))); } printf("]\n");
 #define DUMPVEC(s, vec) printf("%s %f %f %f\n", s, vec.x, vec.y, vec.z)
+#define DUMPPOS(vec) printf("x:%f  y:%f  z:%f\n",vec.x, vec.y, vec.z)
 void inline SETCHEAT(uintptr_t p, const char* c) { // T S X C  L R U D  (L1)1 (R1)2
 	if (p && c)	{ char ch[100] = { 0 }; strcpy(ch, c); reverseString(ch); transformCheat(ch); patchstring(IDATRANSLATE(p), ch); }
 }
@@ -375,6 +398,25 @@ void inline DumpController(CControllerState* p) {
 		p->DPadUp, p->DPadDown, p->DPadLeft, p->DPadRight,
 		p->Start, p->Select, p->Square, p->Triangle,
 		p->Cross, p->Circle, p->LeftShock, p->RightShock);
+}
+CSector* GetSector(int x, int y) { return &CWorld_ms_aSectors[(NUMSECTORS_X*y)+x]; }
+CSector* GetSectorByPos(float wx, float wy) {
+	int sectorX = (int)((wx - WORLD_MIN_X) / SECTOR_SIZE_X);
+	int sectorY = (int)((wy - WORLD_MIN_Y) / SECTOR_SIZE_Y);
+	// Ограничиваем диапазон, чтобы не выйти за пределы массива
+	if (sectorX < 0) sectorX = 0;
+	if (sectorX >= NUMSECTORS_X) sectorX = NUMSECTORS_X - 1;
+	if (sectorY < 0) sectorY = 0;
+	if (sectorY >= NUMSECTORS_Y) sectorY = NUMSECTORS_Y - 1;
+	return GetSector(sectorX, sectorY);
+}
+int GetEntityType(CEntity* pEntity) { int m_type = ((pEntity->_CE_flags_E >> 1) & 0x07); return m_type; }
+int GetEntityStatus(CEntity* pEntity) { int m_status = ((pEntity->_CE_flags_E >> 4) & 0x0F) | ((pEntity->CE_flags_F & 0x01) << 4); return m_status; }
+void TeleportEntity(CEntity* pE, CVector pos, bool updrw = true)
+{
+	//if (pE) { pE->CPlaceable.m_pMat.pos.x = pos.x; pE->CPlaceable.m_pMat.pos.y = pos.y; pE->CPlaceable.m_pMat.pos.z = pos.z; }
+	if (pE) { SetCVector4VU(&pE->CPlaceable.m_pMat.pos, &pos); }
+	if (pE && updrw && pE->CPlaceable.m_pMat.m_pRwMat) { SetRWV3D(&pE->CPlaceable.m_pMat.m_pRwMat->pos, &pos); } // todo update rw stuff
 }
 CPlayerPed* FindPlayerPed() { return EMUPOINTER<CPlayerPed*>(((CPlayerInfo*)CWorld_Players)[CWorld_PlayerInFocus].m_pPed); }
 CVehicle* FindPlayerVehicle() {
@@ -464,7 +506,10 @@ void InitPatches()
 		//MemoryPatcher(IDATRANSLATE(0x00104D1C), 0, 0x00104D30 - 0x00104D1C), // nop
 		//MemoryPatcher(IDATRANSLATE(0x00104CA0), 0, 0x00104D50 - 0x00104CA0), // nop
 		//MemoryPatcher(IDATRANSLATE(0x00104D3C), 0, 4), // nop
-		MemoryPatcher(IDATRANSLATE(0x003F41F8), 0, 0x003F4224 - 0x003F41F8), // nop
+		//MemoryPatcher(IDATRANSLATE(0x003F41F8), 0, 0x003F4224 - 0x003F41F8), // nop
+
+		MemoryPatcher(IDATRANSLATE(0x003BAB44), 0, 4), // nop peds gen
+		MemoryPatcher(IDATRANSLATE(0x003BAC88), 0, 4), // nop cars gen
 	};
 }
 void inline SetPatchesState(bool state) { for (size_t i = 0; i < patches.size(); i++) { if (state) { patches[i].ApplyPatch(); } else { patches[i].RemovePatch(); } } }
@@ -493,8 +538,8 @@ void TeleportPlayer(CVector pos)
 {
 	CPed* pPed = EMUPOINTER<CPed*>(((CPlayerInfo*)CWorld_Players)[CWorld_PlayerInFocus].m_pPed);
 	CVehicle* pVehicle = EMUPOINTER<CVehicle*>(pPed ? pPed->m_pMyVehicle : null);
-	if (pVehicle) { SetCVector4VU(&pVehicle->CPhysical.CEntity.CPlaceable.m_pMat.pos, &pos); }
-	else if (pPed) { SetCVector4VU(&pPed->CPhysical.CEntity.CPlaceable.m_pMat.pos, &pos); }
+	if (pVehicle) { SetCVector4VU(&pVehicle->CPhysical.CEntity.CPlaceable.m_pMat.pos, &pos); } // todo TeleportEntity
+	else if (pPed) { SetCVector4VU(&pPed->CPhysical.CEntity.CPlaceable.m_pMat.pos, &pos); } // todo TeleportEntity
 }
 
 bool gbTeleportHold = false;
@@ -693,6 +738,18 @@ void ProcessPrekol(bool prekol)
 	c2 = c1;
 }
 
+void dump_debug_string_array(uintptr_t idaptr, int string_num)
+{
+	char* ptr = (char*)IDATRANSLATE(idaptr);
+	for (int i = 0; i < string_num; ++i)
+	{
+		int len = strlen(ptr);
+		//printf("String %2d: %.*s\n", i + 1, (int)len, ptr);
+		printf("%s\n", ptr);
+		ptr += len;
+		while (*ptr == '\0') { ++ptr; }
+	}
+}
 // Notes:
 // flags_E &= 0xFFFFFFFFFFFFFDFFui64;  turn off by1[bi1]  bUsesCollision = 0
 // flags_E |= ~0xFFFFF7FFFFFFFFFFui64; turn on  by5[bi3]  bIsStaticWaitingForCollision = 1
@@ -809,6 +866,10 @@ void OnKey(int mode)
 		//PatchMIPS();
 		RunTestSCM();
 
+		//dump_debug_string_array(0x4AB328, 71); // ped states
+		//dump_debug_string_array(0x4ACAF8, 40); // personality
+		//dump_debug_string_array(0x4B6588, 68); // sfx banks
+		
 		// dbg
 		CPlayerPed* pPlayer = FindPlayerPed();
 		int playerhandle = CPools_GetIndex(CPools_ms_pPedPool, pPlayer, 3360); // pool handle
@@ -1080,11 +1141,64 @@ void OnKey(int mode)
 void UpdNonSyncStuff()
 {
 	if (!can_update) { return; }
+	if (!FindPlayerPed()) { return; }
+	CVector pos = FindPlayerPos();
 	//return; //-------------------------------------
-
+	bool neednewline = false;
 	//printf("desc 0x%p\n", EMUPOINTER<tSample*>(SampleManager->n_pSampleDesc_stuff));
 	//printf("sfxgxt 0x%p\n", gAm_sfxgxt);
-	system("cls");
+	if(!(GetAsyncKeyState('K') & 0x8000)) system("cls");
+	printf("player: 0x%p\n", FindPlayerPed());
+	DUMPPOS(pos);
+	printf("CGame::currArea: %d\n", CGame_currArea);
+	printf("CWorld::ms_aSectors: 0x%p\n", CWorld_ms_aSectors);
+	CSector* s = GetSectorByPos(pos.x, pos.y);
+	if (s)
+	{
+		printf("sector: 0x%p\n", s);
+		//CPtrList list = s->m_buildingList; // type 1
+		//CPtrList list = s->m_buildingOverlapList; // type 1
+		//CPtrList list = s->m_vehicleList; // type 2
+		//CPtrList list = s->m_vehicleOverlapList; // type 2
+		//CPtrList list = s->m_pedList; // type 3
+		//CPtrList list = s->m_pedOverlapList; // type 3
+		//CPtrList list = s->m_objectList; // type 4
+		//CPtrList list = s->m_objectOverlapList; // type 4
+		//CPtrList list = s->unk1; // type 5 empire
+		//CPtrList list = s->unk2; // type 5?
+		//CPtrList list = s->m_dummyList; // type 6  (mi 578)
+		//CPtrList list = s->m_dummyOverlapList; // type 6 (mi 574)
+
+		//CPtrList list = s->m_multiplayerList; // type ?
+		CPtrList list = s->unk3; // type 1 (mi 318) pos 0 0 0
+
+
+		CPtrNode* first = EMUPOINTER<CPtrNode*>(list.first);
+		if (first) { printf("f: 0x%p\n", first); }
+		if (first && first->item)
+		{
+			while (first)
+			{
+				CEntity* pEntity = EMUPOINTER<CEntity*>(first->item);
+				printf("d: %d\n", pEntity->m_modelIndex);
+				printf("type: %d\n", GetEntityType(pEntity));
+				DUMPPOS(pEntity->CPlaceable.m_pMat.pos);
+
+				//MboxSTD("find");
+				//if ((GetAsyncKeyState('U') & 0x8000)) { TeleportEntity(pEntity, FindPlayerPos()); }
+				if ((GetAsyncKeyState('U') & 0x8000)) { TeleportPlayer(*(CVector*)&pEntity->CPlaceable.m_pMat.pos); break; }
+				first = first->next ? EMUPOINTER<CPtrNode*>(first->next) : null;
+			}
+		}
+		else { printf("!listelement\n"); }
+	}
+	else { printf("!sector\n"); }
+
+	if (0)
+	{
+		if (FindPlayerPed()) { printf("%d\n", FindPlayerPed()->CPed.m_nPedState); }
+		neednewline = true;
+	}
 
 	//if(0)
 	{
@@ -1103,28 +1217,32 @@ void UpdNonSyncStuff()
 		//DUMPSCRVAR(1576);
 
 		// audio slots
-		DUMPSCRARRAY(1542, 5); // flags 1 1 1 1 1  (1 free, 2loading??, 4 loaded/prepared4play, 8 playing)
 		//DUMPSCRSTRVAR(1547);
+		DUMPSCRARRAY(1542, 5); // flags 1 1 1 1 1  (1 free, 2loading??, 4 loaded/prepared4play, 8 playing)
 		DUMPSCRSTRARRAY(1547, 5); // sfx str
 		DUMPSCRSTRARRAY(1552, 5); // gxt str
 		DUMPSCRARRAY(1557, 5); // -99 ped handle
 		DUMPSCRARRAY(1562, 5); // 0 0 0 1 0 playing/busy flag
+		neednewline = true;
 	}
 
-	if(0)
+	if (neednewline) { printf("\n\n"); }
+	//if(0)
 	{
-		printf("+0x00\t\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->field_0[i]); } printf("]\n");
-		printf("+0x18\t\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->field_18[i]); } printf("]\n");
-		printf("+0x30 peds\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->unk[i]); } printf("]\n");
-		//printf("gxt\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->gxt[i]); } printf("]\n");
-		printf("+0x48 gxts\t["); for (size_t i = 0; i < 6; i++) { printf("0x%p ", EMUPOINTER<void*>(gAm_sfxgxt->gxt[i])); } printf("]\n");
-		printf("+0x60 \t\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->_0_field_60[i]); } printf("]\n");
-		//printf("len\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->len_field_74[i]); } printf("]\n");
-		printf("+0x78 \t\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->_1_field_78[i]); } printf("]\n");
-		printf("+0x90 len\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->sound_length[i]); } printf("]\n");
-		printf("+0xA8 \t\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->_0_field_A8[i]); } printf("]\n");
+		//printf("+0x00\t\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->field_0[i]); } printf("]\n");
+		//printf("+0x18\t\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->field_18[i]); } printf("]\n");
+		//printf("+0x30 peds\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->unk[i]); } printf("]\n");
+		////printf("gxt\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->gxt[i]); } printf("]\n");
+		//printf("+0x48 gxts\t["); for (size_t i = 0; i < 6; i++) { printf("0x%p ", EMUPOINTER<void*>(gAm_sfxgxt->gxt[i])); } printf("]\n");
+		//printf("+0x60 \t\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->_0_field_60[i]); } printf("]\n");
+		////printf("len\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->len_field_74[i]); } printf("]\n");
+		//printf("+0x78 \t\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->_1_field_78[i]); } printf("]\n");
+		//printf("+0x90 len\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->sound_length[i]); } printf("]\n");
+		//printf("+0xA8 \t\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->_0_field_A8[i]); } printf("]\n");
+		neednewline = true;
 	}
-	printf("\n\n");
+
+	if (neednewline) { printf("\n\n"); }
 	//for (size_t i = 0; i < 6; i++) {gAm_sfxgxt->unk[i] = 777; } // paused?
 	//for (size_t i = 0; i < 6; i++) {gAm_sfxgxt->_1_field_78[i] = 0; } //
 	//for (size_t i = 0; i < 6; i++) {gAm_sfxgxt->_0_field_60[i] = 1; } //
