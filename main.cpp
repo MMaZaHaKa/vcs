@@ -2,12 +2,15 @@
 #include <iostream>
 #include <stdio.h>
 #include <string>
+#include <sstream>
 #include <vector>
 #include <fstream>
 #include "mips.hpp"
 
 #include "hdr.h"
 #include "test.hpp"
+#include "AudioSamples.h"
+#include "tools/magic_enum/magic_enum.hpp"
 
 void SetColor(WORD wAttributes)
 {
@@ -115,11 +118,31 @@ template <typename T, typename R = uint32_t> R inline _stackcast(T v) { return *
     (((uint32_t) (x) & 0x00ff0000) >>  8) | \
     (((uint32_t) (x) & 0xff000000) >> 24) \
 ) // PS2 SDK
+// PDP-10 like byte functions
+#define MASK(p, s) (((1 << (s)) - 1) << (p))
+inline uint32_t dpb(uint32_t b, uint32_t p, uint32_t s, uint32_t w) { uint32_t m = MASK(p, s); return (w & ~m) | ((b << p) & m); } // Deposit Bit Field
+inline uint32_t ldb(uint32_t p, uint32_t s, uint32_t w) { return w >> p & (1 << s) - 1; } // Load Bit Field
 #define INRANGE(x,a,b) (x >= a && x <= b) // xarex1337
 #define getBits( x ) (INRANGE((x&(~0x20)),'A','F') ? ((x&(~0x20)) - 'A' + 0xa) : (INRANGE(x,'0','9') ? x - '0' : 0))
 #define getByte( x ) (getBits(x[0]) << 4 | getBits(x[1]))
 template<typename T> T inline EMUPOINTER(void* p) { return (T)(p ? PCSX2POINTER(p) : null); }
 template<typename T> T inline EMUPOINTER(uintptr_t p) { return EMUPOINTER<T>((void*)p); }
+
+// rw so funny :/
+#define LLLinkGetData(linkvar,type,entry) \
+    ((type*)(((uint8_t*)(linkvar))-offsetof(type,entry)))
+
+// Have to be careful since the link might be deleted.
+#define FORLIST(_link, _list) \
+	for(RwLLLink *_next = nil, *_link = (_list).link.next; \
+	_next = (_link)->next, (_link) != (_list).end(); \
+	(_link) = _next)
+
+#define PLUGINOFFSET(type, base, offset) \
+	((type*)((char*)(base) + (offset)))
+
+#define RWRGBAINT(r, g, b, a) ((uint32)((((a)&0xff)<<24)|(((b)&0xff)<<16)|(((g)&0xff)<<8)|((r)&0xff)))
+
 
 #define MYDLL_EXPORTS
 #define MAZAHAKA // PCSX2 ver 1.6.0 x86  SLUS-215.90
@@ -327,21 +350,41 @@ void U_SetCurrentDirectory()
 #define CTheCarGenerators_NumOfCarGenerators (*(uint32_t*)IDATRANSLATE(0x4CD620))
 
 #define gpStreaming ((char*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x489FF8)))
+#define gpModelIndices ((int16_t*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48A040))) // CModelIndices
 
 #define pEmpireHud ((CEmpireHud*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48F370)))
-// todo empire mgr
+#define EmpireMgr ((CEmpireMgr*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48F050)))
+#define EntryExitManager ((char*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48FF48)))
+
+#define CFont_Details ((void*)IDATRANSLATE(0x711F30)) // ?
+
+#define gpSkidTex ((void*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48A5B0)))
+#define currentTexDict ((void*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x4887B8)))
+
 #define SampleManager ((cSampleManager*)IDATRANSLATE(0x4CDA08))
 #define gAm_sfxgxt ((sMissionAudioManager*)IDATRANSLATE(0x4CDA40))
 #define TOTAL_AUDIO_SAMPLES 7721
+
+#define aEngineSounds ((tEngineSounds*)IDATRANSLATE(0x4A9538))
 
 #define TheCamera ((uint32_t*)IDATRANSLATE(0x6F44D0))
 //#define CMBlur_Drunkness ((float*)IDATRANSLATE(0x6F50A8)) // wrong. todo int32
 //#define CTimer_ms_fTimeScale ((float*)IDATRANSLATE(0x4CD168))
 
+//=================================================================================================== POOLS
+#define CPools_ms_pPtrNodePool ((CPool*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x487A8C))) // 12
+#define CPools_ms_pEntryInfoNodePool ((CPool*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x487A90))) // 20
 #define CPools_ms_pPedPool ((CPool*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x487A94))) // 3360
 #define CPools_ms_pVehiclePool ((CPool*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x487A98))) // 2240
+#define CPools_ms_pBuildingPool ((CPool*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x487A9C))) // 96
+#define CPools_ms_pTreadablePool ((CPool*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x487AA0))) // 96
+#define CPools_ms_pObjectPool ((CPool*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x487AA4))) // 544
+#define CPools_ms_pEmpirePool ((CPool*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x487AA8))) // 352
+#define CPools_ms_pDummyPool ((CPool*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x487AAC))) // 96
+#define CPools_ms_pAudioScriptObjectPool ((CPool*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x487AB0))) // 48
+#define CTexListStore_ms_pTexListPool ((CPool*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x489ECC))) // 28
 
-#define POOLFLAG_ID 0x7f
+#define POOLFLAG_ID 0x7F
 #define POOLFLAG_ISFREE 0x80
 // get entity by pool handle
 inline void* CPools_GetAt(CPool* p, int32_t h, int32_t maxe) { return (h == -1) ? null : ((uint8_t*)PCSX2POINTER(p->m_ByteMap))[h >> 8] == (h & 0xFF) ? &((uint8_t*)PCSX2POINTER(p->m_Objects))[(h >> 8) * maxe] : null; }
@@ -354,6 +397,10 @@ inline int CPools_GetIndex(CPool* p, void* pE, int32_t maxe) { int i = CPools_Ge
 // is slot free
 inline bool CPools_GetSlotIsFree(CPool* p, int32_t i) { return !!(((uint8_t*)PCSX2POINTER(p->m_ByteMap))[i] & POOLFLAG_ISFREE); }
 
+// pool handle system 2
+#define POOL_INDEX_MASK     0x7FFFFF
+#define POOLFLAG_BUILDING  0x1000000
+#define POOLFLAG_EMPIRE    0x0800000
 
 #define CTheScripts_aCommandsHandlers ((int64_t*)IDATRANSLATE(0x4BEAF0))
 #define CTheScripts_ScriptSpace ((char*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48741C))) // CScriptThread :)
@@ -368,6 +415,7 @@ bool& CSpecialFX_bLiftCam = *(bool*)IDATRANSLATE(0x481CD8);
 bool& CPad_bHasPlayerCheated = *(bool*)IDATRANSLATE(0x487A54);
 float& CTimer_ms_fTimeScale = *(float*)IDATRANSLATE(0x4CD168);
 int& CGame_currArea = *(int*)IDATRANSLATE(0x489F7C);
+int& CRenderer_ms_nNoOfVisibleEmpires = *(int*)IDATRANSLATE(0x4CD5A0);
 //int& CWorld_ms_aSectors[50][50] = *(int*)IDATRANSLATE();
 RwObjectNameIdAssocation** CVehicleModelInfo_ms_vehicleDescs = (RwObjectNameIdAssocation**)IDATRANSLATE(0x489E38); // size 10
 #elif defined(SLES_54622) 
@@ -411,13 +459,20 @@ CSector* GetSectorByPos(float wx, float wy) {
 	return GetSector(sectorX, sectorY);
 }
 int GetEntityType(CEntity* pEntity) { int m_type = ((pEntity->_CE_flags_E >> 1) & 0x07); return m_type; }
+void SetEntityType(CEntity* pEntity, int type) { pEntity->_CE_flags_E &= ~(0x07 << 1); pEntity->_CE_flags_E |= (type & 0x07) << 1; }
 int GetEntityStatus(CEntity* pEntity) { int m_status = ((pEntity->_CE_flags_E >> 4) & 0x0F) | ((pEntity->CE_flags_F & 0x01) << 4); return m_status; }
+void SetEntityStatus(CEntity* pEntity, int st)
+{ 
+	pEntity->_CE_flags_E &= ~(0x0F << 4); pEntity->_CE_flags_E |= (st & 0x0F) << 4; pEntity->CE_flags_F &= ~0x01; pEntity->CE_flags_F |= (st >> 4) & 0x01;
+}
+
 void TeleportEntity(CEntity* pE, CVector pos, bool updrw = true)
 {
 	//if (pE) { pE->CPlaceable.m_pMat.pos.x = pos.x; pE->CPlaceable.m_pMat.pos.y = pos.y; pE->CPlaceable.m_pMat.pos.z = pos.z; }
 	if (pE) { SetCVector4VU(&pE->CPlaceable.m_pMat.pos, &pos); }
 	if (pE && updrw && pE->CPlaceable.m_pMat.m_pRwMat) { SetRWV3D(&pE->CPlaceable.m_pMat.m_pRwMat->pos, &pos); } // todo update rw stuff
 }
+inline CBaseModelInfo* GetModelInfo(int index) { return EMUPOINTER<CBaseModelInfo*>(CModelInfo_ms_modelInfoPtrs[index]); }
 CPlayerPed* FindPlayerPed() { return EMUPOINTER<CPlayerPed*>(((CPlayerInfo*)CWorld_Players)[CWorld_PlayerInFocus].m_pPed); }
 CVehicle* FindPlayerVehicle() {
 	CPed* pPed = EMUPOINTER<CPed*>(((CPlayerInfo*)CWorld_Players)[CWorld_PlayerInFocus].m_pPed);
@@ -425,6 +480,21 @@ CVehicle* FindPlayerVehicle() {
 }
 CVector FindPlayerPos() { return FindPlayerPed() ? (*(CVector*)&FindPlayerPed()->CPed.CPhysical.CEntity.CPlaceable.m_pMat.pos) : CVector{0, 0, 0}; }
 
+const char* GetRwObjectDescByType(int objtype)
+{
+	switch (objtype) {
+	case rpFRAME: return "FRAME";
+	case rpATOMIC: return "ATOMIC";
+	case rpCLUMP: return "CLUMP";
+	case rpLIGHT: return "LIGHT";
+	case rpCAMERA: return "CAMERA";
+	case rp5: return "reserved";
+	case rpTEXDICTIONARY: return "TEXDICTIONARY";
+	case rpWORLD: return "WORLD";
+	case rpGEOMETRY: return "GEOMETRY";
+	default: return "Unknown case";
+	}
+}
 
 //void SwitchScriptMode(CRunningScript* pScript, bool turnoff = true) {
 //	if (pScript) {
@@ -508,8 +578,18 @@ void InitPatches()
 		//MemoryPatcher(IDATRANSLATE(0x00104D3C), 0, 4), // nop
 		//MemoryPatcher(IDATRANSLATE(0x003F41F8), 0, 0x003F4224 - 0x003F41F8), // nop
 
-		MemoryPatcher(IDATRANSLATE(0x003BAB44), 0, 4), // nop peds gen
-		MemoryPatcher(IDATRANSLATE(0x003BAC88), 0, 4), // nop cars gen
+		//MemoryPatcher(IDATRANSLATE(0x003BAB44), 0, 4), // nop peds gen
+		//MemoryPatcher(IDATRANSLATE(0x003BAC88), 0, 4), // nop cars gen
+
+		//MemoryPatcher(IDATRANSLATE(0x26BD34), 0, 4), // nop test menu draw empires
+		//MemoryPatcher(IDATRANSLATE(0x35D208), 0, 8), // empire bool
+		//MemoryPatcher(IDATRANSLATE(0x0035D16C), 0, 4), // empire ren1 (primary)
+		//MemoryPatcher(IDATRANSLATE(0x0035D21C), 0, 4), // empire ren2  (bool1) // окна
+		//MemoryPatcher(IDATRANSLATE(0x0035D208), 0, 4*2), // empire ren bool not
+		//MemoryPatcher(IDATRANSLATE(0x0035D0BC), 0, 4*3), // empire geo2mat cb zero nop  // не заметил
+
+		//MemoryPatcher(IDATRANSLATE(0x003F3C3C), 0, 0x003F3D08 - 0x003F3C3C), // fonts reset
+		//MemoryPatcher(IDATRANSLATE(0x003F4478), 0, 0x003F448C - 0x003F4478), // fonts setcol3
 	};
 }
 void inline SetPatchesState(bool state) { for (size_t i = 0; i < patches.size(); i++) { if (state) { patches[i].ApplyPatch(); } else { patches[i].RemovePatch(); } } }
@@ -757,7 +837,7 @@ void dump_debug_string_array(uintptr_t idaptr, int string_num)
 // if (((flags_E >> 15) & 1) == 0) by1[bi7] if(!bIsInSafePosition)
 
 /* 575 */
-enum CE_flags_F // bitpos for SET_BIT
+enum CE_flagsnum_F // bitpos for SET_BIT
 {
 	CE_flags_F_0 = 0,
 	bUsesCollision = 1,
@@ -770,7 +850,7 @@ enum CE_flags_F // bitpos for SET_BIT
 };
 
 /* 576 */
-enum CP_flags_J // bitpos for SET_BIT
+enum CP_flagsnum_J // bitpos for SET_BIT
 {
 	CP_flags_J_0 = 0x0,
 	CP_flags_J_1 = 0x1,
@@ -839,23 +919,99 @@ void EmpireTest(int mode)
 	}
 }
 
+bool HW()
+{
+	//int& CRenderer_ms_nNoOfVisibleEmpires = *(int*)IDATRANSLATE(0x4CD5A0);
 
+	//*(int*)IDATRANSLATE(0x48A1DC) = 2; // bank
+	//*(int*)IDATRANSLATE(0x48A1E0) = 1; // bool mode unk
+	//*(float*)IDATRANSLATE(0x48A1E4) = 2.0f; // scale
+	//*(int*)IDATRANSLATE(0x48A1E8) = 0; // растояние widemodestuff
+	//*(int*)IDATRANSLATE(0x48A1EC) = 1; // centre
+	//*(int*)IDATRANSLATE(0x48A200) = 10; // unk
+
+	//return true;
+	return false;
+}
+
+static std::unordered_map<int, std::string> modelNames;
+void LoadModelNames(const char* filename) {
+	std::ifstream f(filename);
+	if (!f.is_open()) {
+		std::cerr << "Failed to open " << filename << "\n";
+		return;
+	}
+	std::string line;
+	while (std::getline(f, line)) {
+		std::istringstream iss(line);
+		int id;
+		std::string name;
+		if (iss >> id >> name) {
+			modelNames[id] = name;
+		}
+	}
+}
 
 bool tmp = false;
 bool tmp2 = false;
 bool tmp3 = false;
 bool tmp4 = false;
-bool can_update = true;
+bool can_update = false;
 int itmp = 0;
-void OnKey(int mode)
+bool OnKey(int mode) // ret bool isallowhold
 {
-	if (!IsCurrentProcessWindowIsFocused()) { return; }
+	if (!IsCurrentProcessWindowIsFocused()) { return false; }
 	switch (mode)
 	{
 	case 0:
 	{
+		if (HW()) { return true; }
+		//CRenderer_ms_nNoOfVisibleEmpires = 0;
+		//return true; // allow hold
+
+		//for (int32_t i = CTexListStore_ms_pTexListPool->m_nSize - 1; i >= 0; i--)
+		//{
+		//	TxdDef* def = (TxdDef*)CPools_GetSlot(CTexListStore_ms_pTexListPool, i, 28);
+		//	RwTexDictionary* rwtex = EMUPOINTER<RwTexDictionary*>(def ? def->texDict : null);
+		//	//if (def && def->texDict)
+		//	if (rwtex)
+		//	{
+		//		printf("tex %d: RwTexDictionary 0x%p\n", i, rwtex);
+		//	}
+		//}
+		//return false;
+
+		//for (int32_t i = CPools_ms_pEmpirePool->m_nSize - 1; i >= 0; i--)
+		//{
+		//	CEntity* e = (CEntity*)CPools_GetSlot(CPools_ms_pEmpirePool, i, 352);
+		//	if (e)
+		//	{
+		//		//SetEntityType(e, 6);
+		//		printf("i %d: pe 0x%p mi %d  type %d\n", i, e, e->m_modelIndex, GetEntityType(e)); // 5
+		//	}
+		//}
+		//return false;
+
+		for (int32_t i = 0; i < CModelInfo_msNumModelInfos; i++)
+		{
+			CBaseModelInfo* mi = GetModelInfo(i); 
+
+			//if (mi) { printf("%d %s\n", i, mi->m_name); continue; }
+			//else { continue; }
+
+			if (mi)
+			{
+				//printf("%d  0x%p type: %d\n", i, mi, mi->m_type);
+				//printf("%d  0x%p e_enex: %d\n", i, mi, mi->e_enex); // enex
+				//mi->e_enex = -1;
+				//mi->e_enex = 9; // 0
+
+			}
+		}
+
+
 		tmp3 = !tmp3;
-		can_update = !can_update;
+		////////////////////////////////////////////////////////can_update = !can_update;
 		//printf("[SPAWNER]: Enter type mi: ");
 		//scanf("%hhu %hhu", &tmppedspawntype, &tmppedspawnmi);
 
@@ -866,6 +1022,112 @@ void OnKey(int mode)
 		//PatchMIPS();
 		RunTestSCM();
 
+		if ((GetAsyncKeyState('U') & 0x8000)) { TeleportPlayer({ -932.3f, -1082.5f, 14.4f }); }
+
+		CBaseModelInfo* mi = GetModelInfo(7508); // (empires) 7508, 7436, 7520, 7443, 7436
+		if (mi) { printf("%d 0x%p\n", 7508, &mi->m_name); }
+
+		printf("gpModelIndices: 0x%p\n", gpModelIndices);
+
+		//LoadModelNames("C:\\ide_output.txt");
+		//printf("parsed: %d\n", modelNames.size());
+		//for (int i = 0; i < 300; i++)
+		//{
+		//	//if (gpModelIndices[i] > 0 && gpModelIndices[i] >= CModelInfo_msNumModelInfos) { break; }
+
+		//	if (gpModelIndices[i] > 0 && gpModelIndices[i] < CModelInfo_msNumModelInfos)
+		//	{
+		//		auto it = modelNames.find(gpModelIndices[i]);
+		//		if (it != modelNames.end())
+		//		{
+		//			const char* name = it->second.c_str();
+		//			printf("__int16 MI_%d_%s;\n", gpModelIndices[i], name);
+		//		}
+		//		else
+		//		{
+		//			printf("__int16 MI_%d;\n", gpModelIndices[i]);
+		//		}
+		//	}
+		//	else if (gpModelIndices[i] == -1) { printf("__int16 MI_MINUS_N%d;\n", i); }
+		//	else if (gpModelIndices[i] == 0) { printf("__int16 MI_%d;\n", gpModelIndices[i]); }
+		//	else
+		//	{
+		//		break;
+		//	}
+
+		//	//if (gpModelIndices[i] <= 0) { printf("-------------------------------------------------\n"); }
+		//	//printf("gpModelIndices[%d]: %d\n", i, gpModelIndices[i]);
+		//	//if(gpModelIndices[i] == -1) { printf("__int16 MI_MINUS_N%d;\n", i); }
+		//	//else { printf("__int16 MI_%d;\n", gpModelIndices[i]); }
+		//}
+		//printf("\n");
+
+
+
+		//printf("# sounds [ID, AccelerationSampleIndex, Bank, HornSample, HornFrequency, SirenOrAlarmSample, SirenOrAlarmFrequency, DoorType]\n\n");
+		//FILE* file = fopen("C:\\Users\\Zver\\Desktop\\vehaudio.txt", "w");
+		//std::vector<std::string> names = FileReadAllLines("C:\\NAMES.txt");
+		//printf("names %d\n", names.size());
+		//int fmi = 170;
+		//for (int32_t i = 0; i < CModelInfo_msNumModelInfos; i++)
+		//{
+		//	CBaseModelInfo* mi = GetModelInfo(i); 
+
+		//	//if (mi) { printf("%d %s\n", i, mi->m_name); continue; }
+		//	//else { continue; }
+
+		//	if (mi)
+		//	{
+		//		//printf("%d  0x%p type: %d\n", i, mi, mi->m_type);
+		//		switch (mi->m_type)
+		//		{
+		//		case MITYPE_VEHICLE:
+		//		{
+		//			CVehicleModelInfo* vmi = (CVehicleModelInfo*)mi;
+		//			//printf("%d  0x%p type: %d\n", i, mi, mi->m_type);
+		//			//printf("mi: %d\n", i);
+		//			//printf("%d, %d, %d, %d, %d, %d, %d, %d\n",
+		//			//printf("%d,\t%d,\t%d,\t%d,\t%d,\t%d,\t%d,\t%d\n",
+		//			//	i,
+		//			//	vmi->m_nAccelerationSampleIndex,
+		//			//	vmi->m_nBank,
+		//			//	vmi->m_nHornSample,
+		//			//	vmi->m_nHornFrequency,
+		//			//	vmi->m_nSirenOrAlarmSample,
+		//			//	vmi->m_nSirenOrAlarmFrequency,
+		//			//	vmi->m_bDoorType);
+		//			printf("%d %s\n", i, names[i - fmi].c_str());
+		//			//fprintf(file, "%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", i,
+		//			fprintf(file, "%s\t\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", names[i - fmi].c_str(),
+		//				vmi->m_nAccelerationSampleIndex,
+		//				vmi->m_nBank,
+		//				vmi->m_nHornSample,
+		//				vmi->m_nHornFrequency,
+		//				vmi->m_nSirenOrAlarmSample,
+		//				vmi->m_nSirenOrAlarmFrequency,
+		//				vmi->m_bDoorType);
+
+		//			//vmi->m_nHornFrequency = 24000;
+		//			break;
+		//		}
+		//		case MITYPE_PED:
+		//		{
+
+		//			break;
+		//		}
+		//		}
+		//	}
+		//}
+		//fclose(file);
+
+		//int cnt_enginesets = 25;
+		//for (size_t i = 0; i < cnt_enginesets; i++)
+		//{
+		//	printf("%s, %s\n", ((std::string)magic_enum::enum_name((eSfxSample)(aEngineSounds[i].val1))).c_str(),
+		//		((std::string)magic_enum::enum_name((eSfxSample)(aEngineSounds[i].val2))).c_str());
+		//}
+
+
 		//dump_debug_string_array(0x4AB328, 71); // ped states
 		//dump_debug_string_array(0x4ACAF8, 40); // personality
 		//dump_debug_string_array(0x4B6588, 68); // sfx banks
@@ -875,17 +1137,17 @@ void OnKey(int mode)
 		int playerhandle = CPools_GetIndex(CPools_ms_pPedPool, pPlayer, 3360); // pool handle
 		printf("player : 0x%p handle %d\n\n", pPlayer, playerhandle);
 
-		for (int32_t i = CPools_ms_pPedPool->m_nSize - 1; i >= 0; i--)
-		{
-			CPed* pPed = (CPed*)CPools_GetSlot(CPools_ms_pPedPool, i, 3360);
-			int index = CPools_GetJustIndex(CPools_ms_pPedPool, pPed, 3360); // array index (slot)
-			int handle = CPools_GetIndex(CPools_ms_pPedPool, pPed, 3360); // pool handle
-			CPed* pTesteddd = (CPed*)CPools_GetAt(CPools_ms_pPedPool, handle, 3360);
-			bool isFree = CPools_GetSlotIsFree(CPools_ms_pPedPool, index);
-			//printf("i: %d  handle %d isfree %d\n", i, handle, isFree);
-			printf("ped[%d]: handle %d isfree %d 0x%p health %f\n\n", i, handle, isFree, pTesteddd, pTesteddd->m_fHealth);
-			//if(!isFree) pTested->m_fHealth = 0.0f;
-		}
+		//for (int32_t i = CPools_ms_pPedPool->m_nSize - 1; i >= 0; i--)
+		//{
+		//	CPed* pPed = (CPed*)CPools_GetSlot(CPools_ms_pPedPool, i, 3360);
+		//	int index = CPools_GetJustIndex(CPools_ms_pPedPool, pPed, 3360); // array index (slot)
+		//	int handle = CPools_GetIndex(CPools_ms_pPedPool, pPed, 3360); // pool handle
+		//	CPed* pTesteddd = (CPed*)CPools_GetAt(CPools_ms_pPedPool, handle, 3360);
+		//	bool isFree = CPools_GetSlotIsFree(CPools_ms_pPedPool, index);
+		//	//printf("i: %d  handle %d isfree %d\n", i, handle, isFree);
+		//	printf("ped[%d]: handle %d isfree %d 0x%p health %f\n\n", i, handle, isFree, pTesteddd, pTesteddd->m_fHealth);
+		//	//if(!isFree) pTested->m_fHealth = 0.0f;
+		//}
 		//DUMPSCRVAR(1568); // on off
 		//DUMPSCRVAR(1571); // num
 		//DUMPSCRVAR(1572+0); // handles recruit
@@ -894,6 +1156,8 @@ void OnKey(int mode)
 		//DUMPSCRVAR(1575);
 		//DUMPSCRVAR(1576);
 		//printf("\n");
+
+
 
 		// tester ped handles
 		int pedh = 0;
@@ -910,8 +1174,13 @@ void OnKey(int mode)
 		}
 		else { printf("!!!!!!not found\n"); }
 
-		printf("desc 0x%p\n", EMUPOINTER<tSample*>(SampleManager->n_pSampleDesc_stuff));
+		tSample* pSamples = EMUPOINTER<tSample*>(SampleManager->m_aSamples);
+		printf("SampleManager 0x%p\n", SampleManager);
+		printf("SampleManager m_aSamples 0x%p\n", pSamples);
 		printf("sfxgxt 0x%p\n", gAm_sfxgxt);
+
+
+
 
 		//printf("[");
 		//for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->field_0[i]); }
@@ -928,7 +1197,7 @@ void OnKey(int mode)
 		//	//EMUPOINTER<tSample*>(SampleManager->n_pSamplesDesc)[i] = tmp;
 		//}
 
-		return;
+		return false;
 		//---------------------------------------------------------------------------------------------------------------------------------------
 		printf("\n");
 		const char* desc[] = { "carIds", "boatIds", "jetskiIds", "trainIds", "heliIds", "planeIds", "bikeIds", "ferryIds", "bmxIds", "quadIds" };
@@ -1080,7 +1349,17 @@ void OnKey(int mode)
 
 		printf("pinfpPED: 0x%p\n", pPed);
 		printf("pinfpPEDVEHICLE: 0x%p\n", pVehicle);
-		printf("empireinst: 0x%p\n", (PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48FF48))));
+		//printf("empireinst: 0x%p\n", (PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48FF48)))); // ?
+		printf("EntryExitManager: 0x%p\n", EntryExitManager);
+		printf("gpSkidTex: 0x%p\n", gpSkidTex);
+		printf("currentTexDict: 0x%p\n", currentTexDict);
+		printf("CFont::Details: 0x%p\n", CFont_Details);
+		printf("EmpireMgr: 0x%p\n", EmpireMgr);
+		printf("EmpireMgr->m_pEmpires: 0x%p\n", EMUPOINTER<void*>(EmpireMgr->m_pEmpiresInfos));
+		//printf("EmpireMgr->pointer_field_14: 0x%p\n", EMUPOINTER<void*>(EmpireMgr->pointer_field_14));
+		//printf("EmpireMgr->pointer_field_1C: 0x%p\n", EMUPOINTER<void*>(EmpireMgr->pointer_field_1C));
+		//printf("EmpireMgr+0x10: 0x%p\n", EmpireMgr+0x10);
+		//printf("EmpireMgr+0x144: 0x%p\n", EmpireMgr+0x144);
 
 		printf("vehp: 0x%p\n", pVehicle?((uintptr_t)pVehicle+0x160):null);
 		printf("gpStreaming: 0x%p\n", gpStreaming);
@@ -1147,7 +1426,7 @@ void UpdNonSyncStuff()
 	bool neednewline = false;
 	//printf("desc 0x%p\n", EMUPOINTER<tSample*>(SampleManager->n_pSampleDesc_stuff));
 	//printf("sfxgxt 0x%p\n", gAm_sfxgxt);
-	if(!(GetAsyncKeyState('K') & 0x8000)) system("cls");
+	if(!(GetAsyncKeyState(VK_CONTROL) & 0x8000)) system("cls");
 	printf("player: 0x%p\n", FindPlayerPed());
 	DUMPPOS(pos);
 	printf("CGame::currArea: %d\n", CGame_currArea);
@@ -1164,30 +1443,79 @@ void UpdNonSyncStuff()
 		//CPtrList list = s->m_pedOverlapList; // type 3
 		//CPtrList list = s->m_objectList; // type 4
 		//CPtrList list = s->m_objectOverlapList; // type 4
-		//CPtrList list = s->unk1; // type 5 empire
-		//CPtrList list = s->unk2; // type 5?
+		CPtrList list = s->empire; // type 5 empire
+		//CPtrList list = s->empireover; // type 5? empire over
 		//CPtrList list = s->m_dummyList; // type 6  (mi 578)
 		//CPtrList list = s->m_dummyOverlapList; // type 6 (mi 574)
 
-		//CPtrList list = s->m_multiplayerList; // type ?
-		CPtrList list = s->unk3; // type 1 (mi 318) pos 0 0 0
+		//CPtrList list = s->m_multiplayerList; // type 7?
+		//CPtrList list = s->unk3; // type 1 (mi 318) pos 0 0 0
 
 
 		CPtrNode* first = EMUPOINTER<CPtrNode*>(list.first);
-		if (first) { printf("f: 0x%p\n", first); }
+		if (first) { printf("first pointer: 0x%p\n", first); }
 		if (first && first->item)
 		{
 			while (first)
 			{
 				CEntity* pEntity = EMUPOINTER<CEntity*>(first->item);
-				printf("d: %d\n", pEntity->m_modelIndex);
-				printf("type: %d\n", GetEntityType(pEntity));
+				CBaseModelInfo* mi = GetModelInfo(pEntity->m_modelIndex);
+				printf("modelindex: %d\n", pEntity->m_modelIndex); // empire 0  mi 7436 type 5  status 4
+				printf("entity enex id: %d\n", mi ? mi->e_enex : -1);
+				printf("entity mi: 0x%p\n", mi);
+				printf("entity type: %d\n", GetEntityType(pEntity)); // (empires) 7508, 7436, 7520, 7443, 7436
+				printf("entity status: %d\n", GetEntityStatus(pEntity));
 				DUMPPOS(pEntity->CPlaceable.m_pMat.pos);
 
+				// RW RSL test
+				/*RwObject* rwo = EMUPOINTER<RwObject*>(pEntity->m_rwObject);
+				if (rwo)
+				{
+					//printf("rwobj type id: %d %s\n", rwo->type, rwo->type == rpATOMIC ? "atomic" : "clump");
+					printf("rwobj type id: %d (%s)\n", rwo->type, GetRwObjectDescByType(rwo->type));
+
+					switch (rwo->type)
+					{
+					case rpATOMIC:
+					{
+						RpAtomic* rwa = (RpAtomic*)rwo;
+						RpGeometry* geo = EMUPOINTER<RpGeometry*>(rwa->geometry);
+						printf("geo: 0x%p\n", geo);
+						for (int i = 0; i < geo->matList.numMaterials; i++)
+						{
+							RpMaterial* prp = EMUPOINTER<RpMaterial*>(EMUPOINTER<RpMaterial**>(geo->matList.materials)[i]);
+							printf("mat[%d] (num %d): 0x%p\n", i, geo->matList.numMaterials, prp);
+							//EMUPOINTER<RpMaterial**>(geo->matList.materials)[i] = null;
+							//prp->texture = null;
+							//prp->color = { 255,0,0,255 };
+							if (prp && prp->unk2) { printf("----------------------------\n0x%p\n\n", prp->unk2); }
+						}
+						//FORLIST(lnk, clump->atomics)
+						//{
+						//}
+
+						break;
+					}
+					case rpCLUMP:
+					{
+						RpClump* rwc = (RpClump*)rwo;
+
+						break;
+					}
+					default:
+					{
+
+						break;
+					}
+					}
+
+				}*/
+
 				//MboxSTD("find");
-				//if ((GetAsyncKeyState('U') & 0x8000)) { TeleportEntity(pEntity, FindPlayerPos()); }
+				//if ((GetAsyncKeyState('U') & 0x8000)) { TeleportEntity(pEntity, FindPlayerPos()); break; }
 				if ((GetAsyncKeyState('U') & 0x8000)) { TeleportPlayer(*(CVector*)&pEntity->CPlaceable.m_pMat.pos); break; }
-				first = first->next ? EMUPOINTER<CPtrNode*>(first->next) : null;
+				first = EMUPOINTER<CPtrNode*>(first->next);
+				printf("\n");
 			}
 		}
 		else { printf("!listelement\n"); }
@@ -1200,7 +1528,7 @@ void UpdNonSyncStuff()
 		neednewline = true;
 	}
 
-	//if(0)
+	if(0)
 	{
 		//system("cls"); for (size_t i = 0; i < 106; i++) { printf("%d ", CTheScripts_pActiveScripts->m_anLocalVariables[i]); } printf("\n");
 		//printf("SCR_%d: %d\n", 5375, *SCRVAR(5375));
@@ -1227,7 +1555,7 @@ void UpdNonSyncStuff()
 	}
 
 	if (neednewline) { printf("\n\n"); }
-	//if(0)
+	if(0)
 	{
 		//printf("+0x00\t\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->field_0[i]); } printf("]\n");
 		//printf("+0x18\t\t["); for (size_t i = 0; i < 6; i++) { printf("%d ", gAm_sfxgxt->field_18[i]); } printf("]\n");
@@ -1277,23 +1605,23 @@ void PluginLoop()
 	//bool f8 = (GetAsyncKeyState(VK_F8) & 0x8000); // screenshot
 	if (key && !gbKeyHold)
 	{
-		OnKey(0); // glass
-		gbKeyHold = true;
+		bool allowhold = OnKey(0); // glass
+		if (!allowhold) { gbKeyHold = true; }
 	}
 	else if (key2 && !gbKeyHold)
 	{
-		OnKey(1);
-		gbKeyHold = true;
+		bool allowhold = OnKey(1);
+		if (!allowhold) { gbKeyHold = true; }
 	}
 	else if (key3 && !gbKeyHold)
 	{
-		OnKey(2);
-		gbKeyHold = true;
+		bool allowhold = OnKey(2);
+		if (!allowhold) { gbKeyHold = true; }
 	}
 	else if (d && !gbKeyHold)
 	{
-		OnKey(3);
-		gbKeyHold = true;
+		bool allowhold = OnKey(3);
+		if (!allowhold) { gbKeyHold = true; }
 	}
 	else if (o && !gbKeyHold)
 	{
@@ -1302,7 +1630,7 @@ void PluginLoop()
 	}
 	else if (!key && !key2 && !key3 && !o && !d) { gbKeyHold = false; }
 
-	GeneratorTeleporterTick();
+	//GeneratorTeleporterTick();
 	if (tmp3) { EmpireTest(1); }
 	UpdNonSyncStuff();
 	patch<uint32_t>(SCRVAR(5547), 0); // PHI_A2 float

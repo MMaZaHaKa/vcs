@@ -190,6 +190,7 @@ struct CPlaceable
 	CMatrix m_pMat;
 };
 
+struct RpAtomic;
 /* 478 */
 struct CEntity
 {
@@ -206,7 +207,7 @@ struct CEntity
 	char CE_flags_J;
 	char CE_flags_K;
 	char CE_flags_L;
-	int m_rwObject;
+	RpAtomic* m_rwObject;
 	__int16 m_scanCode;
 	__int16 m_modelIndex;
 	char _field_58[2];
@@ -705,18 +706,6 @@ struct CColModel
 	int trianglePlanes;
 };
 
-/* 526 */
-struct __declspec(align(1)) CBaseModelInfo
-{
-	int field_0;
-	int field_4;
-	int val_field_8;
-	int pointer_possiblename_field_C;
-	int bytes_field_10;
-	CColModel* m_colModel;
-	char field_18[777];
-};
-
 
 /* 583 */
 struct tHudElementInfo
@@ -777,6 +766,45 @@ struct CEmpireHud
 	int texListRefCount;
 };
 
+/* 500 */
+struct CEmpireBuildingInfo
+{
+	int m_nOwnerId;
+	int m_nBusinessType;
+	int m_nScaleLevel;
+	int m_nCondition;
+	int m_nBuildingState;
+	int m_nCurrentModelIndex;
+	int m_bUseLODModel;
+	int m_bUseExtendedScale;
+	float m_fHeading;
+	char _pad_field_24[12];
+	CVectorVU_align16 m_vecPos;
+	int m_prevUseLODModel;
+	CEntity* pEmpireEntity; // tmp
+	CEntity* pEmpireEntityLOD; // tmp
+	int m_nNameHash;
+	int _pad_field_50;
+};
+
+/* 499 */
+struct CEmpireMgr // todo check pool logic
+{
+	int pointer_prev_field_0;
+	int pointer_next_field_4;
+	int vftable;
+	int m_nEmpiresCount;
+	CEmpireBuildingInfo* m_pEmpiresInfos;
+	void* m_pEmpireList; // unk todo
+	int _pad_field_18;
+	void* m_pEmpireListEnd; // unk todo
+	int m_nearModelIndices[42];
+	int m_farModelIndices[21];
+	int m_pendingRequestModelIndex;
+	int m_aColors[9];
+	char m_ownerIdList[12];
+};
+
 struct RwObjectNameIdAssocation
 {
 	const char* name;
@@ -800,7 +828,7 @@ struct __declspec(align(1)) cSampleManager
 	char field_7;
 	char field_8;
 	char field_9[11];
-	tSample* n_pSampleDesc_stuff;
+	tSample* m_aSamples;
 	char field_18[77777];
 };
 
@@ -846,8 +874,8 @@ struct CSector // (14) todo m_empireList  m_empireOverlapList
 	CPtrList m_multiplayerList;
 	CPtrList m_objectList;
 	CPtrList m_objectOverlapList;
-	CPtrList unk1;
-	CPtrList unk2;
+	CPtrList empire;
+	CPtrList empireover;
 	CPtrList m_vehicleList;
 	CPtrList m_vehicleOverlapList;
 	CPtrList m_pedList;
@@ -860,14 +888,245 @@ struct CSector // (14) todo m_empireList  m_empireOverlapList
 
 
 
+struct tEngineSounds
+{
+	int val1;
+	int val2;
+};
+
+/* 628 */
+enum ModelInfoType
+{
+	MITYPE_NA = 0,
+	MITYPE_SIMPLE = 1,
+	MITYPE_MLO = 2,
+	MITYPE_TIME = 3,
+	MITYPE_WEAPON = 4,
+	MITYPE_CLUMP = 5,
+	MITYPE_VEHICLE = 6,
+	MITYPE_PED = 7,
+	MITYPE_XTRACOMPS = 8,
+	MITYPE_HAND = 9,
+};
+
+/* 526 */
+struct CBaseModelInfo
+{
+	int m_unkTimers[2];
+	char* m_name;
+	int m_chunk;
+	char m_type;
+	char field_11;
+	char field_12;
+	char field_13;
+	CColModel* m_colModel;
+	__int16 field_18;
+	__int16 field_1A;
+	__int16 m_refCount;
+	__int16 field_1E;
+	__int16 e_enex;
+	char field_22[2];
+	int* vftable_MLO;
+};
+
+/* 620 */
+struct CElementGroupModelInfo_CClumpModelInfo
+{
+	CBaseModelInfo CBaseModelInfo;
+	int m_clump;
+	int m_animFileIndexOrName;
+};
+
+/* 629 */
+struct CVehicleModelInfo
+{
+	CElementGroupModelInfo_CClumpModelInfo CElementGroupModelInfo;
+	char field_30[8];
+	void* pHandling;
+	int usespBikeHandlingcquad__field_3C;
+	void* pFlyingHandling;
+	int field_44;
+	char field_48[4];
+	int field_4C;
+	float m_normalSplay;
+	int m_vehicleType;
+	float m_wheelScale;
+	int field_5C;
+	CVectorVU_align16 m_positions[15];
+	char field_150[4];
+	int m_steerAngle;
+	char m_gameName[9];
+	char m_numColours;
+	char field_162[34];
+	char field_184;
+	char field_185;
+	char field_186;
+	char m_currentColour1;
+	char field_188;
+	char field_189;
+	char field_18A;
+	char m_currentColour2;
+	int possible_m_materials1_field_18C[30];
+	int possible_m_materials2_field_204[25];
+	int** m_comps;
+	int m_animFileIndexOrName;
+	char field_270[7];
+	char m_numComps;
+	char field_278[12];
+	int m_nAccelerationSampleIndex;
+	char m_nBank;
+	char _field_289[3];
+	int m_nHornSample;
+	int m_nHornFrequency;
+	int m_nSirenOrAlarmSample;
+	int m_nSirenOrAlarmFrequency;
+	char m_bDoorType;
+	char _field_29D[3];
+};
+
+/* 660 */
+struct RwTexDictionary
+{
+	int field_0;
+	int field_4;
+	int ptr_field_8;
+	int ptr_field_C;
+	char CCCC_field_10[16];
+};
+
+
+/* 659 */
+struct TxdDef
+{
+	RwTexDictionary* texDict;
+	__int16 refCount;
+	__int16 refCountGu;
+	char name[20];
+};
 
 
 
+//========================================== rw
+
+/* 669 */
+enum RwObjectType
+{
+	rpFRAME = 0,
+	rpATOMIC = 1,
+	rpCLUMP = 2,
+	rpLIGHT = 3,
+	rpCAMERA = 4,
+	rp5 = 5,
+	rpTEXDICTIONARY = 6,
+	rpWORLD = 7,
+	rpGEOMETRY = 8,
+};
 
 
+struct RwLinkList;
+/* 235 */
+struct __declspec(align(4)) RwLLLink
+{
+	RwLinkList* next;
+	RwLinkList* prev;
+};
 
+/* 150 */
+struct RwLinkList
+{
+	RwLLLink link;
+};
 
+/* 540 */
+struct RwObject
+{
+	char type;
+	char subType;
+	char flags;
+	char privateFlags;
+	RwObject* parent;
+};
 
+/* 645 */
+struct RwObjectHasFrame
+{
+	RwObject object;
+	RwLLLink lFrame;
+	int sync;
+};
+
+/* 541 */
+struct RpClump
+{
+	RwObject object;
+	RwLinkList atomicList;
+	RwLinkList field_10;
+	int anim_data_field_18;
+};
+
+/* 646 */
+struct RwRaster
+{
+	int field_0;
+	int field_4;
+	int possible_pixels_ptr_field_8;
+	int field_C;
+	int ptr_field_10;
+	int ptr_field_14;
+	int ptr_field_18;
+	int ptr_field_1C;
+};
+
+/* 564 */
+struct RwTexture
+{
+	RwRaster* raster;
+	int dict;
+	RwLLLink lInDictionary;
+	char name[32];
+	char mask[32];
+	int refCount;
+	int field_54;
+};
+
+/* 631 */
+struct RpMaterial
+{
+	RwTexture* texture;
+	CRGBA color;
+	__int16 refCount;
+	__int16 pad;
+	int unk2;
+};
+
+/* 648 */
+struct RpMaterialList
+{
+	RpMaterial** materials;
+	int numMaterials;
+	int space;
+};
+
+/* 644 */
+struct RpGeometry
+{
+	RwObject object;
+	__int16 refCount;
+	__int16 field_A;
+	RpMaterialList matList;
+	int field_18;
+};
+
+/* 643 */
+struct __declspec(align(1)) RpAtomic
+{
+	RwObjectHasFrame object;
+	RpGeometry* geometry;
+	char field_18[18];
+	__int16 flags_field_2A;
+	char field_2C[4];
+	int field_30;
+};
 
 
 
