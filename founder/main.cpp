@@ -11,6 +11,8 @@
 #include <regex>
 #include <sstream>
 #include <iomanip>
+#include <unordered_map>
+#include <unordered_set>
 
 HANDLE InitConsole() // with proto
 {
@@ -623,45 +625,178 @@ int main()
     //    return 0;
     //}
 
-    //{ // cmp test
-    //    std::vector<FuncNodeDB> vcsfL = ParseIdaFuncs("vcs.c");
-    //    printf("vcs: %d\n", vcsfL.size());
-    //    std::vector<FuncNodeDB> lcsfL = ParseIdaFuncs("lcs.c");
-    //    printf("lcs: %d\n", lcsfL.size());
-    //    // :/ temp
-    //    std::vector<std::string> vcsNamesLower;
-    //    std::vector<std::string> vcsNamesOriginal;
-    //    for (const auto& func : vcsfL) {
-    //        std::string name = RemoveDoubleSpacesAndTabs(func.name, true);
-    //        if (name[0] == '*') { name = name.substr(1); }
-    //        vcsNamesOriginal.push_back(name);
-    //        std::transform(name.begin(), name.end(), name.begin(), ::tolower);
-    //        vcsNamesLower.push_back(name);
-    //    }
-    //    std::vector<std::string> lcsNamesLower;
-    //    std::vector<std::string> lcsNamesOriginal;
-    //    for (const auto& func : lcsfL) {
-    //        std::string name = RemoveDoubleSpacesAndTabs(func.name, true);
-    //        if (name[0] == '*') { name = name.substr(1); }
-    //        lcsNamesOriginal.push_back(name);
-    //        std::transform(name.begin(), name.end(), name.begin(), ::tolower);
-    //        lcsNamesLower.push_back(name);
-    //    }
-    //    std::cout << "Functions in lcs but not in vcs: \n\n\n";
-    //    std::string clipboardText;
-    //    for (size_t i = 0; i < lcsNamesLower.size(); ++i) {
-    //        if (std::find(vcsNamesLower.begin(), vcsNamesLower.end(), lcsNamesLower[i]) == vcsNamesLower.end())
-    //        {
-    //            //if ((lcsNamesLower[i].rfind("sub_", 0) == 0) || (lcsNamesLower[i].rfind("*sub_", 0) == 0)) { continue; }
-    //            if ((lcsNamesLower[i].rfind("sub_", 0) == 0)) { continue; }
-    //            if (lcsNamesLower[i].find_first_of("abcdefghijklmnopqrstuvwxyz0123456789_") == std::string::npos) { continue; }
-    //            std::cout << lcsNamesOriginal[i] << std::endl;
-    //            clipboardText += lcsNamesOriginal[i] + "\n";
-    //        }
-    //    }
-    //    //copyToClipboard(clipboardText.c_str());
-    //    return 0;
-    //}
+    { // cmp test
+        // Parse input
+        std::vector<FuncNodeDB> vcsfL = ParseIdaFuncs("vcs.c");
+        printf("vcs: %d\n", vcsfL.size());
+        std::vector<FuncNodeDB> lcsfL = ParseIdaFuncs("lcs.c");
+        printf("lcs: %d\n", lcsfL.size());
+
+        // Prepare lowercase name lists
+        auto buildNameLists = [](const std::vector<FuncNodeDB>& funcs,
+            std::vector<std::string>& namesOrig,
+            std::vector<std::string>& namesLower) {
+                for (const auto& func : funcs) {
+                    std::string name = RemoveDoubleSpacesAndTabs(func.name, true);
+                    if (!name.empty() && name[0] == '*') name.erase(0, 1);
+                    namesOrig.push_back(name);
+                    std::string low = name;
+                    std::transform(low.begin(), low.end(), low.begin(), ::tolower);
+                    namesLower.push_back(low);
+                }
+        };
+
+        std::vector<std::string> vcsNamesOrig, vcsNamesLower;
+        std::vector<std::string> lcsNamesOrig, lcsNamesLower;
+        buildNameLists(vcsfL, vcsNamesOrig, vcsNamesLower);
+        buildNameLists(lcsfL, lcsNamesOrig, lcsNamesLower);
+
+        // Define substrings to skip
+        std::vector<std::string> skipSubs =
+        { 
+            "sub_",
+            "google",
+            "std::",
+            "hal::",
+            "social",
+            //"base::",
+        };
+
+        // Build lowercase skip list
+        std::vector<std::string> skipSubsLower;
+        for (const auto& sub : skipSubs) {
+            std::string lowerSub = sub;
+            std::transform(lowerSub.begin(), lowerSub.end(), lowerSub.begin(), ::tolower);
+            skipSubsLower.push_back(lowerSub);
+        }
+
+        // Collect missing functions
+        std::vector<std::string> missingFuncs;
+        for (size_t i = 0; i < lcsNamesLower.size(); ++i) {
+            const auto& nameLower = lcsNamesLower[i];
+            if (std::find(vcsNamesLower.begin(), vcsNamesLower.end(), lcsNamesLower[i]) != vcsNamesLower.end())
+                continue;
+
+            // Skip by substrings
+            bool skip = false;
+            //for (auto& sub : skipSubs) {
+            //    if (lcsNamesLower[i].rfind(sub, 0) == 0) {
+            //        skip = true;
+            //        break;
+            //    }
+            //}
+            for (const auto& subLower : skipSubsLower) {
+                if (nameLower.rfind(subLower, 0) == 0) {
+                    skip = true;
+                    break;
+                }
+            }
+            if (skip) continue;
+            // Skip names without alphanumeric or underscore
+            if (lcsNamesLower[i].find_first_of("abcdefghijklmnopqrstuvwxyz0123456789_") == std::string::npos)
+                continue;
+            // Add original name
+            missingFuncs.push_back(lcsNamesOrig[i]);
+        }
+
+        // 1) Output unique class names
+        std::unordered_set<std::string> classNames;
+        for (const auto& fname : missingFuncs) {
+            auto pos = fname.rfind("::");
+            if (pos != std::string::npos) {
+                classNames.insert(fname.substr(0, pos));
+            }
+        }
+
+        // Filter classes that contain at least one letter
+        std::vector<std::string> filteredClasses;
+        for (const auto& cls : classNames) {
+            if (cls.find_first_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ") != std::string::npos) {
+                filteredClasses.push_back(cls);
+            }
+        }
+
+        // Save class names to file
+        std::ofstream classesFile("classes.txt");
+        if (classesFile.is_open()) {
+            for (const auto& cls : filteredClasses) {
+                classesFile << cls << '\n';
+            }
+            classesFile.close();
+        }
+        else {
+            std::cerr << "Failed to open classes.txt for writing\n";
+        }
+
+        // Build map for grouping
+        std::unordered_map<std::string, std::vector<std::string>> classMap;
+        for (const auto& fname : missingFuncs) {
+            auto pos = fname.rfind("::");
+            if (pos != std::string::npos) {
+                std::string cls = fname.substr(0, pos);
+                classMap[cls].push_back(fname);
+            }
+            else {
+                classMap["<global>"].push_back(fname);
+            }
+        }
+
+        // Save functions grouped by class to file in same format as console
+        std::ofstream funcsFile("funcs.txt");
+        if (funcsFile.is_open()) {
+            for (const auto& cls : filteredClasses) {
+                funcsFile << "\r\n\r\nClass " << cls << "\n";
+                auto it = classMap.find(cls);
+                if (it != classMap.end()) {
+                    for (const auto& fn : it->second) {
+                        funcsFile << '\t' << fn << '\n';
+                    }
+                }
+            }
+            // Handle global functions
+            auto globIt = classMap.find("<global>");
+            if (globIt != classMap.end()) {
+                funcsFile << "\r\n\r\nClass <global>\n";
+                for (const auto& fn : globIt->second) {
+                    funcsFile << '\t' << fn << '\n';
+                }
+            }
+            funcsFile.close();
+        }
+        else {
+            std::cerr << "Failed to open funcs.txt for writing\n";
+        }
+
+
+
+        std::cout << "Unique class names\n";
+        for (const auto& cls : classNames) {
+            std::cout << cls << std::endl;
+        }
+
+        //// 2) Group and output functions by class
+        //std::unordered_map<std::string, std::vector<std::string>> classMap;
+        //for (const auto& fname : missingFuncs) {
+        //    auto pos = fname.rfind("::");
+        //    if (pos != std::string::npos) {
+        //        std::string cls = fname.substr(0, pos);
+        //        classMap[cls].push_back(fname);
+        //    }
+        //    else {
+        //        classMap["<global>"].push_back(fname);
+        //    }
+        //}
+
+        std::cout << "\nFunctions grouped by class\n";
+        for (const auto& kv : classMap) {
+            std::cout << "\n\nClass " << kv.first << ":\n";
+            for (const auto& fn : kv.second) {
+                std::cout << "  " << fn << std::endl;
+            }
+        }
+        //copyToClipboard(clipboardText.c_str());
+        return 0;
+    }
 
     bool sh = (GetAsyncKeyState(VK_SHIFT) & 0x8000);
     if (sh) { convbase(); } // if call with nums, no enums

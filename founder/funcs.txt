@@ -1,0 +1,8245 @@
+
+
+Class base
+	base::BcfOpen
+	base::AssertFailure
+	base::DebugMessage
+	base::Hermite
+	base::Lerp
+	base::CompressReal
+	base::FindSquareDiv
+	base::SetRMA
+	base::Make
+	base::Divide
+	base::Tokenize
+	base::BcfGets
+	base::CalcPathHashKeyFragment
+	base::Pixel5650R
+	base::Pixel5650G
+	base::Pixel5650B
+	base::Pixel5650A
+	base::Pixel5650
+	base::Pixel5551R
+	base::Pixel5551G
+	base::Pixel5551B
+	base::Pixel5551A
+	base::Pixel5551
+	base::Pixel4444R
+	base::Pixel4444G
+	base::Pixel4444B
+	base::Pixel4444A
+	base::Pixel4444
+	base::swap
+	base::CompareNoCase<char>
+	base::Slerp
+	base::FlipImageinBuffer
+	base::WriteScreenImage
+	base::SingletonManager
+	base::SaveTarga
+	base::Vector3PlaneSpace
+	base::operator-
+	base::StlRandom
+	base::operator+<char>
+
+
+Class CMissionCleanup
+	CMissionCleanup::CMissionCleanup
+	CMissionCleanup::FindFree
+
+
+Class PVS
+	PVS::GetIndexAndBit
+	PVS::AddPVSZone
+	PVS::AddMemberToZone
+	PVS::MatrixFromText
+	PVS::GetCurrentPVSZone
+	PVS::GetCurrentPVSZoneFast
+	PVS::GetIsZoneVisibleFromCurrent
+	PVS::GetLineIntersection
+	PVS::GetLineAABBIntersection
+	PVS::PointInAABB
+	PVS::GetInZone
+	PVS::AssignZones
+	PVS::GetIsZoneMember
+	PVS::AssignZones
+	PVS::AssignZones
+	PVS::AssignZones
+	PVS::Classify
+	PVS::RenderPVSZones
+	PVS::GetVisible
+	PVS::GetVisible
+	PVS::GetVisible
+	PVS::GetCurrentPVSZone
+	PVS::LoadPVSZones
+	PVS::LoadPVSZones
+	PVS::Reload
+
+
+Class base::cTraverseRoute
+	base::cTraverseRoute::Add
+
+
+Class C_PcSave
+	C_PcSave::CloudSaveSuccess
+	C_PcSave::CloudManifestFetched
+	C_PcSave::UpdateCloudSave
+	C_PcSave::SetSaveDirectory
+	C_PcSave::SaveSlot
+	C_PcSave::PopulateSlotInfo
+	C_PcSave::CloudLoadSuccess
+	C_PcSave::InitCloudSaveSystem
+	C_PcSave::DeleteSlot
+
+
+Class lglStreamer
+	lglStreamer::~lglStreamer
+	lglStreamer::~lglStreamer
+	lglStreamer::onInit
+	lglStreamer::lglStreamer
+	lglStreamer::onTick
+
+
+Class CMatrix
+	CMatrix::~CMatrix
+	CMatrix::operator*=
+	CMatrix::Rotate
+	CMatrix::Reorthogonalise
+
+
+Class CTexList
+	CTexList::Initialise
+	CTexList::Shutdown
+	CTexList::SetTexture
+	CTexList::GetFirstFreeTexture
+	CTexList::LoadFileNameTexture
+	CTexList::LoadGlobalTextureList
+
+
+Class cCustomSoundTrack
+	cCustomSoundTrack::~cCustomSoundTrack
+	cCustomSoundTrack::~cCustomSoundTrack
+
+
+Class PVS::C_PVSZone
+	PVS::C_PVSZone::Clear
+	PVS::C_PVSZone::~C_PVSZone
+	PVS::C_PVSZone::C_PVSZone
+
+
+Class CPed
+	CPed::Initialise
+	CPed::Update
+	CPed::CanWeRunAndFireWithWeapon
+	CPed::ProcessAnimation
+	CPed::IsPedShootable
+	CPed::UseGroundColModel
+	CPed::CanBeArrested
+	CPed::CanStrafeOrMouseControl
+	CPed::CheckAroundForPossibleCollisions
+	CPed::Look
+	CPed::SeekFollowingPath
+	CPed::InsertPathNode
+	CPed::RecomputeFollowPathOnCollision
+	CPed::SetIdleAndResetAnim
+	CPed::ClearWanderPath
+	CPed::SetPause
+	CPed::Stagger
+	CPed::Die
+	CPed::WorkOutHeadingForMovingFirstPerson
+	CPed::PedSetPreviousStateCB
+	CPed::ClearPause
+	CPed::ClearFlee
+	CPed::SetFollowPathDynamic
+	CPed::SetFollowPath
+	CPed::SetDirectionToWalkAroundVehicle
+	CPed::PedEvadeOtherPlayerCB
+	CPed::ClearFall
+	CPed::RestoreHeadingRateCB
+	CPed::PossiblyFindBetterPosToSeekCar
+	CPed::FinishJumpCB
+	CPed::CanPedDriveOff
+	CPed::SetRadioStation
+	CPed::SetNewAttraction
+	CPed::PositionAttachedPed
+	CPed::SunBathe
+	CPed::TeamId
+	CPed::TeamId
+	CPed::SetPlayerToFollow
+	CPed::UpdateHoldPosition
+	CPed::DeleteRslObject
+	CPed::PedWanky180CB
+	CPed::FinishBikeFallOffCB
+	CPed::PedSetInTrainCB
+	CPed::PedSetOutTrainCB
+	CPed::GetNextPointOnRoute
+	CPed::SetFollowRoute
+	CPed::HaveReachedNextPointOnRoute
+	CPed::GetFormationPosition
+	CPed::ClearCarJack
+	CPed::FollowAnim
+	CPed::RetriveCarjackCar
+	CPed::PedAnimShuffleCB
+	CPed::FindNearestDoorToPed
+	CPed::RoomToLeaveMultiVehicle
+	CPed::PedSetGetInCarPositionCB
+	CPed::WriteAnimOffsetInfo
+	CPed::FinishFollowAnimCB
+	CPed::GetNearestTrainPedPosition
+	CPed::GetNearestTrainDoor
+	CPed::LineUpPedWithTrain
+	CPed::SetEnterTrain
+	CPed::EnterTrain
+	CPed::SetPedPositionInTrain
+	CPed::SetExitTrain
+	CPed::ExitTrain
+	CPed::FindBestCoordsFromNodes
+	CPed::Duck
+	CPed::InformMyGangOfAttack
+	CPed::IsRoomToBeCarJacked
+	CPed::PositionPedOutOfCollisionSlow
+	CPed::WarpPedToNearEntityOffScreen
+	CPed::CanBeDamagedByThisGangMember
+	CPed::LineUpPedWithProxyCar
+	CPed::ServiceTalkingWhenDead
+	CPed::EndFight
+	CPed::WriteFightData
+	CPed::SpawnFlyingComponent
+	CPed::ApplyHeadShot
+	CPed::DoesLOSBulletHitPed
+	CPed::StartFightDefend
+	CPed::ChooseAttackAI
+	CPed::ChooseAttackPlayer
+	CPed::StartFightAttack
+	CPed::StartFightMove
+	CPed::GetPedBoneWorldPosition
+	CPed::GetHeadAndFootPositions
+	CPed::CanStrikeLockonTarget
+
+
+Class C_JavaAPI
+	C_JavaAPI::~C_JavaAPI
+	C_JavaAPI::GetJNIEnv
+	C_JavaAPI::GetAPIClass
+	C_JavaAPI::GetAPIMethod
+	C_JavaAPI::CallStaticVoidMethod
+	C_JavaAPI::CallStaticObjectMethod
+	C_JavaAPI::CallStaticIntMethod
+	C_JavaAPI::CallStaticBooleanMethod
+
+
+Class sDMAMaterial
+	sDMAMaterial::GetMaterialTexture
+	sDMAMaterial::SetTexture
+	sDMAMaterial::LoadTexture
+	sDMAMaterial::sDMAMaterial
+	sDMAMaterial::ReleaseTexture
+
+
+Class CSpecialParticleStuff
+	CSpecialParticleStuff::CreateFoamAroundObject
+	CSpecialParticleStuff::StartBoatFoamAnimation
+	CSpecialParticleStuff::UpdateBoatFoamAnimation
+
+
+Class __gnu_cxx
+	__gnu_cxx::__verbose_terminate_handler
+
+
+Class cWorldStreamEx
+	cWorldStreamEx::cWorldStreamEx
+	cWorldStreamEx::IsShadowShader
+	cWorldStreamEx::Initialise
+	cWorldStreamEx::SetModelMatrix
+	cWorldStreamEx::SetViewMatrix
+	cWorldStreamEx::Shutdown
+	cWorldStreamEx::~cWorldStreamEx
+	cWorldStreamEx::DrawPrimitiveRef
+	cWorldStreamEx::RenderNoCull
+
+
+Class CPlaneBanners
+	CPlaneBanners::RegisterPoint
+
+
+Class CullFade
+	CullFade::Update
+
+
+Class sDMAMesh
+	sDMAMesh::sDMAMesh
+	sDMAMesh::~sDMAMesh
+
+
+Class base::cSingletonManager
+	base::cSingletonManager::Purge
+	base::cSingletonManager::~cSingletonManager
+	base::cSingletonManager::Add
+
+
+Class C_DeviceDetailSettings
+	C_DeviceDetailSettings::C_DeviceDetailSettings
+	C_DeviceDetailSettings::Initialise
+	C_DeviceDetailSettings::GetWorldCullFadeSettings
+	C_DeviceDetailSettings::GetModelCullFadeSettings
+	C_DeviceDetailSettings::GetLODSettings
+
+
+Class Lucid::C_Mesh
+	Lucid::C_Mesh::C_Mesh
+	Lucid::C_Mesh::~C_Mesh
+	Lucid::C_Mesh::Destroy
+	Lucid::C_Mesh::Render
+	Lucid::C_Mesh::Create
+
+
+Class StreamThread
+	StreamThread::StreamThread
+	StreamThread::ThreadMain
+	StreamThread::~StreamThread
+	StreamThread::~StreamThread
+
+
+Class CCamera
+	CCamera::DeleteCutSceneCamDataMemory
+	CCamera::Enable1rstPersonCamCntrlsScript
+	CCamera::Enable1rstPersonWeaponsCamera
+	CCamera::FindCamFOV
+	CCamera::Find3rdPersonCamTargetVector
+	CCamera::Find3rdPersonQuickAimPitch
+	CCamera::GetCutSceneFinishTime
+	CCamera::GetFadingStatusForScript
+	CCamera::GetFadingDirection
+	CCamera::GetArrPosForVehicleType
+	CCamera::InitialiseCameraForDebugMode
+	CCamera::LoadTrainCamNodes
+	CCamera::LoadPathSplines
+	CCamera::ProcessMusicFade
+	CCamera::ProcessWideScreenOn
+	CCamera::SetCamCutSceneOffSet
+	CCamera::SetPercentAlongCutScene
+	CCamera::FinishCutscene
+	CCamera::SetRslCamera
+	CCamera::ShouldPedControlsBeRelative
+	CCamera::StartTransition
+	CCamera::StartTransitionWhenNotFinishedInter
+	CCamera::StoreValuesDuringInterPol
+	CCamera::NoTrainNodeFoundDefaults
+	CCamera::Process_Train_Camera_Control
+	CCamera::TakeControlWithSpline
+	CCamera::UpdateAimingCoors
+	CCamera::~CCamera
+
+
+Class sDMAModel
+	sDMAModel::sDMAModel
+	sDMAModel::~sDMAModel
+
+
+Class TouchAnalog
+	TouchAnalog::TouchAnalog
+	TouchAnalog::~TouchAnalog
+	TouchAnalog::Initialize
+	TouchAnalog::Update
+	TouchAnalog::Render
+	TouchAnalog::Reset
+	TouchAnalog::SetAnalogBike
+	TouchAnalog::ResetAnalogBike
+
+
+Class CGame
+	CGame::InitialiseOnceBeforeRsl3DEngine
+	CGame::Shutdown
+	CGame::ReloadIPLs
+	CGame::GenerateTempPedAtStartOfNetworkGame
+	CGame::CanSeeOutSideFromCurrArea
+
+
+Class const,CullFade>>>
+	const,CullFade>>>::_M_erase
+
+
+Class const,base::sFileLine>>>
+	const,base::sFileLine>>>::_M_erase
+
+
+Class Lucid::C_BoxMesh
+	Lucid::C_BoxMesh::C_BoxMesh
+	Lucid::C_BoxMesh::~C_BoxMesh
+	Lucid::C_BoxMesh::SetColour
+	Lucid::C_BoxMesh::Create
+	Lucid::C_BoxMesh::Destroy
+	Lucid::C_BoxMesh::Render
+
+
+Class &&>,std
+	&&>,std::tuple<>>
+	&&>,std::tuple<>>
+	&&>,std::tuple<>>
+
+
+Class base::cTunnelStripperImpl
+	base::cTunnelStripperImpl::AddEdge
+	base::cTunnelStripperImpl::CheckEdge
+	base::cTunnelStripperImpl::Strip
+
+
+Class MP3Stream
+	MP3Stream::MP3Stream
+	MP3Stream::MP3Stream
+	MP3Stream::MP3Stream
+	MP3Stream::Delete
+	MP3Stream::~MP3Stream
+	MP3Stream::FileRead
+	MP3Stream::Initialize
+	MP3Stream::DecodeStream
+	MP3Stream::FillBuffer
+	MP3Stream::QueueBuffer
+	MP3Stream::Update
+	MP3Stream::Pause
+	MP3Stream::Resume
+	MP3Stream::IsPlaying
+	MP3Stream::IsPaused
+	MP3Stream::Start
+	MP3Stream::SetVolume
+	MP3Stream::SetPan
+	MP3Stream::GetPosition
+	MP3Stream::GetLength
+
+
+Class lglDynamicVB::List
+	lglDynamicVB::List::get
+	lglDynamicVB::List::reset
+	lglDynamicVB::List::List
+
+
+Class C_DynamicVertexBufferList::List
+	C_DynamicVertexBufferList::List::List
+
+
+Class cMusicManager
+	cMusicManager::~cMusicManager
+	cMusicManager::cMusicManager
+	cMusicManager::AddToTrackListenTime
+	cMusicManager::SaveAnnouncementsWhenMissionPassedPlayed
+	cMusicManager::OnMemstickChange
+	cMusicManager::KillCustomSoundTracks
+	cMusicManager::SpecialFullVolumeTrack
+	cMusicManager::Disable
+	cMusicManager::Enable
+	cMusicManager::GetRadioPosition
+	cMusicManager::GetFavouriteRadioStation
+	cMusicManager::SetMalibuClubTrackPos
+	cMusicManager::SetStripClubTrackPos
+	cMusicManager::StationsAreSame
+
+
+Class CDummy
+	CDummy::RcWriteThis
+	CDummy::RcWriteEmpty
+
+
+Class cMusicStreamer
+	cMusicStreamer::Init
+	cMusicStreamer::SetLoopFlag
+	cMusicStreamer::CheckForTHEFUCKUP
+	cMusicStreamer::StopPlayFile
+	cMusicStreamer::PlayPreLoadedFile
+
+
+Class CFileLoader
+	CFileLoader::FindRelatedModelInfoCB
+	CFileLoader::SetRelatedModelInfoCB
+	CFileLoader::LoadLine
+	CFileLoader::LoadTexList
+	CFileLoader::AddTexLists
+	CFileLoader::LoadElementFile
+	CFileLoader::LoadElementFile2Return
+	CFileLoader::LoadElementGroupFile
+	CFileLoader::LoadElementFile
+	CFileLoader::LoadElementGroupFile
+	CFileLoader::LoadObject
+	CFileLoader::ReloadObject
+	CFileLoader::LoadTimeObject
+	CFileLoader::LoadWeaponObject
+	CFileLoader::LoadElementGroupObject
+	CFileLoader::LoadVehicleObject
+	CFileLoader::LoadPedObject
+	CFileLoader::LoadPathHeader
+	CFileLoader::LoadPedPathNode
+	CFileLoader::LoadCarPathNode
+	CFileLoader::ReloadPaths
+	CFileLoader::Load2dEffect
+	CFileLoader::LoadObjectTypes
+	CFileLoader::ReLoadScene
+	CFileLoader::ReloadObjectTypes
+	CFileLoader::LoadObjectInstance
+	CFileLoader::LoadPickup
+	CFileLoader::LoadZone
+	CFileLoader::LoadCullZone
+	CFileLoader::LoadOcclusionVolume
+	CFileLoader::LoadScene
+	CFileLoader::SplitColTrianglesIntoSections
+	CFileLoader::LoadCollisionModel
+	CFileLoader::LoadCollisionFile
+	CFileLoader::LoadLevel
+	CFileLoader::LoadCollisionFileFirstTime
+	CFileLoader::LoadCollisionFile
+	CFileLoader::LoadBoundingBox
+	CFileLoader::LoadBBFromCollisionFile
+
+
+Class CAutomobile
+	CAutomobile::SetComponentRotation
+	CAutomobile::HideAllComps
+	CAutomobile::ShowAllComps
+	CAutomobile::SetComponentVisibility
+	CAutomobile::Linkup
+	CAutomobile::GetAllWheelsOffGround
+	CAutomobile::DebugCode
+	CAutomobile::SetupDamageAfterLoad
+	CAutomobile::SetAllTaxiLights
+	CAutomobile::SetBusDoorTimer
+	CAutomobile::CloseBoot
+	CAutomobile::CloseBonnet
+	CAutomobile::CloseAllDoors
+	CAutomobile::DoHoverSuspensionRatios
+
+
+Class base::cSingletonBase
+	base::cSingletonBase::~cSingletonBase
+	base::cSingletonBase::~cSingletonBase
+
+
+Class CPedShelterAttractor
+	CPedShelterAttractor::IsAtHeadOfQueue
+	CPedShelterAttractor::UpdatePedStateOnDeparture
+	CPedShelterAttractor::ComputeAttractHeading
+	CPedShelterAttractor::BroadcastDeparture
+	CPedShelterAttractor::GetDisplacement
+	CPedShelterAttractor::ComputeAttractPos
+	CPedShelterAttractor::GetType
+	CPedShelterAttractor::~CPedShelterAttractor
+	CPedShelterAttractor::~CPedShelterAttractor
+
+
+Class base::cSingleton<cCustomSoundTrack>
+	base::cSingleton<cCustomSoundTrack>::~cSingleton
+	base::cSingleton<cCustomSoundTrack>::~cSingleton
+
+
+Class Display::C_TextureDesc
+	Display::C_TextureDesc::C_TextureDesc
+	Display::C_TextureDesc::SetId
+
+
+Class LoadingThread
+	LoadingThread::ThreadMain
+	LoadingThread::LoadingThread
+	LoadingThread::~LoadingThread
+	LoadingThread::~LoadingThread
+
+
+Class cSampleManager
+	cSampleManager::~cSampleManager
+	cSampleManager::cSampleManager
+	cSampleManager::InitialiseSampleBanks
+	cSampleManager::IsARadioConnectedSFX
+	cSampleManager::GetBankContainingSound
+	cSampleManager::SetChannel3DPosition
+	cSampleManager::SetChannelEmittingVolume
+	cSampleManager::SetChannel3DDistances
+	cSampleManager::PauseStream
+	cSampleManager::PauseAllStreams
+	cSampleManager::SetStreamedFileLoopFlag
+	cSampleManager::StartPreloadedStreamedFile
+	cSampleManager::GetStreamedFilePosition
+	cSampleManager::GetStreamedFileLength
+	cSampleManager::SetChannelFRMix
+	cSampleManager::SuspendAudioContext
+	cSampleManager::ResumeAudioContext
+	cSampleManager::SetChannelLoopCount
+
+
+Class C_SysContext
+	C_SysContext::Initialise
+
+
+Class CRenderer
+	CRenderer::Shutdown
+	CRenderer::AddVisibleEntity
+	CRenderer::RenderFadingInUnderwaterEntities
+	CRenderer::GenerateEnvironmentMap
+	CRenderer::SetupBigBuildingVisibility
+	CRenderer::ScanBigBuildingList
+	CRenderer::HesGotTheWholeWorldInHisHands
+	CRenderer::SortBIGBuildingsForSectorList
+
+
+Class WaterBlock
+	WaterBlock::~WaterBlock
+	WaterBlock::RegisterInstance
+	WaterBlock::PackInstanceVerts
+	WaterBlock::PackInstanceVerts
+	WaterBlock::SetConstants
+	WaterBlock::SetEnvMapColour
+	WaterBlock::SetEnvMapFade
+	WaterBlock::SetEnvMapUVVectors
+
+
+Class const,TextureEntry>>>
+	const,TextureEntry>>>::_M_erase
+
+
+Class CProjectileInfo
+	CProjectileInfo::Shutdown
+	CProjectileInfo::RemoveDetonatorProjectiles
+	CProjectileInfo::IsProjectileInRange
+	CProjectileInfo::RemoveIfThisIsAProjectile
+	CProjectileInfo::RemoveAllProjectilesOwnedBy
+
+
+Class cMemMessage
+	cMemMessage::cMemMessage
+	cMemMessage::Print
+
+
+Class const,std::string>>>
+	const,std::string>>>::_M_erase
+	const,std::string>>>::_M_erase
+	const,std::string>>>::_M_copy
+	const,std::string>>>::_M_get_insert_hint_unique_pos
+	const,std::string>>>::_M_copy
+
+
+Class lglBuffer
+	lglBuffer::lglBuffer
+	lglBuffer::init
+	lglBuffer::initVB
+	lglBuffer::initIB
+
+
+Class to'SocialClub
+	to'SocialClub::onAlertBoxDismissed
+	to'SocialClub::~SocialClub
+	to'SocialClub::~SocialClub
+	to'SocialClub::succeededWithNickname
+	to'SocialClub::succeededWithStatus
+	to'SocialClub::failedWithErrorMessage
+	to'SocialClub::succeededWithDocType
+	to'SocialClub::failedWithMessage
+	to'SocialClub::failedWithMessage
+	to'SocialClub::failedWithMessageLegalDoc
+	to'SocialClub::onTransitionFinished
+
+
+Class GameTickThread
+	GameTickThread::onInit
+	GameTickThread::onTick
+	GameTickThread::~GameTickThread
+	GameTickThread::~GameTickThread
+	GameTickThread::GameTickThread
+	GameTickThread::bind
+	GameTickThread::bind
+	GameTickThread::unbind
+
+
+Class lglThread
+	lglThread::~lglThread
+	lglThread::onInit
+	lglThread::~lglThread
+	lglThread::lglThread
+	lglThread::start
+	lglThread::stop
+	lglThread::run
+	lglThread::startFunction
+	lglThread::tick
+
+
+Class CStateTracker::SBindBufferState
+	CStateTracker::SBindBufferState::init
+	CStateTracker::SBindBufferState::set
+	CStateTracker::SBindBufferState::cmpset
+	CStateTracker::SBindBufferState::invalidate
+
+
+Class CMenuManager
+	CMenuManager::ResetFades
+	CMenuManager::CreateMissionJump
+	CMenuManager::CMenuManager
+	CMenuManager::LoadAllTextures
+	CMenuManager::ChangeLanguage
+	CMenuManager::InitialiseChangedLanguageSettings
+	CMenuManager::HandleScrollInput
+	CMenuManager::DrawPlayerSetupScreen
+	CMenuManager::DrawGamesListScreen
+	CMenuManager::HandleVerticalScrollInput
+	CMenuManager::JumpToErrorScreen
+	CMenuManager::ApplyScrollInput
+	CMenuManager::GetPrintBriefsHeight
+	CMenuManager::GetPrintHelpHeight
+	CMenuManager::DrawMemoryCardStartUpMenus
+	CMenuManager::RequestFrontEndShutDown
+	CMenuManager::RequestFrontEndStartUp
+	CMenuManager::ShutDownJustMenu
+	CMenuManager::FilterOutColorMarkersFromString
+	CMenuManager::FilterOutColorMarkersFromString
+	CMenuManager::PickNewPlayerColour
+	CMenuManager::ApplySettings
+	CMenuManager::DeferredApplySettings
+	CMenuManager::SaveSettings
+	CMenuManager::Back
+	CMenuManager::LoadSettings
+	CMenuManager::GetStartOptionsCntrlConfigScreens
+	CMenuManager::GetNumOptionsCntrlConfigScreens
+	CMenuManager::DoSettingsBeforeStartingAGame
+	CMenuManager::StretchX
+	CMenuManager::DisplaySlider
+	CMenuManager::StretchY
+	CMenuManager::DrawCharacter
+	CMenuManager::DrawLoadingScreen
+	CMenuManager::PrintCredits
+	CMenuManager::PrintController
+	CMenuManager::GetScrollTextFade
+	CMenuManager::FadeIn
+	CMenuManager::DrawVerticalScrollMenu
+	CMenuManager::PrintBriefs
+	CMenuManager::PrintHelp
+	CMenuManager::ProcessOnOffMenuOptions
+	CMenuManager::ProcessMultiMenuOptions
+	CMenuManager::CheckSliderMovement
+	CMenuManager::MessageScreen
+	CMenuManager::UnloadTextures
+	CMenuManager::~CMenuManager
+	CMenuManager::SetFrontEndRenderStates
+	CMenuManager::HandleMapInput
+	CMenuManager::StartNewGame
+	CMenuManager::IsAdjustingControls
+	CMenuManager::PrintScreenDetails
+	CMenuManager::DrawScrollMenu
+	CMenuManager::SetMenuScrollPos
+	CMenuManager::GetCurrentLabelValueOnOff
+	CMenuManager::GetCurrentLabelValueSlider
+	CMenuManager::PrintRadioStationList
+	CMenuManager::SetRadioStation
+	CMenuManager::JumpToLinkURL
+	CMenuManager::DrawLinkIcon
+	CMenuManager::Draw3DTouchHelp
+	CMenuManager::CurrentScreenCanOnlyNavigateBackwards
+	CMenuManager::Draw
+	CMenuManager::DrawFrontEndNormal
+	CMenuManager::DrawFrontEnd
+	CMenuManager::ProcessButtonPresses
+	CMenuManager::Process
+	CMenuManager::BuildStatLine
+	CMenuManager::ConstructStatLine
+
+
+Class const,TextureMetaData>>>
+	const,TextureMetaData>>>::_M_erase
+
+
+Class _JNIEnv
+	_JNIEnv::CallStaticObjectMethod
+	_JNIEnv::CallStaticBooleanMethod
+	_JNIEnv::CallStaticVoidMethod
+	_JNIEnv::CallVoidMethod
+	_JNIEnv::CallStaticIntMethod
+	_JNIEnv::CallObjectMethod
+	_JNIEnv::CallLongMethod
+	_JNIEnv::CallIntMethod
+
+
+Class Display::C_BufferedVB
+	Display::C_BufferedVB::C_BufferedVB
+	Display::C_BufferedVB::SetCount
+	Display::C_BufferedVB::Destroy
+	Display::C_BufferedVB::Create
+	Display::C_BufferedVB::Lock
+	Display::C_BufferedVB::Unlock
+	Display::C_BufferedVB::Locked
+	Display::C_BufferedVB::GetBuffer
+	Display::C_BufferedVB::GetSizeBytes
+
+
+Class DumpStreamer
+	DumpStreamer::dump_CStreaming
+	DumpStreamer::dump_CModelInfo
+	DumpStreamer::dump_CTexListStore
+	DumpStreamer::dump
+
+
+Class CRGBA
+	CRGBA::~CRGBA
+
+
+Class cUmdStream
+	cUmdStream::~cUmdStream
+	cUmdStream::~cUmdStream
+	cUmdStream::cUmdStream
+	cUmdStream::GetNextRequest
+	cUmdStream::AcquireLock
+	cUmdStream::ReleaseLock
+	cUmdStream::UmdThread
+	cUmdStream::Tell
+	cUmdStream::ReadAsync
+	cUmdStream::Poll
+	cUmdStream::Cancel
+	cUmdStream::Wait
+	cUmdStream::Read
+	cUmdStream::MediaError
+	cUmdStream::MediaShowLoading
+
+
+Class C_BoundingBoxRenderer
+	C_BoundingBoxRenderer::~C_BoundingBoxRenderer
+	C_BoundingBoxRenderer::C_BoundingBoxRenderer
+	C_BoundingBoxRenderer::Setup
+	C_BoundingBoxRenderer::BeginRender
+	C_BoundingBoxRenderer::SetColour
+	C_BoundingBoxRenderer::RenderBox
+	C_BoundingBoxRenderer::EndRender
+	C_BoundingBoxRenderer::RenderPending
+	C_BoundingBoxRenderer::SetViewMatrix
+	C_BoundingBoxRenderer::AddToQueue
+
+
+Class base::cMemoryBlock
+	base::cMemoryBlock::MakeHeap
+	base::cMemoryBlock::FindFree
+	base::cMemoryBlock::FindLargest
+	base::cMemoryBlock::AddToFreeList
+	base::cMemoryBlock::RemoveFromFreeList
+	base::cMemoryBlock::Validate
+	base::cMemoryBlock::ValidateGuards
+	base::cMemoryBlock::JoinWithNext
+	base::cMemoryBlock::Resize
+	base::cMemoryBlock::Allocate
+	base::cMemoryBlock::AllocateAligned
+	base::cMemoryBlock::Free
+
+
+Class MenuItemCoords
+	MenuItemCoords::MenuItemCoords
+
+
+Class TouchControls
+	TouchControls::Reset
+	TouchControls::Update
+	TouchControls::FindTouch
+	TouchControls::GetTouchByIndex
+	TouchControls::NewTouch
+	TouchControls::AcquireTouch
+	TouchControls::RecordTouch
+	TouchControls::RecordTouchInUISpace
+	TouchControls::RecordTouch
+
+
+Class Noise2DVector4
+	Noise2DVector4::~Noise2DVector4
+	Noise2DVector4::Evaluate
+	Noise2DVector4::Update
+	Noise2DVector4::SetTimeStep
+	Noise2DVector4::Interpolate
+	Noise2DVector4::Ceiling
+	Noise2DVector4::Reset
+	Noise2DVector4::FillArray
+
+
+Class CTrain
+	CTrain::~CTrain
+	CTrain::~CTrain
+	CTrain::ReadAndInterpretTrackFile
+	CTrain::Write
+	CTrain::Init
+	CTrain::TrainHitStuff
+	CTrain::OpenTrainDoor
+	CTrain::ProcessControl
+	CTrain::AddPassenger
+	CTrain::RemovePassenger
+	CTrain::SetModelIndex
+	CTrain::CTrain
+	CTrain::PreRender
+	CTrain::Render
+
+
+Class TouchControls::C_TouchState
+	TouchControls::C_TouchState::C_TouchState
+
+
+Class CGarages
+	CGarages::IsCarSprayable
+	CGarages::SetTargetCarForMissionGarage
+	CGarages::DeActivateGarage
+	CGarages::ActivateGarage
+	CGarages::QueryCarsCollected
+	CGarages::HasThisCarBeenCollected
+	CGarages::HasCarBeenCrushed
+	CGarages::GivePlayerDetonator
+	CGarages::StopCarFromBlowingUp
+	CGarages::SetAllDoorsBackToOriginalHeight
+
+
+Class lglRenderQueue::CP
+	lglRenderQueue::CP::CP
+	lglRenderQueue::CP::reset
+
+
+Class C_AnalyticsEvents
+	C_AnalyticsEvents::C_AnalyticsEvents
+	C_AnalyticsEvents::GetInstance
+	C_AnalyticsEvents::StartSession
+	C_AnalyticsEvents::EndSession
+	C_AnalyticsEvents::UpdateSession
+	C_AnalyticsEvents::ControllerUsed
+
+
+Class const*>>
+	const*>>::_M_erase
+	const*>>::_M_copy
+
+
+Class Lucid
+	Lucid::MakeVertex
+	Lucid::MakeVertex
+	Lucid::GetNumVertsTrisStrips
+	Lucid::BuildMaterial
+	Lucid::FillBuffers
+	Lucid::RenderMeshBoundingBox
+	Lucid::CalcModelScreenSize
+	Lucid::CreateModel
+	Lucid::CreateModel
+
+
+Class Services
+	Services::SetBackBuffer
+	Services::OS_ServiceOpenLink
+
+
+Class base::cStream
+	base::cStream::Read
+
+
+Class CSolid
+	CSolid::~CSolid
+	CSolid::~CSolid
+	CSolid::CSolid
+
+
+Class cWorldGeom::cSector
+	cWorldGeom::cSector::~cSector
+	cWorldGeom::cSector::cSector
+	cWorldGeom::cSector::cSector
+
+
+Class GAEventTracking
+	GAEventTracking::~GAEventTracking
+	GAEventTracking::~GAEventTracking
+	GAEventTracking::GAEventTracking
+	GAEventTracking::GAEventTracking
+	GAEventTracking::GAEventTracking
+	GAEventTracking::GAEventTracking
+
+
+Class CPedSeatAttractor
+	CPedSeatAttractor::UpdatePedStateOnDeparture
+	CPedSeatAttractor::GetType
+	CPedSeatAttractor::~CPedSeatAttractor
+	CPedSeatAttractor::~CPedSeatAttractor
+
+
+Class TouchSense
+	TouchSense::startContinuousBuiltinEffect
+	TouchSense::stopContinuousEffect
+	TouchSense::playBuiltinEffect
+	TouchSense::~TouchSense
+	TouchSense::deleteInstance
+	TouchSense::TouchSense
+	TouchSense::instance
+	TouchSense::playBuiltinEffectInternal
+	TouchSense::run
+	TouchSense::threadFunc
+
+
+Class CPlaceable
+	CPlaceable::PointAt
+	CPlaceable::PointAt
+
+
+Class const&>,std
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+	const&>,std::tuple<>>
+
+
+Class CAnimBlendAssociation
+	CAnimBlendAssociation::GetNode
+	CAnimBlendAssociation::SetBlendTo
+	CAnimBlendAssociation::SetBlend
+	CAnimBlendAssociation::Remove
+	CAnimBlendAssociation::Write
+	CAnimBlendAssociation::UpdateBlend
+
+
+Class ButtonContainer<98>
+	ButtonContainer<98>::~ButtonContainer
+
+
+Class ButtonContainer<3>
+	ButtonContainer<3>::Update
+
+
+Class CDynamicShadows
+	CDynamicShadows::GetTexture
+	CDynamicShadows::Initialise
+	CDynamicShadows::Terminate
+	CDynamicShadows::End
+	CDynamicShadows::PreRenderSetup
+	CDynamicShadows::ArbitraryRotationMatrix
+	CDynamicShadows::ClampVectorAngle
+	CDynamicShadows::UpdateCamera
+	CDynamicShadows::Begin
+
+
+Class Touchscreen
+	Touchscreen::SetState
+	Touchscreen::Initialize
+	Touchscreen::ResetButtStates
+	Touchscreen::ResetHeliControls
+	Touchscreen::RenderSprite
+	Touchscreen::Flip
+	Touchscreen::RenderSprites
+	Touchscreen::DrawWatermark
+	Touchscreen::DrawTabButton
+	Touchscreen::DrawAdjustingControlsTab
+	Touchscreen::RenderForAdjustment
+	Touchscreen::GetButtonAt
+	Touchscreen::AnalogCount
+	Touchscreen::MoveButton
+	Touchscreen::ResizeButton
+	Touchscreen::GetHUDElementAt
+	Touchscreen::StreetActionOff
+	Touchscreen::HandleDebugInput
+	Touchscreen::HandleSwitchRadioStations
+	Touchscreen::HandleSwitchTouchTargets
+	Touchscreen::HandleFlickSteering
+	Touchscreen::HandleTap
+	Touchscreen::HandleDoubleTap
+	Touchscreen::HandleTapToJump
+	Touchscreen::HandleTapWheelie
+	Touchscreen::HandleTapStoppie
+	Touchscreen::GetRadarButton
+	Touchscreen::GetTutButton
+	Touchscreen::GetSummaryButton
+	Touchscreen::GetTimerButton
+	Touchscreen::GetNippleValue
+	Touchscreen::ReadFromSettings
+	Touchscreen::RestoreDefaults
+	Touchscreen::LoadButtons
+	Touchscreen::WriteToSettings
+	Touchscreen::GetSpriteForString
+	Touchscreen::GetControllerText
+	Touchscreen::GetTutorialTextScaleX
+	Touchscreen::GetTutorialTextScaleY
+	Touchscreen::GetSummaryScaleX
+	Touchscreen::GetSummaryScaleY
+	Touchscreen::GetRadarScaleX
+	Touchscreen::GetRadarScaleY
+	Touchscreen::GetTimerScaleX
+	Touchscreen::GetTimerScaleY
+	Touchscreen::~Touchscreen
+	Touchscreen::SetupJoystate
+	Touchscreen::HandleSniper
+	Touchscreen::DumpInfo
+	Touchscreen::ResetToDefault
+	Touchscreen::CancelAdjustments
+	Touchscreen::SaveCurrentAdjustments
+	Touchscreen::GetPinchZoomDelta
+	Touchscreen::IsPointInsideAdaptedTouchArea
+	Touchscreen::DeterminePinchZoom
+	Touchscreen::HandlePinchZoom
+	Touchscreen::HandleSwipe
+	Touchscreen::HandleAdaptedTouch
+	Touchscreen::HandleAdjustControlsTabInput
+	Touchscreen::UpdateAdjustment
+	Touchscreen::StartSelectSteeringMode
+	Touchscreen::EndSelectSteeringMode
+	Touchscreen::HandleSelectSteeringMode
+	Touchscreen::RenderSteeringOption
+	Touchscreen::RenderSelectSteeringMode
+	Touchscreen::Render
+	Touchscreen::TurnOffCellPhoneTouch
+	Touchscreen::GetForceOverButton
+	Touchscreen::Update
+	Touchscreen::ShowTouchSkipCutscene
+	Touchscreen::SetMissionAvailable
+
+
+Class Lucid::C_Batch
+	Lucid::C_Batch::C_Batch
+	Lucid::C_Batch::~C_Batch
+	Lucid::C_Batch::Create
+	Lucid::C_Batch::Destroy
+	Lucid::C_Batch::Render
+
+
+Class Lucid::C_Model
+	Lucid::C_Model::C_Model
+	Lucid::C_Model::~C_Model
+	Lucid::C_Model::Destroy
+	Lucid::C_Model::Render
+	Lucid::C_Model::CreateMesh
+
+
+Class const,TextureInfo>>>
+	const,TextureInfo>>>::_M_erase
+	const,TextureInfo>>>::_M_get_insert_unique_pos
+
+
+Class RenderBuffer
+	RenderBuffer::ClearRenderBuffer
+	RenderBuffer::StopStoring
+	RenderBuffer::RenderStuffInBuffer
+	RenderBuffer::StartStoring
+
+
+Class WorldShaderState
+	WorldShaderState::WorldShaderState
+
+
+Class CFontRenderState
+	CFontRenderState::~CFontRenderState
+
+
+Class TouchscreenButton
+	TouchscreenButton::Reset
+	TouchscreenButton::~TouchscreenButton
+	TouchscreenButton::~TouchscreenButton
+	TouchscreenButton::Render
+	TouchscreenButton::TouchscreenButton
+	TouchscreenButton::UpdateState
+
+
+Class const,VAO>>>
+	const,VAO>>>::_M_erase
+
+
+Class const&,std::tuple<StringId&&>,std
+	const&,std::tuple<StringId&&>,std::tuple<>>
+	const&,std::tuple<StringId&&>,std::tuple<>>
+	const&,std::tuple<StringId&&>,std::tuple<>>
+	const&,std::tuple<StringId&&>,std::tuple<>>
+	const&,std::tuple<StringId&&>,std::tuple<>>
+	const&,std::tuple<StringId&&>,std::tuple<>>
+
+
+Class CRecordDataForGame
+	CRecordDataForGame::Init
+	CRecordDataForGame::PackCurrentPadValues
+	CRecordDataForGame::UnPackCurrentPadValues
+	CRecordDataForGame::CalcGameChecksum
+
+
+Class Display::Shader
+	Display::Shader::_Set
+	Display::Shader::Reset
+	Display::Shader::Shader
+	Display::Shader::SetSamplerState
+	Display::Shader::GetSamplerState
+	Display::Shader::Release
+	Display::Shader::__Set
+	Display::Shader::SetUniformF
+	Display::Shader::SetUniformI
+	Display::Shader::UploadUniforms
+	Display::Shader::BindVertexDecl
+	Display::Shader::~Shader
+	Display::Shader::~Shader
+	Display::Shader::Setup
+	Display::Shader::Reload
+
+
+Class Lucid::BatchedMaterial
+	Lucid::BatchedMaterial::BatchedMaterial
+
+
+Class CDate
+	CDate::CDate
+	CDate::Clear
+	CDate::IsZero
+	CDate::IsValid
+	CDate::GetCurrentSystemTimeStamp
+	CDate::operator>
+	CDate::operator<
+	CDate::operator==
+	CDate::PopulateDateFields
+
+
+Class lglModelDestroyer
+	lglModelDestroyer::hasPendingTasks
+	lglModelDestroyer::add
+	lglModelDestroyer::tick
+	lglModelDestroyer::destroyAll
+	lglModelDestroyer::~lglModelDestroyer
+	lglModelDestroyer::destroyFreed
+
+
+Class Display::C_Texture
+	Display::C_Texture::C_Texture
+	Display::C_Texture::~C_Texture
+	Display::C_Texture::SetSamplerState
+	Display::C_Texture::GetSamplerState
+
+
+Class Display::C_Frustum
+	Display::C_Frustum::Configure
+	Display::C_Frustum::ConfigurePerspective
+	Display::C_Frustum::ConfigureOrthographic
+
+
+Class long>
+	long>::_M_fill_insert
+
+
+Class CMemoryCard
+	CMemoryCard::CMemoryCard
+	CMemoryCard::LoadSavedGame
+	CMemoryCard::FillFirstFileWithGuff
+	CMemoryCard::CreateDirectory
+	CMemoryCard::OpenMemCardFile
+	CMemoryCard::LoadIconFiles
+	CMemoryCard::LookForDirectory
+	CMemoryCard::UnFormatCard
+	CMemoryCard::ClearErrorMessage
+	CMemoryCard::CheckFilePresent
+	CMemoryCard::CopyProtectDirectory
+	CMemoryCard::DisplayMemoryCardOptions
+	CMemoryCard::CompareMemoryCardDates
+	CMemoryCard::CheckMagazineDirectoryThere
+	CMemoryCard::CreateMagazineDirectory
+	CMemoryCard::CheckDirCopyProtected
+	CMemoryCard::GetInfoOnSpecificSlot
+	CMemoryCard::PopulateErrorMessage
+	CMemoryCard::SetUpSpecificStuffSoLoadRestoreIsNice
+	CMemoryCard::DoClassSaveRoutine
+	CMemoryCard::GetNameOfSavedGame
+	CMemoryCard::GetDateAndTimeOfSavedGame
+	CMemoryCard::CheckThereIsAppropriateSpaceAtBootUp
+	CMemoryCard::GetLanguageToLoad
+	CMemoryCard::StoredCharsToUnicodeForMemoryCard
+
+
+Class C_LODSettings
+	C_LODSettings::C_LODSettings
+
+
+Class RadarMap
+	RadarMap::RadarMap
+	RadarMap::Deactivate
+	RadarMap::MoveMapCenter
+	RadarMap::Activate
+	RadarMap::Render
+	RadarMap::DrawGang
+	RadarMap::GetTouchCoordInWorldSpace
+	RadarMap::Update
+	RadarMap::GetZoomPercentage
+
+
+Class TouchscreenNipple
+	TouchscreenNipple::Reset
+	TouchscreenNipple::Render
+	TouchscreenNipple::TouchscreenNipple
+	TouchscreenNipple::Update
+	TouchscreenNipple::GetValue
+	TouchscreenNipple::~TouchscreenNipple
+	TouchscreenNipple::~TouchscreenNipple
+
+
+Class cUmdRequest
+	cUmdRequest::cUmdRequest
+
+
+Class base::cAxisBox
+	base::cAxisBox::operator*=
+
+
+Class base::cColourQuantizer
+	base::cColourQuantizer::cColourQuantizer
+	base::cColourQuantizer::CleanResults
+	base::cColourQuantizer::Add
+	base::cColourQuantizer::Add
+	base::cColourQuantizer::Match
+	base::cColourQuantizer::Match
+	base::cColourQuantizer::Purge
+	base::cColourQuantizer::~cColourQuantizer
+	base::cColourQuantizer::Generate
+
+
+Class base::cColourQuantizerTally
+	base::cColourQuantizerTally::~cColourQuantizerTally
+	base::cColourQuantizerTally::~cColourQuantizerTally
+
+
+Class lglBufferDestroyer
+	lglBufferDestroyer::lglBufferDestroyer
+	lglBufferDestroyer::add
+	lglBufferDestroyer::tick
+	lglBufferDestroyer::sync
+	lglBufferDestroyer::destroyAll
+	lglBufferDestroyer::~lglBufferDestroyer
+	lglBufferDestroyer::destroyFreed
+
+
+Class base::cTree16Node<base::cColourQuantizerTally>
+	base::cTree16Node<base::cColourQuantizerTally>::~cTree16Node
+	base::cTree16Node<base::cColourQuantizerTally>::~cTree16Node
+	base::cTree16Node<base::cColourQuantizerTally>::Purge
+
+
+Class base::cTree16<base::cColourQuantizerTally>
+	base::cTree16<base::cColourQuantizerTally>::~cTree16
+	base::cTree16<base::cColourQuantizerTally>::~cTree16
+
+
+Class base::QuickSortPtr<base
+	base::QuickSortPtr<base::sMED>
+
+
+Class *,base
+	*,base::sDataBlock>>
+
+
+Class ScSaveData
+	ScSaveData::suceededWithDirectoryListing
+	ScSaveData::succeeded
+	ScSaveData::failedWithError
+	ScSaveData::failedWithMessage
+	ScSaveData::~ScSaveData
+	ScSaveData::setDelegate
+	ScSaveData::cleanUp
+	ScSaveData::getString
+	ScSaveData::getInt
+	ScSaveData::getFloat
+	ScSaveData::getBool
+	ScSaveData::isSet
+	ScSaveData::setDirtyFlag
+	ScSaveData::setString
+	ScSaveData::setInt
+	ScSaveData::setFloat
+	ScSaveData::setBool
+	ScSaveData::removeStat
+	ScSaveData::getCloudFilePath
+	ScSaveData::syncDataWithCloud
+	ScSaveData::getLocalFilePath
+	ScSaveData::uploadDataToCloud
+	ScSaveData::succeededWithFlag
+	ScSaveData::checkCloudFileExists
+	ScSaveData::setInBackground
+	ScSaveData::clearSettings
+	ScSaveData::getDataAsJSON
+	ScSaveData::attemptActualUpload
+	ScSaveData::writeDataToLocalStorage
+	ScSaveData::update
+	ScSaveData::ScSaveData
+	ScSaveData::getInstance
+	ScSaveData::instance
+	ScSaveData::getLocalSavedData
+	ScSaveData::succeededWithFileContents
+
+
+Class base::cStringT<char>
+	base::cStringT<char>::~cStringT
+	base::cStringT<char>::Append
+	base::cStringT<char>::Reserve
+	base::cStringT<char>::cStringT
+	base::cStringT<char>::operator+
+	base::cStringT<char>::Append
+	base::cStringT<char>::SetImpl
+	base::cStringT<char>::Append
+	base::cStringT<char>::Append
+
+
+Class base::cGifWriter
+	base::cGifWriter::writechar
+	base::cGifWriter::writestr
+	base::cGifWriter::writebits
+	base::cGifWriter::FreeStrtab
+	base::cGifWriter::AllocStrtab
+	base::cGifWriter::AddCharString
+	base::cGifWriter::FindCharString
+	base::cGifWriter::ClearStrtab
+	base::cGifWriter::LZWCompress
+	base::cGifWriter::Savegif
+	base::cGifWriter::SaveGif32
+
+
+Class lglBufferCreator
+	lglBufferCreator::lglBufferCreator
+	lglBufferCreator::hasPendingTasks
+	lglBufferCreator::add
+	lglBufferCreator::tick
+	lglBufferCreator::sync
+	lglBufferCreator::destroyAll
+	lglBufferCreator::~lglBufferCreator
+	lglBufferCreator::createReady
+
+
+Class CEntryInfoNode
+	CEntryInfoNode::RcWriteThis
+	CEntryInfoNode::RcWriteEmpty
+
+
+Class base::cImage
+	base::cImage::cImage
+	base::cImage::~cImage
+	base::cImage::cImage
+	base::cImage::operator=
+	base::cImage::Clean
+	base::cImage::FilterWidth
+	base::cImage::FilterWeight
+	base::cImage::CalculateFilterMask
+	base::cImage::Create
+	base::cImage::Mono
+	base::cImage::Gamma
+	base::cImage::Clear
+	base::cImage::Flip
+	base::cImage::Mirror
+	base::cImage::Pixel
+	base::cImage::Pixel
+	base::cImage::Pixel
+	base::cImage::pPalette
+	base::cImage::SetPixels
+	base::cImage::ClosestPaletteEntry
+	base::cImage::Pixel
+	base::cImage::Format
+	base::cImage::Format
+	base::cImage::Resample
+
+
+Class base::cMatrix3x2
+	base::cMatrix3x2::operator*=
+	base::cMatrix3x2::Inverse
+	base::cMatrix3x2::SetRotate
+	base::cMatrix3x2::Angle
+
+
+Class base::cMainMemoryManager
+	base::cMainMemoryManager::Init
+
+
+Class base::cMemoryManager
+	base::cMemoryManager::Free
+	base::cMemoryManager::IsFree
+	base::cMemoryManager::cMemoryManager
+
+
+Class GrowableMemBuffer
+	GrowableMemBuffer::GrowableMemBuffer
+	GrowableMemBuffer::Grow
+	GrowableMemBuffer::Free
+	GrowableMemBuffer::~GrowableMemBuffer
+	GrowableMemBuffer::GetBuffer
+
+
+Class CRecordDataForChase
+	CRecordDataForChase::Init
+	CRecordDataForChase::StoreInfoForCar
+	CRecordDataForChase::RestoreInfoForMatrix
+	CRecordDataForChase::RestoreInfoForCar
+	CRecordDataForChase::ShouldThisPadBeLeftAlone
+	CRecordDataForChase::GiveUsACar
+	CRecordDataForChase::StartChaseScene
+	CRecordDataForChase::CleanUpChaseScene
+	CRecordDataForChase::SetUpCarsForChaseScene
+	CRecordDataForChase::CleanUpCarsForChaseScene
+	CRecordDataForChase::RemoveCarFromChase
+	CRecordDataForChase::TurnChaseCarIntoScriptCar
+
+
+Class Display::C_ShaderMap
+	Display::C_ShaderMap::GetShader
+	Display::C_ShaderMap::MapShaders
+	Display::C_ShaderMap::Initialise
+	Display::C_ShaderMap::Release
+
+
+Class base::cParametricEvaluator
+	base::cParametricEvaluator::cParametricEvaluator
+	base::cParametricEvaluator::UpdateValue
+	base::cParametricEvaluator::Graph
+	base::cParametricEvaluator::ConvertFromStr
+
+
+Class TiXmlElement
+	TiXmlElement::Accept
+	TiXmlElement::GetText
+	TiXmlElement::RemoveAttribute
+	TiXmlElement::Attribute
+	TiXmlElement::Attribute
+	TiXmlElement::Attribute
+	TiXmlElement::QueryIntAttribute
+	TiXmlElement::QueryUnsignedAttribute
+	TiXmlElement::QueryBoolAttribute
+	TiXmlElement::QueryDoubleAttribute
+	TiXmlElement::SetAttribute
+	TiXmlElement::SetDoubleAttribute
+	TiXmlElement::SetAttribute
+	TiXmlElement::operator=
+	TiXmlElement::Clone
+	TiXmlElement::ToElement
+	TiXmlElement::ToElement
+
+
+Class base::cPlane
+	base::cPlane::Classify
+	base::cPlane::Classify
+	base::cPlane::Set
+
+
+Class base::cProximity
+	base::cProximity::Intersect
+
+
+Class base::cTunnelStripper
+	base::cTunnelStripper::cTunnelStripper
+	base::cTunnelStripper::NumIndices
+	base::cTunnelStripper::pIndices
+	base::cTunnelStripper::LongestStrip
+	base::cTunnelStripper::NumStrips
+	base::cTunnelStripper::Add
+	base::cTunnelStripper::Strip
+
+
+Class base::cQuat
+	base::cQuat::operator=
+	base::cQuat::operator*=
+	base::cQuat::Matrix
+
+
+Class base::cRectangle
+	base::cRectangle::cRectangle
+	base::cRectangle::cRectangle
+
+
+Class ScopedWorldPassOverride
+	ScopedWorldPassOverride::ScopedWorldPassOverride
+	ScopedWorldPassOverride::~ScopedWorldPassOverride
+
+
+Class TiXmlVisitor
+	TiXmlVisitor::~TiXmlVisitor
+	TiXmlVisitor::VisitEnter
+	TiXmlVisitor::VisitExit
+	TiXmlVisitor::VisitEnter
+	TiXmlVisitor::VisitExit
+	TiXmlVisitor::Visit
+	TiXmlVisitor::Visit
+	TiXmlVisitor::Visit
+	TiXmlVisitor::Visit
+	TiXmlVisitor::~TiXmlVisitor
+
+
+Class CBridge
+	CBridge::Update
+	CBridge::ShouldLightsBeFlashing
+	CBridge::FindBridgeEntities
+	CBridge::Init
+	CBridge::ThisIsABridgeObjectMovingUp
+	CBridge::ForceBridgeState
+
+
+Class CTheCarGenerators
+	CTheCarGenerators::SaveAllCarGenerators
+	CTheCarGenerators::LoadAllCarGenerators
+
+
+Class base::cRelocatableChunkWriter
+	base::cRelocatableChunkWriter::Reserve
+	base::cRelocatableChunkWriter::IsAllocated
+	base::cRelocatableChunkWriter::AddPatch
+	base::cRelocatableChunkWriter::AddPatchWithInfo
+	base::cRelocatableChunkWriter::AllocateRaw
+	base::cRelocatableChunkWriter::DebugFileLine
+	base::cRelocatableChunkWriter::Clear
+	base::cRelocatableChunkWriter::cRelocatableChunkWriter
+	base::cRelocatableChunkWriter::~cRelocatableChunkWriter
+	base::cRelocatableChunkWriter::Class
+	base::cRelocatableChunkWriter::PatchFunc
+	base::cRelocatableChunkWriter::Save
+	base::cRelocatableChunkWriter::Save
+
+
+Class CScriptPaths
+	CScriptPaths::Save
+	CScriptPaths::Shutdown
+	CScriptPaths::Load
+
+
+Class char>
+	char>::resize
+	char>::_M_fill_insert
+
+
+Class lglWorldDestroyer
+	lglWorldDestroyer::hasPendingTasks
+	lglWorldDestroyer::add
+	lglWorldDestroyer::tick
+	lglWorldDestroyer::destroyFreed
+	lglWorldDestroyer::removeIfExists
+	lglWorldDestroyer::destroyAll
+	lglWorldDestroyer::~lglWorldDestroyer
+
+
+Class const,base::sDataBlock>>>
+	const,base::sDataBlock>>>::_M_erase
+
+
+Class Display::C_DepthStencilDesc
+	Display::C_DepthStencilDesc::C_DepthStencilDesc
+
+
+Class const,base::sDataBlock>>,base
+	const,base::sDataBlock>>,base::sSortByOffset>
+
+
+Class base::cStateMachine
+	base::cStateMachine::OnStateChanged
+	base::cStateMachine::Process
+	base::cStateMachine::IsKindOf
+
+
+Class CPhysical
+	CPhysical::ApplyMoveSpeed
+	CPhysical::ApplyTurnSpeed
+	CPhysical::ApplyTurnForceMultiplayer
+	CPhysical::ApplyCollisionAlt
+	CPhysical::ApplySpringCollision
+	CPhysical::SendMuliVehicleCollision
+
+
+Class base::cTextStreamIn
+	base::cTextStreamIn::NextLine
+
+
+Class CStore<C2dEffect,1210>
+	CStore<C2dEffect,1210>::~CStore
+
+
+Class base::cTextStreamOut
+	base::cTextStreamOut::WriteToken
+
+
+Class int>>
+	int>>::_M_erase
+	int>>::_M_copy
+	int>>::_M_default_append
+
+
+Class base::cVector2
+	base::cVector2::SetHermite
+	base::cVector2::SetLerp
+
+
+Class Platform::SocketBSD
+	Platform::SocketBSD::Close
+	Platform::SocketBSD::~SocketBSD
+	Platform::SocketBSD::Connect
+	Platform::SocketBSD::Listen
+	Platform::SocketBSD::Send
+	Platform::SocketBSD::SocketBSD
+	Platform::SocketBSD::SetBlocking
+	Platform::SocketBSD::Create
+	Platform::SocketBSD::Recv
+	Platform::SocketBSD::Accept
+	Platform::SocketBSD::~SocketBSD
+
+
+Class CEmergencyPed
+	CEmergencyPed::InRange
+
+
+Class base::cVector3
+	base::cVector3::SetHermite
+	base::cVector3::SetLerp
+
+
+Class base::cVector4
+	base::cVector4::SetHermite
+	base::cVector4::SetLerp
+
+
+Class base::cCallBack1Impl<void,eVolatileCallbackState>
+	base::cCallBack1Impl<void,eVolatileCallbackState>::~cCallBack1Impl
+	base::cCallBack1Impl<void,eVolatileCallbackState>::operator
+	base::cCallBack1Impl<void,eVolatileCallbackState>::~cCallBack1Impl
+
+
+Class base::cYCbCrA
+	base::cYCbCrA::From
+	base::cYCbCrA::To
+
+
+Class MD5
+	MD5::MD5Transform
+
+
+Class scLinkAccounts
+	scLinkAccounts::LinkAccountExecuteUrl
+	scLinkAccounts::linkPlatform
+	scLinkAccounts::linkAccountSucceededWithStatus
+	scLinkAccounts::clearCallback
+	scLinkAccounts::getOnlinePlatform
+	scLinkAccounts::onAlertBoxDismissed
+
+
+Class CTimer
+	CTimer::Shutdown
+	CTimer::GetCyclesPerMillisecond
+	CTimer::GetCyclesPerFrame
+	CTimer::StartUserPause
+	CTimer::EndUserPause
+
+
+Class cDeviceManager
+	cDeviceManager::cDeviceManager
+	cDeviceManager::Open
+	cDeviceManager::Close
+	cDeviceManager::~cDeviceManager
+	cDeviceManager::~cDeviceManager
+	cDeviceManager::Refresh
+
+
+Class Display::C_TextureState
+	Display::C_TextureState::Invalidate
+	Display::C_TextureState::C_TextureState
+
+
+Class base::cSingleton<cDeviceManager>
+	base::cSingleton<cDeviceManager>::~cSingleton
+	base::cSingleton<cDeviceManager>::~cSingleton
+
+
+Class lglTextureRecycler
+	lglTextureRecycler::getKey
+	lglTextureRecycler::add
+	lglTextureRecycler::get
+	lglTextureRecycler::tick
+	lglTextureRecycler::destroy
+
+
+Class CPedStats
+	CPedStats::Write
+	CPedStats::Shutdown
+	CPedStats::LoadPedStats
+	CPedStats::GetPedStatInfo
+	CPedStats::GetPedStatType
+
+
+Class CXtraCompsModelInfo
+	CXtraCompsModelInfo::SetElementGroup
+	CXtraCompsModelInfo::RcWriteThis
+	CXtraCompsModelInfo::RcWriteEmpty
+
+
+Class cJoyPad
+	cJoyPad::cJoyPad
+	cJoyPad::Close
+	cJoyPad::~cJoyPad
+	cJoyPad::Poll
+	cJoyPad::ClearAll
+	cJoyPad::Open
+
+
+Class cTime
+	cTime::~cTime
+	cTime::Reset
+	cTime::cTime
+	cTime::Refresh
+	cTime::Scale
+
+
+Class CAnimBlendAssocGroup
+	CAnimBlendAssocGroup::CAnimBlendAssocGroup
+	CAnimBlendAssocGroup::~CAnimBlendAssocGroup
+	CAnimBlendAssocGroup::GetAnimationId
+	CAnimBlendAssocGroup::SetRequiredAnimations
+	CAnimBlendAssocGroup::Write
+
+
+Class CFerry
+	CFerry::IsDoorClosed
+	CFerry::~CFerry
+	CFerry::~CFerry
+	CFerry::PreRender
+	CFerry::OpenDoor
+	CFerry::Write
+	CFerry::SetupForMultiplayer
+	CFerry::SwitchFerryCollision
+	CFerry::UpdateFerrys
+	CFerry::RenderAllRemaning
+	CFerry::FerryHitStuff
+	CFerry::OpenFerryDoor
+	CFerry::GetNearestDoor
+	CFerry::GetBoardingSpace
+	CFerry::GetClosestFerry
+	CFerry::IsDocked
+	CFerry::CloseDoor
+	CFerry::IsDoorOpen
+	CFerry::CompleteDorrMovement
+	CFerry::DissableFerryPath
+	CFerry::SkipFerryToNextDock
+	CFerry::PruneWakeTrail
+	CFerry::AddWakePoint
+	CFerry::PlayArrivedHorn
+	CFerry::ProcessControl
+	CFerry::Init
+	CFerry::InitFerrys
+	CFerry::SetModelIndex
+	CFerry::CFerry
+	CFerry::EnableFerryPath
+	CFerry::Render
+
+
+Class TiXmlDocument
+	TiXmlDocument::Accept
+	TiXmlDocument::Print
+	TiXmlDocument::SaveFile
+	TiXmlDocument::SaveFile
+	TiXmlDocument::SaveFile
+	TiXmlDocument::CopyTo
+	TiXmlDocument::operator=
+	TiXmlDocument::ToDocument
+	TiXmlDocument::ToDocument
+
+
+Class CAnimBlendNode
+	CAnimBlendNode::NextKeyFrameNoCalc
+	CAnimBlendNode::UpdateTime
+	CAnimBlendNode::CalcDeltas
+	CAnimBlendNode::NextKeyFrame
+	CAnimBlendNode::Update
+	CAnimBlendNode::GetCurrentTranslation
+	CAnimBlendNode::Write
+	CAnimBlendNode::SetSequence
+	CAnimBlendNode::~CAnimBlendNode
+	CAnimBlendNode::CAnimBlendNode
+
+
+Class CompressedAnimQuat
+	CompressedAnimQuat::ToQuat
+
+
+Class cUmdFile
+	cUmdFile::cUmdFile
+
+
+Class CAnimBlendSequence
+	CAnimBlendSequence::CAnimBlendSequence
+	CAnimBlendSequence::~CAnimBlendSequence
+	CAnimBlendSequence::SetName
+	CAnimBlendSequence::SetBoneTag
+	CAnimBlendSequence::SetNumFrames
+	CAnimBlendSequence::RemoveQuaternionFlips
+
+
+Class CAnimBlendTree
+	CAnimBlendTree::CAnimBlendTree
+	CAnimBlendTree::FindSequence
+	CAnimBlendTree::SetName
+	CAnimBlendTree::CalcTotalTime
+	CAnimBlendTree::RemoveQuaternionFlips
+	CAnimBlendTree::RemoveAnimSequences
+	CAnimBlendTree::~CAnimBlendTree
+	CAnimBlendTree::Shutdown
+
+
+Class CAnimManager
+	CAnimManager::Initialise
+	CAnimManager::Shutdown
+	CAnimManager::RegisterAnimBlock
+	CAnimManager::LoadAnimFile
+	CAnimManager::LoadAnimFile
+	CAnimManager::LoadAnimFiles
+	CAnimManager::RemoveLastAnimFile
+	CAnimManager::GetNumAnimations
+	CAnimManager::Write
+
+
+Class CWeaponInfo
+	CWeaponInfo::Write
+	CWeaponInfo::Shutdown
+	CWeaponInfo::GetWeaponName
+	CWeaponInfo::FindWeaponType
+	CWeaponInfo::FindWeaponFireType
+	CWeaponInfo::LoadWeaponData
+
+
+Class Tls
+	Tls::Tls
+	Tls::~Tls
+	Tls::getData
+	Tls::setData
+
+
+Class CCutsceneMgr
+	CCutsceneMgr::Write
+	CCutsceneMgr::Shutdown
+	CCutsceneMgr::LoadAnimationUncompressed
+	CCutsceneMgr::RemoveEverythingBecauseCutsceneDoesntFitInMemory
+	CCutsceneMgr::LoadEverythingBecauseCutsceneDeletedAllOfIt
+	CCutsceneMgr::AppendToNextCutscene
+	CCutsceneMgr::HideRequestedObjects
+	CCutsceneMgr::LoadCutsceneData_postload
+	CCutsceneMgr::DeleteCutsceneData_overlay
+	CCutsceneMgr::SetCutsceneAnimToLoop
+	CCutsceneMgr::SetHeadAnim
+	CCutsceneMgr::AttachObjectToBone
+	CCutsceneMgr::AttachObjectToFrame
+	CCutsceneMgr::AttachObjectToParent
+	CCutsceneMgr::PresubBodge
+	CCutsceneMgr::FinishCutscene
+	CCutsceneMgr::GetCutsceneTimeInMilleseconds
+
+
+Class cAudioScriptObject
+	cAudioScriptObject::SaveAllAudioScriptObjects
+	cAudioScriptObject::LoadAllAudioScriptObjects
+
+
+Class cAudioCollisionManager
+	cAudioCollisionManager::FixWrongCollisionSound
+
+
+Class C_ContextBase
+	C_ContextBase::GetNumContexts
+
+
+Class cAudioManager
+	cAudioManager::GetCollisionLoopingRatio
+	cAudioManager::SetColliosionSamplePlayed
+	cAudioManager::ProcessReverb
+	cAudioManager::ProcessTrainNoise
+	cAudioManager::GetJFOTOTalkSfx
+	cAudioManager::GetJMOTOTalkSfx
+	cAudioManager::AddCarTalkComment
+	cAudioManager::ProcessBridge
+	cAudioManager::ProcessExtraSounds
+	cAudioManager::GetMissionAudioLoadedLabel
+	cAudioManager::MissionScriptAudioUsesPoliceChannel
+	cAudioManager::GetArmyTalkSfx
+	cAudioManager::GetFiremanTalkSfx
+	cAudioManager::GetDonaldLoveTalkSfx
+	cAudioManager::GetJdOtooleTalkSfx
+	cAudioManager::GetleonMcaffreyTalkSfx
+	cAudioManager::GetSalvatoreTalkSfx
+	cAudioManager::GetMickeyHamfistsTalkSfx
+	cAudioManager::GetBiker1TalkSfx
+	cAudioManager::GetBiker2TalkSfx
+	cAudioManager::GetGrdAng1TalkSfx
+	cAudioManager::GetGrdAng2TalkSfx
+	cAudioManager::GetMariaTalkSfx
+	cAudioManager::GetToshikoTalkSfx
+	cAudioManager::GetSpecialCharacterTalkSfx
+	cAudioManager::GetDefaultTalkSfx
+	cAudioManager::GetCopTalkSfx
+	cAudioManager::GetSwatTalkSfx
+	cAudioManager::GetFBITalkSfx
+	cAudioManager::GetMedicTalkSfx
+	cAudioManager::GetHFOSTTalkSfx
+	cAudioManager::GetHMYSTTalkSfx
+	cAudioManager::GetHMOSTTalkSfx
+	cAudioManager::GetHFYRITalkSfx
+	cAudioManager::GetHFORITalkSfx
+	cAudioManager::GetHMYRITalkSfx
+	cAudioManager::GetHMORITalkSfx
+	cAudioManager::GetHFYBETalkSfx
+	cAudioManager::GetHFOBETalkSfx
+	cAudioManager::GetHMYBETalkSfx
+	cAudioManager::GetHFYBUTalkSfx
+	cAudioManager::GetHFYMDTalkSfx
+	cAudioManager::GetHFYCGTalkSfx
+	cAudioManager::GetHFYPRTalkSfx
+	cAudioManager::GetHFOTRTalkSfx
+	cAudioManager::GetHMOTRTalkSfx
+	cAudioManager::GetHMOCATalkSfx
+	cAudioManager::GetBMYCRTalkSfx
+	cAudioManager::GetBFYSTTalkSfx
+	cAudioManager::GetBFOSTTalkSfx
+	cAudioManager::GetBMYSTTalkSfx
+	cAudioManager::GetBMOSTTalkSfx
+	cAudioManager::GetBFYRITalkSfx
+	cAudioManager::GetBFORITalkSfx
+	cAudioManager::GetCAMPMANTalkSfx
+	cAudioManager::GetCAMPWOMTalkSfx
+	cAudioManager::GetBFYBETalkSfx
+	cAudioManager::GetBMYBETalkSfx
+	cAudioManager::GetBFOBETalkSfx
+	cAudioManager::GetBMOBETalkSfx
+	cAudioManager::GetBMYBUTalkSfx
+	cAudioManager::GetBFYPRTalkSfx
+	cAudioManager::GetBFOTRTalkSfx
+	cAudioManager::GetBMOTRTalkSfx
+	cAudioManager::GetBMYPITalkSfx
+	cAudioManager::GetBMYBBTalkSfx
+	cAudioManager::GetWMYCRTalkSfx
+	cAudioManager::GetWFYSTTalkSfx
+	cAudioManager::GetWFOSTTalkSfx
+	cAudioManager::GetWMYSTTalkSfx
+	cAudioManager::GetWMOSTTalkSfx
+	cAudioManager::GetWFYRITalkSfx
+	cAudioManager::GetWFORITalkSfx
+	cAudioManager::GetWMYRITalkSfx
+	cAudioManager::GetWMORITalkSfx
+	cAudioManager::GetWFYBETalkSfx
+	cAudioManager::GetWMYBETalkSfx
+	cAudioManager::GetWFOBETalkSfx
+	cAudioManager::GetWMOBETalkSfx
+	cAudioManager::GetWMYCWTalkSfx
+	cAudioManager::GetWMYGOTalkSfx
+	cAudioManager::GetWFOGOTalkSfx
+	cAudioManager::GetWMOGOTalkSfx
+	cAudioManager::GetWFYLGTalkSfx
+	cAudioManager::GetGangLeoneATalkSfx
+	cAudioManager::GetGangLeoneBTalkSfx
+	cAudioManager::GetGangTriadATalkSfx
+	cAudioManager::GetGangTriadBTalkSfx
+	cAudioManager::GetGangDiabloATalkSfx
+	cAudioManager::GetGangDiabloBTalkSfx
+	cAudioManager::GetGangYakuzaATalkSfx
+	cAudioManager::GetGangYakuzaBTalkSfx
+	cAudioManager::GetGangYardieATalkSfx
+	cAudioManager::GetGangYardieBTalkSfx
+	cAudioManager::GetGangColumbianATalkSfx
+	cAudioManager::GetGangColumbianBTalkSfx
+	cAudioManager::GetGangHoodATalkSfx
+	cAudioManager::GetGangHoodBTalkSfx
+	cAudioManager::GetGangForelliATalkSfx
+	cAudioManager::GetGangForelliBTalkSfx
+	cAudioManager::GetGangSindaccosATalkSfx
+	cAudioManager::GetGangSindaccosBTalkSfx
+	cAudioManager::GetViceWhiteTalkSfx
+	cAudioManager::GetViceBlackTalkSfx
+	cAudioManager::GetBMODKTalkSfx
+	cAudioManager::GetHMYAPTalkSfx
+	cAudioManager::~cAudioManager
+	cAudioManager::GetEntityStatus
+	cAudioManager::GetEntityPointer
+	cAudioManager::SetOutputMode
+	cAudioManager::UpdateReflections
+	cAudioManager::GenerateIntegerRandomNumberTable
+	cAudioManager::cAudioManager
+	cAudioManager::LoadBankIfNecessary
+	cAudioManager::SetPausedByOS
+	cAudioManager::InitialisePoliceRadioZones
+	cAudioManager::SetMissionScriptPoliceAudio
+	cAudioManager::GetMissionScriptPoliceAudioPlayingStatus
+	cAudioManager::ServicePoliceRadio
+	cAudioManager::ServicePoliceRadioChannel
+	cAudioManager::SetupSuspectLastSeenReport
+	cAudioManager::ReportCrime
+	cAudioManager::AgeCrimes
+	cAudioManager::SetupCrimeReport
+
+
+Class cDMAudio
+	cDMAudio::GetEntityStatus
+	cDMAudio::SetPausedByOS
+	cDMAudio::ReportCrime
+	cDMAudio::ResetPoliceRadio
+	cDMAudio::SaveAnnouncementsWhenMissionPassedPlayed
+	cDMAudio::StopFrontEndTrack
+	cDMAudio::GetCurrentMusicMode
+	cDMAudio::IsMissionAudioSamplePlaying
+	cDMAudio::GetMissionAudioLoadedLabel
+	cDMAudio::SetOutputMode
+	cDMAudio::GetFavouriteRadioStation
+	cDMAudio::GetRadioPosition
+	cDMAudio::~cDMAudio
+
+
+Class CVehicleToEffect
+	CVehicleToEffect::~CVehicleToEffect
+	CVehicleToEffect::From
+	CVehicleToEffect::operator=
+
+
+Class CBuilding
+	CBuilding::RcWriteThis
+	CBuilding::RcWriteEmpty
+
+
+Class CTreadable
+	CTreadable::RcWriteThis
+	CTreadable::RcWriteEmpty
+
+
+Class CBinaryTreeNode
+	CBinaryTreeNode::CBinaryTreeNode
+	CBinaryTreeNode::~CBinaryTreeNode
+	CBinaryTreeNode::FindSector
+	CBinaryTreeNode::AddItem
+	CBinaryTreeNode::GetTotalNumItemsRec
+	CBinaryTreeNode::GetTotalNumItems
+	CBinaryTreeNode::GetAll
+
+
+Class CDensityBTreeNode
+	CDensityBTreeNode::CDensityBTreeNode
+	CDensityBTreeNode::~CDensityBTreeNode
+	CDensityBTreeNode::AddItem
+	CDensityBTreeNode::Fixup
+	CDensityBTreeNode::GetAll
+	CDensityBTreeNode::GetTotalNumItemsRec
+	CDensityBTreeNode::GetTotalNumItems
+
+
+Class CColBox
+	CColBox::Set
+	CColBox::operator=
+
+
+Class CColLine
+	CColLine::Set
+
+
+Class CCollision
+	CCollision::Shutdown
+	CCollision::Update
+	CCollision::LoadCollisionWhenINeedIt
+	CCollision::TestSphereSphere
+	CCollision::ProcessSphereTriangle
+	CCollision::DistToLine
+	CCollision::TestPillWithSpheresInColModel
+	CCollision::ProcessLineTriangle
+
+
+Class base::cSingleton<cWorldStream>
+	base::cSingleton<cWorldStream>::CreateInstance
+	base::cSingleton<cWorldStream>::~cSingleton
+	base::cSingleton<cWorldStream>::~cSingleton
+
+
+Class COneSheet
+	COneSheet::AddToList
+	COneSheet::RemoveFromList
+
+
+Class TiXmlDeclaration
+	TiXmlDeclaration::Accept
+	TiXmlDeclaration::Print
+	TiXmlDeclaration::CopyTo
+	TiXmlDeclaration::operator=
+	TiXmlDeclaration::Clone
+	TiXmlDeclaration::Print
+	TiXmlDeclaration::ToDeclaration
+	TiXmlDeclaration::ToDeclaration
+
+
+Class CColModel
+	CColModel::operator=
+	CColModel::GetTrianglePoint
+	CColModel::CalculateTrianglePlanes
+	CColModel::SetLinkPtr
+	CColModel::Write
+
+
+Class CCarCtrl
+	CCarCtrl::AddToVehicleArray
+	CCarCtrl::RemoveFromLoadedVehicleArray
+	CCarCtrl::CountCarsOfType
+	CCarCtrl::RenderDebugInfo
+	CCarCtrl::TestCollisionBetween2MovingRects
+	CCarCtrl::FindPathDirection
+	CCarCtrl::PickNextNodeToChaseCar
+	CCarCtrl::IsThisVehicleOnRadar
+	CCarCtrl::FindLinksToGoWithTheseNodes
+	CCarCtrl::ThisRoadObjectCouldMove
+	CCarCtrl::MapCouldMoveInThisArea
+	CCarCtrl::BoatWithTallMast
+	CCarCtrl::Write
+	CCarCtrl::SetMultiplayerAmbientCarLimit
+	CCarCtrl::ToggleScriptControlsMpCarLimit
+	CCarCtrl::MultiPlayerRemoveVehicleAndDriver
+
+
+Class CColStore
+	CColStore::AddColSlot
+	CColStore::GetColName
+	CColStore::FindColSlot
+	CColStore::LoadCol
+	CColStore::LoadColCHK
+	CColStore::LoadCol
+	CColStore::RemoveColSlot
+	CColStore::Shutdown
+	CColStore::GetBoundingBox
+	CColStore::IncludeModelIndex
+	CColStore::EnsureCollisionIsInMemory
+	CColStore::LoadAllBoundingBoxes
+	CColStore::LoadAllCollision
+	CColStore::Write
+	CColStore::DoScriptsWantThisIn
+	CColStore::HasCollisionLoaded
+	CColStore::HasCollisionLoaded
+
+
+Class CUpsideDownCarCheck
+	CUpsideDownCarCheck::UpdateTimers
+	CUpsideDownCarCheck::AreAnyCarsUpsideDown
+
+
+Class CTrafficLights
+	CTrafficLights::LightForPeds
+	CTrafficLights::ScanForLightsOnMap
+
+
+Class CColTrianglePlane
+	CColTrianglePlane::Set
+
+
+Class CTempColModels
+	CTempColModels::Write
+
+
+Class Platform::ISocket
+	Platform::ISocket::~ISocket
+	Platform::ISocket::~ISocket
+
+
+Class const,BatchedWorld::C_TextureBucket>>>
+	const,BatchedWorld::C_TextureBucket>>>::_M_erase
+
+
+Class CCarAI
+	CCarAI::TellCarToRamOtherCar
+
+
+Class to'hal::Button
+	to'hal::Button::~Button
+	to'hal::Button::~Button
+	to'hal::Button::buttonTouchUp
+	to'hal::Button::buttonTouchMove
+	to'hal::Button::buttonTouchCancel
+	to'hal::Button::buttonTouchDown
+
+
+Class CCurves
+	CCurves::TestCurves
+	CCurves::CalcSpeedScaleFactor
+	CCurves::CalcCurvePoint
+
+
+Class CPhone
+	CPhone::CPhone
+	CPhone::~CPhone
+
+
+Class CFileMgr
+	CFileMgr::ChangeDir
+	CFileMgr::LoadFile
+	CFileMgr::OpenFileForWriting
+	CFileMgr::OpenFileForAppending
+	CFileMgr::Write
+	CFileMgr::Tell
+	CFileMgr::ReadLine
+	CFileMgr::CloseFileAsync
+	CFileMgr::RemoveAsyncFile
+	CFileMgr::IsAsyncFileComplete
+	CFileMgr::OpenFileAsync
+	CFileMgr::ReadAsync
+	CFileMgr::GetCdError
+	CFileMgr::GetCdErrorString
+	CFileMgr::GetCdFile
+	CFileMgr::ReadCd
+	CFileMgr::SyncCd
+
+
+Class CWeather
+	CWeather::AddHeatHaze
+	CWeather::AddSnow
+
+
+Class CDarkel
+	CDarkel::DrawTimer
+
+
+Class CGameLogic
+	CGameLogic::PassTime
+	CGameLogic::RewindTime
+	CGameLogic::Save
+	CGameLogic::Load
+
+
+Class CStore<CPedModelInfo,130>
+	CStore<CPedModelInfo,130>::~CStore
+
+
+Class TiXmlUnknown
+	TiXmlUnknown::Accept
+	TiXmlUnknown::Print
+	TiXmlUnknown::CopyTo
+	TiXmlUnknown::Clone
+	TiXmlUnknown::ToUnknown
+	TiXmlUnknown::ToUnknown
+
+
+Class CGarage
+	CGarage::BuildRotatedDoorMatrix
+	CGarage::UpdateCrusherShake
+	CGarage::HasCraigCollectedThisCar
+	CGarage::Does60SecondsNeedThisCar
+	CGarage::Does60SecondsNeedThisCarAtAll
+	CGarage::OpenThisGarage
+	CGarage::CloseThisGarage
+	CGarage::MarkThisCarAsCollectedFor60Seconds
+	CGarage::CalcSmallestDistToGarageDoorSquared
+	CGarage::IsPlayerEntirelyInsideGarage
+	CGarage::IsStaticPlayerCarEntirelyInside
+
+
+Class lglTexture
+	lglTexture::lglTexture
+	lglTexture::setState
+
+
+Class CPlaceName
+	CPlaceName::CPlaceName
+	CPlaceName::ProcessAfterFrontEndShutDown
+	CPlaceName::Display
+
+
+Class CRow
+	CRow::CRow
+	CRow::SetLetter
+
+
+Class CGrid
+	CGrid::ProcessAnyLeftJustDown
+	CGrid::ProcessAnyRightJustDown
+	CGrid::ProcessAnyUpJustDown
+	CGrid::ProcessAnyDownJustDown
+	CGrid::DisplayGrid
+	CGrid::AllDoneMakePlayerName
+	CGrid::ProcessDPadCrossJustDown
+	CGrid::ProcessControllerInput
+	CGrid::CGrid
+	CGrid::Process
+
+
+Class CStateTracker::SVertexAttribEnabledState
+	CStateTracker::SVertexAttribEnabledState::init
+	CStateTracker::SVertexAttribEnabledState::set
+	CStateTracker::SVertexAttribEnabledState::cmpset
+	CStateTracker::SVertexAttribEnabledState::invalidate
+
+
+Class CPlayerName
+	CPlayerName::CPlayerName
+	CPlayerName::DisplayName
+
+
+Class tHandlingData
+	tHandlingData::GetMass
+	tHandlingData::GetTractionMultiplier
+	tHandlingData::GetTurnMass
+	tHandlingData::GetCollisionDamageMultiplier
+
+
+Class CPathFind
+	CPathFind::Init
+	CPathFind::RegisterMapObject
+	CPathFind::CalcNodeCoors
+	CPathFind::BuildPathGrid
+	CPathFind::PreparePathDataForType
+	CPathFind::RemoveBadStartNode
+	CPathFind::CountFloodFillGroups
+	CPathFind::PreparePathData
+	CPathFind::CalcRoadDensity
+	CPathFind::RemoveNodeFromList
+	CPathFind::AddNodeToList
+	CPathFind::TestCoorsCloseness
+	CPathFind::RecordNodesClosestToCoors
+	CPathFind::RecordNodesInCircle
+	CPathFind::FindNodeOrientationForCarPlacementFacingDestination
+	CPathFind::AllocatePathFindInfoMem
+	CPathFind::StoreNodeInfoCar
+	CPathFind::StoreNodeInfoPed
+	CPathFind::StoreDetachedNodeInfoPed
+	CPathFind::StoreDetachedNodeInfoCar
+	CPathFind::ArrangeOneNodeList
+	CPathFind::ArrangeNodes
+	CPathFind::RegisterMarker
+	CPathFind::MarkRoadsBetweenLevelsNodeAndNeighbours
+	CPathFind::PedMarkRoadsBetweenLevelsInArea
+	CPathFind::SetLinksBridgeLights
+	CPathFind::TakeWidthIntoAccountForCoors
+	CPathFind::Write
+
+
+Class CShadows
+	CShadows::Shutdown
+	CShadows::StoreShadowForTree
+	CShadows::StoreShadowForPole
+	CShadows::PrintDebugPoly
+	CShadows::CalcPedShadowValues
+
+
+Class CPathInfoForObject
+	CPathInfoForObject::SwapConnectionsToBeRightWayRound
+
+
+Class CPedPath
+	CPedPath::AddBlockade
+	CPedPath::AddBlockadeSectorList
+	CPedPath::CalcPedRoute
+	CPedPath::AddBuildingBlockade
+	CPedPath::AddBuildingBlockadeSectorList
+
+
+Class lglTextureLoader
+	lglTextureLoader::onInit
+	lglTextureLoader::~lglTextureLoader
+	lglTextureLoader::~lglTextureLoader
+	lglTextureLoader::lglTextureLoader
+	lglTextureLoader::getUploadTask
+	lglTextureLoader::loadTextureFromPath
+	lglTextureLoader::loadTexture
+	lglTextureLoader::uploadTexture
+	lglTextureLoader::uploadTexture
+	lglTextureLoader::getLoadTask
+	lglTextureLoader::onTick
+
+
+Class CBaseModelInfo
+	CBaseModelInfo::Write
+	CBaseModelInfo::GetColModel
+	CBaseModelInfo::GetColModelPtr
+	CBaseModelInfo::Init2dEffects
+	CBaseModelInfo::Add2dEffect
+	CBaseModelInfo::SetTexList
+	CBaseModelInfo::WriteModel
+
+
+Class CEntity
+	CEntity::GetBoundCentre
+	CEntity::DeleteRslObject
+	CEntity::CreateRslObject
+	CEntity::AttachToRslObject
+	CEntity::DetachFromRslObject
+	CEntity::UpdateRslTAnim
+	CEntity::LG_RenderBounds
+	CEntity::UpdateDistanceFade
+	CEntity::GetIsOnScreenComplex
+	CEntity::IsVisibleComplex
+	CEntity::SetupBigBuilding
+	CEntity::ModifyMatrixForBannerInWind
+	CEntity::SetRslObjectAlpha
+
+
+Class CPedAttractor
+	CPedAttractor::IsAtHeadOfQueue
+	CPedAttractor::IsInQueue
+	CPedAttractor::GetNoOfRegisteredPeds
+	CPedAttractor::ComputeFreeSlot
+	CPedAttractor::ComputeAttractTime
+	CPedAttractor::BroadcastDeparture
+	CPedAttractor::ComputeDeltaPos
+	CPedAttractor::ComputeAttractPos
+	CPedAttractor::ComputeDeltaHeading
+	CPedAttractor::ComputeAttractHeading
+	CPedAttractor::IsRegisteredWithPed
+	CPedAttractor::CPedAttractor
+	CPedAttractor::BroadcastArrival
+	CPedAttractor::RegisterPed
+	CPedAttractor::GetHeadOfQueueWaitTime
+	CPedAttractor::~CPedAttractor
+	CPedAttractor::~CPedAttractor
+
+
+Class CPhoneInfo
+	CPhoneInfo::CPhoneInfo
+	CPhoneInfo::~CPhoneInfo
+	CPhoneInfo::Shutdown
+	CPhoneInfo::PhoneAtThisPosition
+	CPhoneInfo::SetPhoneMessage_Repeatedly
+	CPhoneInfo::HasMessageBeenDisplayed
+	CPhoneInfo::IsMessageBeingDisplayed
+	CPhoneInfo::Save
+	CPhoneInfo::Load
+
+
+Class CPickup
+	CPickup::HasPlayerPassedOverMe
+	CPickup::ProcessGunShot
+
+
+Class CPickups
+	CPickups::DoMoneyEffects
+	CPickups::DetonateMinesHitByGunShot
+	CPickups::FindPickUpForThisObject
+	CPickups::GetNewUniquePickupIndex
+	CPickups::GetValue
+	CPickups::SetValue
+	CPickups::RemoveAllPickupsOfACertainWeaponGroupWithNoAmmo
+	CPickups::CanPickUpInCar
+
+
+Class CPacManPickups
+	CPacManPickups::Init
+	CPacManPickups::Update
+	CPacManPickups::GeneratePMPickUps
+	CPacManPickups::GeneratePMPickUpsForRace
+	CPacManPickups::GenerateOnePMPickUp
+	CPacManPickups::Render
+	CPacManPickups::ClearPMPickUps
+	CPacManPickups::StartPacManRace
+	CPacManPickups::StartPacManRecord
+	CPacManPickups::QueryPowerPillsEatenInRace
+	CPacManPickups::ResetPowerPillsEatenInRace
+	CPacManPickups::CleanUpPacManStuff
+	CPacManPickups::StartPacManScramble
+	CPacManPickups::QueryPowerPillsCarriedByPlayer
+	CPacManPickups::ResetPowerPillsCarriedByPlayer
+
+
+Class LCSGAnalytics
+	LCSGAnalytics::~LCSGAnalytics
+	LCSGAnalytics::~LCSGAnalytics
+	LCSGAnalytics::getInstance
+	LCSGAnalytics::initialize
+	LCSGAnalytics::processTokenBucketHits
+	LCSGAnalytics::LCSGAnalytics
+	LCSGAnalytics::sendTrackingAction
+	LCSGAnalytics::startSession
+	LCSGAnalytics::endSession
+	LCSGAnalytics::processTimeElapsed
+	LCSGAnalytics::update
+
+
+Class CPacManPickup
+	CPacManPickup::Update
+
+
+Class CPtrNode
+	CPtrNode::RcWriteThis
+	CPtrNode::RcWriteEmpty
+
+
+Class CPlaneTrail
+	CPlaneTrail::RegisterPoint
+
+
+Class CPowerPoints
+	CPowerPoints::Init
+	CPowerPoints::Update
+	CPowerPoints::GenerateNewOne
+	CPowerPoints::Save
+	CPowerPoints::Load
+
+
+Class CPowerPoint
+	CPowerPoint::Update
+
+
+Class CStore<CSimpleModelInfo,3885>
+	CStore<CSimpleModelInfo,3885>::~CStore
+
+
+Class CExplosion
+	CExplosion::Shutdown
+
+
+Class CRestart
+	CRestart::CancelOverrideRestart
+	CRestart::SaveAllRestartPoints
+	CRestart::LoadAllRestartPoints
+
+
+Class CRoadBlocks
+	CRoadBlocks::RegisterScriptRoadBlock
+
+
+Class base::cSingleton<cVramManager>
+	base::cSingleton<cVramManager>::~cSingleton
+	base::cSingleton<cVramManager>::~cSingleton
+
+
+Class CTheScripts
+	CTheScripts::PrintListSizes
+	CTheScripts::CloseAllActiveScripts
+	CTheScripts::GetNewUniqueScriptSphereIndex
+	CTheScripts::HighlightImportantAngledArea
+	CTheScripts::SetObjectiveForAllPedsInCollective
+	CTheScripts::SetObjectiveForAllPedsInCollective
+	CTheScripts::SetObjectiveForAllPedsInCollective
+	CTheScripts::SetObjectiveForAllPedsInCollective
+	CTheScripts::SetObjectiveForAllPedsInCollective
+	CTheScripts::FindFreeSlotInCollectiveArray
+	CTheScripts::IsPlayerStopped
+
+
+Class Display::ShaderParams
+	Display::ShaderParams::~ShaderParams
+	Display::ShaderParams::ShaderParams
+	Display::ShaderParams::operator=
+	Display::ShaderParams::ShaderParams
+	Display::ShaderParams::GetHash
+	Display::ShaderParams::SetShader
+	Display::ShaderParams::SetTexture0
+	Display::ShaderParams::SetSamplerState0
+	Display::ShaderParams::SetBlendState0
+	Display::ShaderParams::SetColourWriteState
+	Display::ShaderParams::SetDepthState
+	Display::ShaderParams::SetStencilState
+	Display::ShaderParams::SetCullMode
+	Display::ShaderParams::_Apply
+	Display::ShaderParams::ApplyImmediate
+	Display::ShaderParams::ApplyDeferred
+
+
+Class CRunningScript
+	CRunningScript::ProcessCommands200To299
+	CRunningScript::ProcessCommands0To99
+	CRunningScript::ProcessCommands100To199
+	CRunningScript::ProcessCommands300To399
+	CRunningScript::ProcessCommands400To499
+	CRunningScript::ProcessCommands600To699
+	CRunningScript::ProcessCommands700To799
+	CRunningScript::ProcessCommands500To599
+	CRunningScript::ProcessCommands900To999
+	CRunningScript::ProcessCommands800To899
+	CRunningScript::LocateSniperBulletCommand
+	CRunningScript::LocatePlayerCharCommand
+	CRunningScript::LocateCollectiveCharCommand
+	CRunningScript::LocateCollectivePlayerCommand
+	CRunningScript::LocatePlayerCarCommand
+	CRunningScript::LocateCollectiveCarCommand
+	CRunningScript::LocateCollectiveCommand
+	CRunningScript::CollectiveInAreaCheckCommand
+	CRunningScript::PlayerInAreaCheckCommand
+	CRunningScript::PlayerInAngledAreaCheckCommand
+	CRunningScript::LocatePlayerCommand
+	CRunningScript::ProcessCommands1100To1199
+	CRunningScript::ProcessCommands1000To1099
+	CRunningScript::ProcessCommands1200To1299
+	CRunningScript::ProcessCommands1300To1399
+	CRunningScript::ProcessCommands1400To1499
+	CRunningScript::ProcessCommands1500To1599
+	CRunningScript::ProcessCommands1600To1699
+
+
+Class base::cSList<script_corona>
+	base::cSList<script_corona>::~cSList
+
+
+Class base::cSingleton<cWorldGeom>
+	base::cSingleton<cWorldGeom>::CreateInstance
+	base::cSingleton<cWorldGeom>::~cSingleton
+	base::cSingleton<cWorldGeom>::~cSingleton
+
+
+Class cParticleSystemMgr
+	cParticleSystemMgr::cParticleSystemMgr
+	cParticleSystemMgr::LoadParticleData
+	cParticleSystemMgr::Initialise
+	cParticleSystemMgr::RangeCheck
+
+
+Class CSetPieces
+	CSetPieces::Save
+	CSetPieces::Load
+	CSetPieces::Update
+
+
+Class CAccident
+	CAccident::CAccident
+	CAccident::~CAccident
+
+
+Class CAccidentManager
+	CAccidentManager::~CAccidentManager
+	CAccidentManager::CAccidentManager
+	CAccidentManager::RemoveAccident
+
+
+Class CAnimViewer
+	CAnimViewer::Initialise
+	CAnimViewer::Shutdown
+	CAnimViewer::Update
+	CAnimViewer::Render
+
+
+Class BatchedModel::C_DeferredBatchManager
+	BatchedModel::C_DeferredBatchManager::C_DeferredBatchManager
+	BatchedModel::C_DeferredBatchManager::Reset
+	BatchedModel::C_DeferredBatchManager::~C_DeferredBatchManager
+	BatchedModel::C_DeferredBatchManager::RenderBatch
+	BatchedModel::C_DeferredBatchManager::Render
+	BatchedModel::C_DeferredBatchManager::GetFreeBatch
+
+
+Class CCam
+	CCam::Cam_On_A_String_Unobscured
+	CCam::DoAverageOnVector
+	CCam::FixCamWhenObscuredByVehicle
+	CCam::GetBoatLook_L_R_HeightOffset
+	CCam::IsTargetInWater
+	CCam::Process_1rstPersonPedOnPC
+	CCam::Using3rdPersonMouseCam
+	CCam::LookLeft
+	CCam::LookRight
+	CCam::Process_BehindBoat
+	CCam::WorkOutCamHeight
+	CCam::Process_Cam_On_A_String
+	CCam::GetLookOverShoulderPos
+	CCam::GetLookAlongGroundPos
+	CCam::FixSourceAboveWaterLevel
+	CCam::Process_FollowPed_SA
+
+
+Class CVector
+	CVector::Magnitude
+	CVector::Normalise
+
+
+Class CMissionTextOffsets
+	CMissionTextOffsets::Load
+
+
+Class CClock
+	CClock::GetMinutesSinceMidnight
+	CClock::GetGameClockMinutesFrom
+
+
+Class CDebug
+	CDebug::DebugAddText
+	CDebug::DebugDisplayTextBuffer
+	CDebug::MetricsFrameStart
+	CDebug::AddPolysRendered
+	CDebug::AddTextureUpload
+	CDebug::AddEEStreamBytes
+	CDebug::AddMusicStreamBytes
+	CDebug::AddSampStreamBytes
+	CDebug::GetAvgEEStreamBytes
+	CDebug::GetAvgMusicStreamBytes
+	CDebug::GetAvgSampStreamBytes
+	CDebug::GetAvgStreamBytes
+	CDebug::GetAvgPolysRendered
+	CDebug::GetAvgTextureUpload
+	CDebug::GetPolysRendered
+	CDebug::GetTextureUpload
+
+
+Class const,Display::E_StaticUniformState>>>
+	const,Display::E_StaticUniformState>>>::_M_erase
+
+
+Class CDirectory
+	CDirectory::CDirectory
+	CDirectory::~CDirectory
+	CDirectory::AddItem
+	CDirectory::ReadDirFile
+	CDirectory::WriteDirFile
+
+
+Class TiXmlBase
+	TiXmlBase::EncodeString
+	TiXmlBase::ConvertUTF32ToUTF8
+	TiXmlBase::GetEntity
+
+
+Class CEntryInfoList
+	CEntryInfoList::Write
+
+
+Class CVisibilityComponents
+	CVisibilityComponents::Shutdown
+	CVisibilityComponents::SetElementModelIndex
+	CVisibilityComponents::SetElementId
+	CVisibilityComponents::RenderObjNormalElement
+	CVisibilityComponents::SetNodeTreeId
+	CVisibilityComponents::DefaultVisibilityCB
+	CVisibilityComponents::FrustumSphereCB
+	CVisibilityComponents::VehicleVisibilityCB_BigVehicle
+	CVisibilityComponents::SetElementGroupModelInfo
+	CVisibilityComponents::GetElementGroupModelInfo
+	CVisibilityComponents::IsElementGroupVisible
+	CVisibilityComponents::SetElementGroupDistanceAlpha
+	CVisibilityComponents::GetElementGroupDistanceAlpha
+	CVisibilityComponents::SetObjectDistanceAlpha
+	CVisibilityComponents::GetObjectDistanceAlpha
+	CVisibilityComponents::RenderFadingUnderwaterEntities
+	CVisibilityComponents::MloVisibilityCB
+	CVisibilityComponents::VehicleVisibilityCB
+
+
+Class CStateTracker::SVertexAttribPointerState
+	CStateTracker::SVertexAttribPointerState::init
+	CStateTracker::SVertexAttribPointerState::set
+	CStateTracker::SVertexAttribPointerState::cmpset
+	CStateTracker::SVertexAttribPointerState::invalidate
+
+
+Class CEventList
+	CEventList::Shutdown
+
+
+Class CFire
+	CFire::CFire
+	CFire::~CFire
+	CFire::ReportThisFire
+
+
+Class CFireManager
+	CFireManager::~CFireManager
+	CFireManager::CFireManager
+	CFireManager::GetNextFreeFire
+	CFireManager::FindFurthestFire_NeverMindFireMen
+	CFireManager::SetScriptFireAudio
+	CFireManager::ExtinguishAll
+
+
+Class CGeneral
+	CGeneral::GetNodeHeadingFromVector
+
+
+Class CObjectData
+	CObjectData::Initialise
+
+
+Class ,std::vector<std::pair<std::string,std::string>>>,int,std::pair<std::string,std
+	,std::vector<std::pair<std::string,std::string>>>,int,std::pair<std::string,std::string>>
+
+
+Class CKeyGen
+	CKeyGen::AppendStringToKey
+
+
+Class cRelocatableChunkWriterGTA
+	cRelocatableChunkWriterGTA::Save
+
+
+Class cRelocatableChunkGTA
+	cRelocatableChunkGTA::cRelocatableChunkGTA
+
+
+Class Display::C_IndexBuffer
+	Display::C_IndexBuffer::getIBO
+	Display::C_IndexBuffer::Lock
+	Display::C_IndexBuffer::Unlock
+	Display::C_IndexBuffer::C_IndexBuffer
+	Display::C_IndexBuffer::~C_IndexBuffer
+
+
+Class CPad
+	CPad::InputHowLongAgo
+	CPad::StartShake_Train
+	CPad::PadReadyTest
+	CPad::JumpDown
+	CPad::DoubleJump
+	CPad::GetExitVehicleForScript
+	CPad::GetDuck
+	CPad::ForceCameraBehindVehicle
+	CPad::GuiBackJustUp
+	CPad::ResetAverageWeapon
+	CPad::GetAverageWeapon
+	CPad::PrintErrorMessage
+	CPad::EditString
+	CPad::EditCodesForControls
+	CPad::FixPadsAfterSave
+	CPad::EnterFreeAim
+	CPad::CycleCameraModeJustDown
+	CPad::DPadUpJustUp
+	CPad::CycleCameraModeDownJustDown
+	CPad::DPadDownJustUp
+	CPad::ChangeStationDownJustDown
+	CPad::DPadLeftJustUp
+	CPad::ChangeStationUpJustDown
+	CPad::ShiftTargetRightJustDown
+	CPad::DPadRightJustUp
+	CPad::GetAnaloguePadLeftJustUp
+	CPad::GetAnaloguePadRightJustUp
+	CPad::GetAnaloguePadUp
+	CPad::GetAnaloguePadDown
+
+
+Class CPlayerInfo
+	CPlayerInfo::SavePlayerInfo
+	CPlayerInfo::IsVehicleNearby
+	CPlayerInfo::IsRestartingAfterMissionFailed
+
+
+Class CGangInfo
+	CGangInfo::CGangInfo
+	CGangInfo::~CGangInfo
+
+
+Class lglTextureCreator
+	lglTextureCreator::lglTextureCreator
+	lglTextureCreator::hasPendingTasks
+	lglTextureCreator::add
+	lglTextureCreator::tick
+	lglTextureCreator::sync
+	lglTextureCreator::destroyAll
+	lglTextureCreator::~lglTextureCreator
+	lglTextureCreator::createReady
+
+
+Class CPools
+	CPools::ShutDown
+	CPools::GetPedRef
+	CPools::GetVehicleRef
+	CPools::GetVehicle
+	CPools::GetObjectRef
+	CPools::GetObject
+	CPools::LoadVehiclePool
+	CPools::SaveVehiclePool
+	CPools::SaveObjectPool
+	CPools::LoadObjectPool
+	CPools::SavePedPool
+	CPools::LoadPedPool
+
+
+Class CVector2D
+	CVector2D::Normalise
+
+
+Class CProfile
+	CProfile::Initialise
+	CProfile::SuspendProfile
+	CProfile::ShowResults
+
+
+Class CPtrList
+	CPtrList::Flush
+	CPtrList::Write
+	CPtrList::~CPtrList
+
+
+Class GASessionTracking
+	GASessionTracking::~GASessionTracking
+	GASessionTracking::~GASessionTracking
+	GASessionTracking::GASessionTracking
+
+
+Class CRadar
+	CRadar::SetBlipShortRange
+	CRadar::ShowRadarTrace
+	CRadar::ShowRadarMarker
+	CRadar::ShowAltitudeBar
+	CRadar::GetRadarTraceColour
+	CRadar::RemoveRadarSections
+	CRadar::StreamRadarSections
+	CRadar::ClipRadarPoly
+	CRadar::StreamRadarSections
+	CRadar::StreamRadarSections
+	CRadar::SaveAllRadarBlips
+	CRadar::LoadAllRadarBlips
+	CRadar::AdjustForWideScreen
+
+
+Class lglTextureFallback
+	lglTextureFallback::lglTextureFallback
+	lglTextureFallback::create
+	lglTextureFallback::get
+	lglTextureFallback::destroy
+	lglTextureFallback::~lglTextureFallback
+	lglTextureFallback::add
+
+
+Class CRange2D
+	CRange2D::CRange2D
+	CRange2D::~CRange2D
+	CRange2D::IsInRange
+	CRange2D::GetRandomPointInRange
+	CRange2D::DebugShowRange
+
+
+Class CRange3D
+	CRange3D::CRange3D
+	CRange3D::IsInRange
+	CRange3D::GetRandomPointInRange
+	CRange3D::DebugShowRange
+
+
+Class COnscreenTimer
+	COnscreenTimer::~COnscreenTimer
+
+
+Class CReferences
+	CReferences::ListSize
+
+
+Class ,std
+	,std::vector<S_CamDistEntityPair>>>
+	,std::vector<S_CamDistEntityPair>>,int,S_CamDistEntityPair>
+	,std::vector<S_CamDistEntityPair>>,int>
+	,std::vector<int>>,int>
+	,std::vector<sDynamic>>>
+	,std::vector<sGeomInstance>>>
+	,std::vector<sGeomInstance>>>
+	,std::vector<sDynamic>>>
+	,std::vector<sGeomInstance>>,int,sGeomInstance>
+	,std::vector<sGeomInstance>>,int>
+	,std::vector<sDynamic>>,int,sDynamic>
+	,std::vector<sDynamic>>>
+	,std::vector<sDynamic>>,int>
+
+
+Class const,BatchedWorld::C_ShaderBucket>>>
+	const,BatchedWorld::C_ShaderBucket>>>::_M_erase
+
+
+Class CStats
+	CStats::RegisterFastestTime
+	CStats::RegisterBestPosition
+	CStats::RegisterBestBanditLapTime
+	CStats::RegisterBestBanditPosition
+	CStats::RegisterStreetRaceBestPosition
+	CStats::RegisterStreetRaceFastestLap
+	CStats::RegisterStreetRaceFastestTime
+	CStats::RegisterDirtBikeFastestLap
+	CStats::RegisterDirtBikeFastestTime
+	CStats::SetTotalNumberMissions
+	CStats::MoneySpentOnProperty
+	CStats::MoneySpentOnAutoPainting
+	CStats::MoneySpentOnFashion
+	CStats::NumOfVisitsFromLoanSharks
+	CStats::NumOfStoresKnockedOff
+	CStats::NumOfMovieStunts
+	CStats::NumOfAssassinations
+	CStats::NumOfPizzasDelivered
+	CStats::NumOfGarbagePickups
+	CStats::NumOfIceCreamSold
+	CStats::TopShootingRange
+	CStats::ShootingRangeRank
+	CStats::AddPropertyAsOwned
+	CStats::AddNumBloodRingKills
+	CStats::LongestTimeInBloodRing
+	CStats::RegisterSonyCDBeingRead
+	CStats::HasSonyCDBeenRead
+	CStats::NumberSonyCDsRead
+	CStats::RegisterFastestSmugglingTime
+	CStats::RegisterHighestGaurdianAngelJusticeDished
+	CStats::RegisterMostTimeLeftTrainRace
+	CStats::RegisterBestTimeGoGoFaggio
+	CStats::RegisterHighestTrainCashEarned
+	CStats::RegisterFastestHeliRaceTime
+	CStats::RegisterBestHeliRacePosition
+	CStats::ConvertToMins
+	CStats::ConvertToSecs
+
+
+Class CModelInfo
+	CModelInfo::ReInit2dEffects
+	CModelInfo::ShutDown
+	CModelInfo::AddSimpleModel
+	CModelInfo::Initialise
+	CModelInfo::AddTimeModel
+	CModelInfo::AddWeaponModel
+	CModelInfo::AddElementGroupModel
+	CModelInfo::AddVehicleModel
+	CModelInfo::AddPedModel
+	CModelInfo::Get2dEffectStore
+	CModelInfo::Tidy
+	CModelInfo::IsTrainModel
+	CModelInfo::Write
+
+
+Class CSurfaceTable
+	CSurfaceTable::Initialise
+	CSurfaceTable::ShutDown
+
+
+Class CTimeCycle
+	CTimeCycle::UpdateArrays
+	CTimeCycle::Initialise
+	CTimeCycle::UpdateTimeCycleEditor
+
+
+Class CCurrentVehicle
+	CCurrentVehicle::CCurrentVehicle
+
+
+Class Platform::C_GameConfigBase
+	Platform::C_GameConfigBase::AddBundleSearchPath
+	Platform::C_GameConfigBase::C_GameConfigBase
+
+
+Class CWanted
+	CWanted::UpdateCrimesQ
+	CWanted::RemovePursuitCop
+
+
+Class CMloModelInfo
+	CMloModelInfo::RcWriteThis
+	CMloModelInfo::RcWriteEmpty
+	CMloModelInfo::ConstructElementGroup
+
+
+Class GAnalytics
+	GAnalytics::GAnalytics
+	GAnalytics::urlEncode
+	GAnalytics::generatePayloadForAction
+	GAnalytics::~GAnalytics
+	GAnalytics::~GAnalytics
+	GAnalytics::setClientID
+	GAnalytics::setUserID
+	GAnalytics::setUserAgent
+	GAnalytics::setSystemInfo
+	GAnalytics::setApplicationInfo
+	GAnalytics::setCustomDimension
+	GAnalytics::setCustomMetric
+
+
+Class CWorld
+	CWorld::ShutDown
+	CWorld::CastShadowSectorList
+	CWorld::CastShadow
+	CWorld::FindObjectsInRangeSectorListMulti
+	CWorld::FindLowestZForCoord
+	CWorld::CheckBlockListIntegrity
+	CWorld::AddParticles
+	CWorld::RepositionOneObject
+	CWorld::RepositionCertainDynamicObjects
+	CWorld::UseDetonator
+	CWorld::ProcessVerticalLineSectorList_FillGlobeColPoints
+	CWorld::ProcessVerticalLineSector_FillGlobeColPoints
+	CWorld::ProcessVerticalLine_FillGlobeColPoints
+	CWorld::PrintCarChanges
+	CWorld::RemoveStaticObjects
+	CWorld::TestForBuildingsOnTopOfEachOther
+	CWorld::TestForBuildingsOnTopOfEachOther
+	CWorld::TestForUnusedModels
+	CWorld::TestForUnusedModels
+	CWorld::HandleCollisionZoneChange
+	CWorld::DoZoneTestForChaser
+	CWorld::FindPlayerSlotWithPedPointer
+	CWorld::Write
+
+
+Class cWorldStream
+	cWorldStream::PrintLargestWorldSector
+	cWorldStream::DeleteOldSector
+	cWorldStream::SetViewMatrix
+	cWorldStream::RenderUncached
+	cWorldStream::RenderNoCull
+	cWorldStream::CleanupOldSector
+	cWorldStream::SwapInStreamingBuffer
+	cWorldStream::CleanupRadarSections
+	cWorldStream::PrepareRadarStreaming
+	cWorldStream::pDynamic
+	cWorldStream::RenderDynamic
+	cWorldStream::ClearDynamics
+	cWorldStream::GetLevelEntry
+	cWorldStream::AddDynamic
+	cWorldStream::GetCellSize
+	cWorldStream::GrabFrontendMemory
+	cWorldStream::Suspend
+	cWorldStream::SetListStates
+	cWorldStream::~cWorldStream
+	cWorldStream::~cWorldStream
+
+
+Class CTheZones
+	CTheZones::Init
+	CTheZones::CreateZone
+	CTheZones::ZoneIsEntirelyContainedWithinOtherZone
+	CTheZones::CheckZonesForOverlap
+	CTheZones::InsertZoneIntoZoneHierRecursive
+	CTheZones::InsertZoneIntoZoneTree
+	CTheZones::FindZoneByLabel
+	CTheZones::GetZonePedGroupForTimeOfDay
+	CTheZones::AddZoneToAudioZoneArray
+	CTheZones::InitialiseAudioZoneArray
+	CTheZones::PostZoneCreation
+	CTheZones::GetIndexForNavigationZonePointer
+	CTheZones::GetPointerForNavigationZoneIndex
+	CTheZones::Write
+
+
+Class cGuList
+	cGuList::SetDefaults
+	cGuList::Light
+	cGuList::LightAtt
+	cGuList::LightSpot
+	cGuList::LightColourAmbient
+	cGuList::LightColourDiffuse
+	cGuList::LightColourSpecular
+	cGuList::DebugPrint
+	cGuList::DrawSprite
+	cGuList::Matrix
+
+
+Class lglTextureManager
+	lglTextureManager::lglTextureManager
+	lglTextureManager::hasPendingTasks
+	lglTextureManager::getLoadTexture
+	lglTextureManager::create
+	lglTextureManager::destroy
+	lglTextureManager::tick
+	lglTextureManager::destroyTexture
+	lglTextureManager::loadTextureExists
+	lglTextureManager::loadTexture
+	lglTextureManager::getTextureUsageStats
+	lglTextureManager::outputTextureUsage
+	lglTextureManager::getTexture
+
+
+Class Timer
+	Timer::Ticks
+	Timer::BeginBenchmark
+	Timer::EndBenchmark
+
+
+Class const>>>
+	const>>>::_M_erase
+
+
+Class CPlaneBanner
+	CPlaneBanner::RegisterPoint
+
+
+Class to'SocialClubHandler
+	to'SocialClubHandler::onAlertBoxDismissed
+
+
+Class CQuaternion
+	CQuaternion::Multiply
+	CQuaternion::Add
+	CQuaternion::Subtract
+	CQuaternion::Scale
+	CQuaternion::Invert
+	CQuaternion::GetLengthSquared
+	CQuaternion::Normalise
+	CQuaternion::operator+=
+	CQuaternion::operator-=
+	CQuaternion::operator*=
+	CQuaternion::operator/=
+	CQuaternion::Copy
+	CQuaternion::Slerp
+	CQuaternion::Slerp
+	CQuaternion::operator=
+
+
+Class ScopedTexturesListDummy
+	ScopedTexturesListDummy::~ScopedTexturesListDummy
+	ScopedTexturesListDummy::ScopedTexturesListDummy
+
+
+Class ScopedPassStateOverride
+	ScopedPassStateOverride::ScopedPassStateOverride
+	ScopedPassStateOverride::~ScopedPassStateOverride
+
+
+Class lglContext
+	lglContext::lglContext
+	lglContext::bind
+	lglContext::unbind
+
+
+Class CMattRenderer
+	CMattRenderer::Reset
+	CMattRenderer::~CMattRenderer
+	CMattRenderer::~CMattRenderer
+
+
+Class ScopedTexturesList
+	ScopedTexturesList::ScopedTexturesList
+	ScopedTexturesList::~ScopedTexturesList
+	ScopedTexturesList::FormatStateString
+	ScopedTexturesList::ScopedTexturesList
+
+
+Class base::cSingleton<CMattRenderer>
+	base::cSingleton<CMattRenderer>::~cSingleton
+	base::cSingleton<CMattRenderer>::~cSingleton
+
+
+Class OcclusionQuery
+	OcclusionQuery::OcclusionQuery
+	OcclusionQuery::reset
+	OcclusionQuery::isVisible
+
+
+Class CVehicle
+	CVehicle::SetComponentRotation
+	CVehicle::ProcessBikeWheel
+	CVehicle::FindTyreNearestPoint
+	CVehicle::IsDriver
+	CVehicle::IsDriver
+	CVehicle::AreThereAnyPassengers
+	CVehicle::PedsShouldScreamOnDisembarking
+	CVehicle::CanDoorsBeDamaged
+	CVehicle::CanPedJumpOffBike
+	CVehicle::CanPedJumpOutCar
+	CVehicle::IsSphereTouchingVehicle
+	CVehicle::ShufflePassengersToMakeSpace
+	CVehicle::UpdatePassengerList
+	CVehicle::ApplyCollisionMultiplayer
+	CVehicle::OccupantsReactToDamage
+	CVehicle::DoFixedMachineGuns
+
+
+Class GATrackingAction
+	GATrackingAction::getParams
+	GATrackingAction::getTimeRecorded
+	GATrackingAction::~GATrackingAction
+	GATrackingAction::~GATrackingAction
+	GATrackingAction::setCustomMetric
+	GATrackingAction::setCustomMetric
+	GATrackingAction::GATrackingAction
+
+
+Class BinaryDeserialiser
+	BinaryDeserialiser::BinaryDeserialiser
+	BinaryDeserialiser::Init
+	BinaryDeserialiser::Skip
+	BinaryDeserialiser::GetPos
+	BinaryDeserialiser::SetPos
+	BinaryDeserialiser::ReadRawUnencrypted
+	BinaryDeserialiser::ReadRawEncrypted
+	BinaryDeserialiser::ReadRaw
+	BinaryDeserialiser::Read
+	BinaryDeserialiser::Read
+	BinaryDeserialiser::Read
+	BinaryDeserialiser::Read
+	BinaryDeserialiser::Read
+	BinaryDeserialiser::Read
+	BinaryDeserialiser::Read
+	BinaryDeserialiser::Read
+	BinaryDeserialiser::Read
+	BinaryDeserialiser::Read
+	BinaryDeserialiser::Read
+	BinaryDeserialiser::Read
+
+
+Class cFile
+	cFile::cFile
+	cFile::open
+	cFile::close
+	cFile::seek
+	cFile::tell
+	cFile::size
+	cFile::read
+
+
+Class cUmdEvent
+	cUmdEvent::cUmdEvent
+	cUmdEvent::~cUmdEvent
+	cUmdEvent::set
+	cUmdEvent::wait
+	cUmdEvent::reset
+
+
+Class cUmdMutex
+	cUmdMutex::cUmdMutex
+	cUmdMutex::~cUmdMutex
+	cUmdMutex::lock
+	cUmdMutex::unlock
+
+
+Class cUmdSemaphore
+	cUmdSemaphore::cUmdSemaphore
+	cUmdSemaphore::~cUmdSemaphore
+	cUmdSemaphore::lock
+	cUmdSemaphore::unlock
+
+
+Class CParticle
+	CParticle::CParticle
+	CParticle::~CParticle
+	CParticle::SetPixelData
+	CParticle::Shutdown
+	CParticle::CanCreateParticle
+	CParticle::AddParticlesAlongLine
+	CParticle::AddParticlesAlongLine
+	CParticle::AddJetExplosion
+	CParticle::AddYardieDoorSmoke
+	CParticle::CalWindDir
+	CParticle::HandleShipsAtHorizonStuff
+
+
+Class cUmdThread
+	cUmdThread::cUmdThread
+	cUmdThread::start
+	cUmdThread::startFunction
+
+
+Class base::cSingleton<cUmdStream>
+	base::cSingleton<cUmdStream>::~cSingleton
+	base::cSingleton<cUmdStream>::~cSingleton
+
+
+Class cWorldGeom
+	cWorldGeom::cWorldGeom
+	cWorldGeom::SetLevel
+	cWorldGeom::Model
+	cWorldGeom::SetLodDistance
+	cWorldGeom::IsVisible
+	cWorldGeom::CalcNumPolys
+	cWorldGeom::Model
+	cWorldGeom::CollectModelInfos
+	cWorldGeom::AddDynamic
+	cWorldGeom::Save
+	cWorldGeom::Write
+	cWorldGeom::AddInstance
+	cWorldGeom::CalcSize
+	cWorldGeom::BuildCell
+	cWorldGeom::RemoveRefsFrom
+	cWorldGeom::AddToMainChunk
+	cWorldGeom::Write
+	cWorldGeom::Write
+	cWorldGeom::Build
+	cWorldGeom::StoreBuildingSwap
+	cWorldGeom::~cWorldGeom
+	cWorldGeom::~cWorldGeom
+
+
+Class cWorldGeom::sModelInstance
+	cWorldGeom::sModelInstance::sModelInstance
+
+
+Class const,std::set<int>>>>
+	const,std::set<int>>>>::_M_erase
+	const,std::set<int>>>>::_M_get_insert_unique_pos
+	const,std::set<int>>>>::_M_copy
+
+
+Class GATimingTracking
+	GATimingTracking::GATimingTracking
+	GATimingTracking::~GATimingTracking
+	GATimingTracking::~GATimingTracking
+
+
+Class const,int>>>
+	const,int>>>::_M_erase
+	const,int>>>::_M_erase
+	const,int>>>::_M_erase
+	const,int>>>::_M_get_insert_unique_pos
+	const,int>>>::_M_get_insert_hint_unique_pos
+	const,int>>>::_M_get_insert_unique_pos
+	const,int>>>::_M_copy
+	const,int>>>::_M_erase
+	const,int>>>::_M_erase
+	const,int>>>::_M_erase
+
+
+Class Platform::Mutex
+	Platform::Mutex::Mutex
+	Platform::Mutex::~Mutex
+	Platform::Mutex::Lock
+	Platform::Mutex::Unlock
+
+
+Class lglDynamicVB
+	lglDynamicVB::Unlock
+	lglDynamicVB::CurrentBuffer
+	lglDynamicVB::getVertexBuffer
+	lglDynamicVB::Lock
+	lglDynamicVB::Swap
+	lglDynamicVB::lglDynamicVB
+
+
+Class sGeomInstance
+	sGeomInstance::sGeomInstance
+
+
+Class CWeapon
+	CWeapon::ShutdownWeapons
+	CWeapon::RemovePlayersRemoteDetonatorForThisVehicle
+	CWeapon::GenerateFlameThrowerParticles
+	CWeapon::HitsGround
+	CWeapon::HasWeaponAmmoToBeUsed
+	CWeapon::GetWeaponAllowsStrafing
+
+
+Class ,std::vector<std
+	,std::vector<std::pair<int,int>>>>
+	,std::vector<std::pair<int,int>>>>
+	,std::vector<std::pair<int,int>>>>
+	,std::vector<std::pair<int,int>>>,int>
+	,std::vector<std::pair<int,int>>>>
+
+
+Class ,std::vector<std::pair<int,int>>>,int,std
+	,std::vector<std::pair<int,int>>>,int,std::pair<int,int>>
+
+
+Class CPlaneTrails
+	CPlaneTrails::RegisterPoint
+
+
+Class base::cCallBack1ImplBase<void,eVolatileCallbackState>
+	base::cCallBack1ImplBase<void,eVolatileCallbackState>::~cCallBack1ImplBase
+	base::cCallBack1ImplBase<void,eVolatileCallbackState>::~cCallBack1ImplBase
+
+
+Class CCullZones
+	CCullZones::ForceCullZoneCoors
+	CCullZones::AddCullZone
+	CCullZones::WaterFudge
+	CCullZones::DoINeedToLoadCollision
+	CCullZones::UpdateAtBeachForAudio
+	CCullZones::Write
+
+
+Class base::cCallBack1ImplMemFun<void,eVolatileCallbackState,cWorldStream>
+	base::cCallBack1ImplMemFun<void,eVolatileCallbackState,cWorldStream>::~cCallBack1ImplMemFun
+	base::cCallBack1ImplMemFun<void,eVolatileCallbackState,cWorldStream>::operator
+	base::cCallBack1ImplMemFun<void,eVolatileCallbackState,cWorldStream>::~cCallBack1ImplMemFun
+
+
+Class CDummyObject
+	CDummyObject::RcWriteThis
+
+
+Class CParticleObject
+	CParticleObject::~CParticleObject
+	CParticleObject::SaveParticle
+	CParticleObject::RemoveAllParticleObjects
+	CParticleObject::LoadParticle
+	CParticleObject::RemoveAllExpireableParticleObjects
+
+
+Class CStinger
+	CStinger::CStinger
+
+
+Class CCopPed
+	CCopPed::AttemptArrest
+	CCopPed::PositionStingerCop
+
+
+Class CPedIceCreamVanAttractor
+	CPedIceCreamVanAttractor::UpdatePedStateOnDeparture
+	CPedIceCreamVanAttractor::~CPedIceCreamVanAttractor
+	CPedIceCreamVanAttractor::~CPedIceCreamVanAttractor
+	CPedIceCreamVanAttractor::GetType
+
+
+Class to'scLinkAccounts
+	to'scLinkAccounts::LinkAccountExecuteUrl
+	to'scLinkAccounts::onAlertBoxDismissed
+
+
+Class CDummyPed
+	CDummyPed::~CDummyPed
+	CDummyPed::~CDummyPed
+	CDummyPed::CDummyPed
+
+
+Class CStreamingInfo
+	CStreamingInfo::AddToList
+	CStreamingInfo::RemoveFromList
+	CStreamingInfo::GetCdPosn
+	CStreamingInfo::GetCdSize
+	CStreamingInfo::GetCdPosnAndSize
+	CStreamingInfo::SetCdPosnAndSize
+
+
+Class CGangs
+	CGangs::GetWillAttackPlayerWithCops
+	CGangs::SetGangPedModelOverride
+	CGangs::ChooseGangPedModel
+	CGangs::SaveAllGangData
+	CGangs::LoadAllGangData
+
+
+Class CPedStopAttractor
+	CPedStopAttractor::UpdatePedStateOnDeparture
+	CPedStopAttractor::GetType
+	CPedStopAttractor::~CPedStopAttractor
+	CPedStopAttractor::~CPedStopAttractor
+
+
+Class CFormationInfo
+	CFormationInfo::CFormationInfo
+	CFormationInfo::~CFormationInfo
+	CFormationInfo::Init
+	CFormationInfo::Join
+	CFormationInfo::Leave
+	CFormationInfo::Update
+
+
+Class CPedPizzaAttractor
+	CPedPizzaAttractor::UpdatePedStateOnDeparture
+	CPedPizzaAttractor::GetType
+	CPedPizzaAttractor::GetHeadOfQueueWaitTime
+	CPedPizzaAttractor::~CPedPizzaAttractor
+	CPedPizzaAttractor::~CPedPizzaAttractor
+
+
+Class CPedAtmAttractor
+	CPedAtmAttractor::UpdatePedStateOnDeparture
+	CPedAtmAttractor::GetType
+	CPedAtmAttractor::~CPedAtmAttractor
+	CPedAtmAttractor::~CPedAtmAttractor
+
+
+Class CPedAttractorManager
+	CPedAttractorManager::GetIceCreamVanForEffect
+	CPedAttractorManager::IsPedRegistered
+	CPedAttractorManager::BroadcastDeparture
+	CPedAttractorManager::BroadcastDeparture
+	CPedAttractorManager::IsAtHeadOfQueue
+	CPedAttractorManager::IsAtHeadOfQueue
+	CPedAttractorManager::IsInQueue
+	CPedAttractorManager::IsInQueue
+	CPedAttractorManager::RemoveIceCreamVanEffects
+	CPedAttractorManager::ComputeEffectQueueDir
+	CPedAttractorManager::BroadcastArrival
+	CPedAttractorManager::BroadcastArrival
+
+
+Class CPedIK
+	CPedIK::GetWorldMatrix
+	CPedIK::ExtractYawAndPitchLocal
+
+
+Class cSmallHeap
+	cSmallHeap::cSmallHeap
+	cSmallHeap::Unlock
+
+
+Class CRouteNode
+	CRouteNode::GetRouteStart
+	CRouteNode::GetNextPointOnRoute
+	CRouteNode::GetPointPosition
+	CRouteNode::GetRouteThisPointIsOn
+
+
+Class CPedType
+	CPedType::Write
+	CPedType::Shutdown
+	CPedType::FindPedType
+	CPedType::FindPedFlag
+	CPedType::LoadPedData
+	CPedType::Save
+	CPedType::Load
+
+
+Class CVehicleModelInfo
+	CVehicleModelInfo::Write
+	CVehicleModelInfo::RcWriteThis
+	CVehicleModelInfo::RcWriteEmpty
+	CVehicleModelInfo::MoveObjectsCB
+	CVehicleModelInfo::CollapseFramesCB
+	CVehicleModelInfo::GetEditableMaterialListCB
+	CVehicleModelInfo::GetEditableMaterialListCB
+	CVehicleModelInfo::WriteModel
+	CVehicleModelInfo::AddXtraElements
+	CVehicleModelInfo::SetElementRendererCB_RealHeli
+	CVehicleModelInfo::SetElementRendererCB_Boat_Far
+	CVehicleModelInfo::SetElementRendererCB_Train
+	CVehicleModelInfo::SetVehicleComponentFlags
+	CVehicleModelInfo::PreprocessTree
+	CVehicleModelInfo::FindEditableMaterialList
+	CVehicleModelInfo::LoadVehicleColours
+	CVehicleModelInfo::DeleteVehicleColourTextures
+	CVehicleModelInfo::LoadEnvironmentMaps
+	CVehicleModelInfo::ShutdownEnvironmentMaps
+	CVehicleModelInfo::GetMatFXEffectMaterialCB
+	CVehicleModelInfo::SetEnvironmentMap
+	CVehicleModelInfo::SetElementGroup
+	CVehicleModelInfo::GetMaximumNumberOfPassengersFromNumberOfDoors
+	CVehicleModelInfo::WriteStaticInfo
+
+
+Class CTimeDynamic
+	CTimeDynamic::Initialise
+	CTimeDynamic::Shutdown
+	CTimeDynamic::GetFirstFreeTimeDynamicSlot
+	CTimeDynamic::Add
+
+
+Class CPlayerPed
+	CPlayerPed::RemovePlayerPed
+	CPlayerPed::RotatePlayerToTrackTarget
+	CPlayerPed::IsThisPedAnAimingPriority
+	CPlayerPed::Busted
+	CPlayerPed::RunningLand
+	CPlayerPed::DoesTargetHaveToBeBroken
+	CPlayerPed::EvaluateTarget
+	CPlayerPed::EvaluateNeighbouringTarget
+	CPlayerPed::CanIKReachThisTarget
+	CPlayerPed::FindMeleeAttackPoint
+	CPlayerPed::RemovePedFromMeleeList
+	CPlayerPed::IsCarryingAHeavyWeapon
+	CPlayerPed::GetPickupsBeingCarried
+	CPlayerPed::RemoveUberPickup
+	CPlayerPed::GiveQuadDamage
+	CPlayerPed::GiveRegeneration
+	CPlayerPed::GiveInvisibility
+	CPlayerPed::GiveCarHandling
+	CPlayerPed::UpdatePickupTimer
+	CPlayerPed::GetUberPickupTimeLeft
+	CPlayerPed::DropUberPickup
+	CPlayerPed::GetInitialFreeAimPosition
+	CPlayerPed::GetClosestPedToCenter
+	CPlayerPed::TargetingLockToFreeAim
+	CPlayerPed::HandleTapToTarget
+	CPlayerPed::IsTargetFreeAimTarget
+	CPlayerPed::SetMoveAnim
+
+
+Class CPopulation
+	CPopulation::LoadPedGroups
+	CPopulation::Shutdown
+	CPopulation::TestRoomForDummyObject
+	CPopulation::OKToAddExtraPed
+	CPopulation::OKToCreatePedAtPosition
+	CPopulation::AddDummyPed
+	CPopulation::ChoosePolicePedOccupation
+	CPopulation::IsSecurityGuard
+	CPopulation::ChooseGangOccupation
+	CPopulation::AddExistingPedInCar
+	CPopulation::MoveCarsAndPedsOutOfAbandonedZones
+	CPopulation::DealWithZoneChange
+	CPopulation::IsSunbather
+	CPopulation::CanSolicitPlayerOnFoot
+	CPopulation::CanJeerAtStripper
+	CPopulation::ComputeRandomisedGangSize
+	CPopulation::PlaceGangMembers
+
+
+Class halDebug
+	halDebug::puts
+	halDebug::printf
+	halDebug::vprintf
+	halDebug::abort
+	halDebug::debugBreak
+	halDebug::getAvailableMemory
+	halDebug::getMemoryUsage
+	halDebug::getTotalMemory
+	halDebug::getManagedStaticCounts
+
+
+Class ScHttpResponseDelegate
+	ScHttpResponseDelegate::onReceiveResponse
+	ScHttpResponseDelegate::onReceiveData
+	ScHttpResponseDelegate::onRequestFinished
+	ScHttpResponseDelegate::onRequestFailed
+
+
+Class CMemoryHeap
+	CMemoryHeap::CMemoryHeap
+	CMemoryHeap::RegisterMemPointer
+	CMemoryHeap::MoveMemory
+	CMemoryHeap::PushMemId
+	CMemoryHeap::PopMemId
+	CMemoryHeap::ParseHeap
+	CMemoryHeap::GetSizeOfHoles
+	CMemoryHeap::GetMemoryUsed
+	CMemoryHeap::GetBlocksUsed
+	CMemoryHeap::TidyHeap
+	CMemoryHeap::GetLargestFreeBlock
+
+
+Class C_DynamicIndexBufferList
+	C_DynamicIndexBufferList::~C_DynamicIndexBufferList
+	C_DynamicIndexBufferList::C_DynamicIndexBufferList
+	C_DynamicIndexBufferList::Create
+	C_DynamicIndexBufferList::Lock
+	C_DynamicIndexBufferList::Unlock
+	C_DynamicIndexBufferList::LoadIndices
+	C_DynamicIndexBufferList::MakeTriFanIndices
+	C_DynamicIndexBufferList::MakeTriStripIndices
+
+
+Class CBulletInfo
+	CBulletInfo::Shutdown
+
+
+Class C_DynamicVertexBufferListWrapper
+	C_DynamicVertexBufferListWrapper::~C_DynamicVertexBufferListWrapper
+
+
+Class CBike
+	CBike::SetComponentRotation
+	CBike::dmgDrawCarCollidingParticles
+	CBike::SetRemoveAnimFlags
+	CBike::SetComponentVisibility
+	CBike::GetAllWheelsOffGround
+	CBike::DebugCode
+	CBike::Fix
+	CBike::SetupDamageAfterLoad
+	CBike::PlaceOnRoadProperly
+	CBike::GetCorrectedWorldDoorPosition
+
+
+Class int>>>
+	int>>>::_M_erase
+
+
+Class C_DynamicVertexBufferList
+	C_DynamicVertexBufferList::C_DynamicVertexBufferList
+
+
+Class RslLight
+	RslLight::~RslLight
+
+
+Class RslTexList
+	RslTexList::RslTexList
+
+
+Class RslTexture
+	RslTexture::GetTexture
+	RslTexture::Release
+
+
+Class cVolatileRam
+	cVolatileRam::cVolatileRam
+	cVolatileRam::~cVolatileRam
+
+
+Class to'SocialClubOnlinePolicies
+	to'SocialClubOnlinePolicies::updateCallback
+	to'SocialClubOnlinePolicies::~SocialClubOnlinePolicies
+	to'SocialClubOnlinePolicies::~SocialClubOnlinePolicies
+	to'SocialClubOnlinePolicies::onButtonTapped
+	to'SocialClubOnlinePolicies::onTransitionFinished
+
+
+Class Display::C_TextureBase
+	Display::C_TextureBase::C_TextureBase
+	Display::C_TextureBase::AcquireRef
+
+
+Class cVramManager
+	cVramManager::cVramManager
+	cVramManager::Reset
+	cVramManager::Allocate
+	cVramManager::Tidy
+	cVramManager::~cVramManager
+	cVramManager::~cVramManager
+
+
+Class CAntenna
+	CAntenna::Update
+
+
+Class CClouds
+	CClouds::CalculateScaleAndRotationOffsets
+	CClouds::Init
+	CClouds::Shutdown
+
+
+Class cHSV
+	cHSV::cHSV
+	cHSV::cHSV
+	cHSV::operator=
+	cHSV::CopyFrom
+	cHSV::cHSV
+	cHSV::operator=
+
+
+Class CCoronas
+	CCoronas::Shutdown
+
+
+Class CCredits
+	CCredits::PrintCreditSpace
+	CCredits::StartGroup
+	CCredits::HandleTouchInput
+
+
+Class CElementGroupModelInfo
+	CElementGroupModelInfo::RcWriteThis
+	CElementGroupModelInfo::RcWriteEmpty
+	CElementGroupModelInfo::FindFrameFromNameWithoutIdCB
+	CElementGroupModelInfo::Write
+	CElementGroupModelInfo::WriteModel
+	CElementGroupModelInfo::SetElementGroup
+	CElementGroupModelInfo::FindFrameFromNameCB
+	CElementGroupModelInfo::SetElementRendererCB
+	CElementGroupModelInfo::SetNodeIds
+
+
+Class Display::C_RenderTexture
+	Display::C_RenderTexture::C_RenderTexture
+	Display::C_RenderTexture::~C_RenderTexture
+	Display::C_RenderTexture::Create
+	Display::C_RenderTexture::Create
+	Display::C_RenderTexture::TargetDesc
+	Display::C_RenderTexture::TextureDesc
+	Display::C_RenderTexture::SetTarget
+	Display::C_RenderTexture::SetTexture
+	Display::C_RenderTexture::SetDepthTexture
+	Display::C_RenderTexture::SetStencilTexture
+	Display::C_RenderTexture::Resolve
+	Display::C_RenderTexture::BlockUntilNotBusy
+
+
+Class CMovingThings
+	CMovingThings::Shutdown
+
+
+Class CShotInfo
+	CShotInfo::Shutdown
+
+
+Class CScriptPath
+	CScriptPath::Clear
+	CScriptPath::InitialiseOne
+	CScriptPath::SetObjectToControl
+	CScriptPath::FindCoorsFromDistanceOnPath
+
+
+Class CFont
+	CFont::IsPrintCached
+	CFont::PrintCachedDispLists
+	CFont::AddToPrintCache
+	CFont::ClearSpecialLanguages
+	CFont::AddJapaneseTexture
+	CFont::AddKoreanTexture
+	CFont::AddEFIGSFont
+	CFont::AddRussianTexture
+	CFont::Shutdown
+	CFont::CheckNewLine
+	CFont::GetNextSpace
+	CFont::GetNextSpace
+	CFont::GetStringWidth
+	CFont::GetStringWidth
+	CFont::GetNumberLines
+	CFont::GetTextRect
+	CFont::DrawFonts
+	CFont::SetSlantRefPoint
+	CFont::SetSlant
+	CFont::SetFlashOn
+	CFont::SetFlashOff
+	CFont::SetJustifyOn
+	CFont::SetJustifyOff
+	CFont::SetCentreOn
+	CFont::SetCentreOff
+	CFont::SetWrapx
+	CFont::SetCentreSize
+	CFont::SetBackgroundOn
+	CFont::SetBackgroundOff
+	CFont::SetBackGroundOnlyTextOn
+	CFont::SetBackGroundOnlyTextOff
+	CFont::SetRightJustifyOn
+	CFont::SetRightJustifyOff
+	CFont::SetPropOff
+	CFont::SetPropOn
+	CFont::SetRightJustifyWrap
+	CFont::SetAlphaFade
+	CFont::SetDropColor
+	CFont::SetOutlineOn
+	CFont::SetDropShadowPosition
+	CFont::SetIconScale
+	CFont::SetIconYCorrection
+	CFont::SetIconXCorrection
+	CFont::InitPerFrame
+	CFont::FindNewCharacter
+	CFont::ReplaceGermanSZ
+	CFont::PrintStringFromBottom
+	CFont::GetCharacterSize
+
+
+Class CFontDetails
+	CFontDetails::~CFontDetails
+
+
+Class CHud
+	CHud::ReInitialise
+	CHud::GetRidOfAllHudMessages
+	CHud::IsHelpMessageBeingDisplayed
+	CHud::SetHelpMessageWithNumber
+	CHud::SetVehicleName
+	CHud::DrawHudExtras
+	CHud::ClearSmallMessages
+	CHud::SetBigMessage
+	CHud::SetPagerMessage
+	CHud::ResetWastedText
+	CHud::DrawPickupTimers
+	CHud::GetRadarSizeX
+	CHud::GetRadarSizeY
+	CHud::GetRadarPosX
+	CHud::GetRadarPosY
+	CHud::DoHudFade
+	CHud::UseTimerCounterFontSettings
+
+
+Class CLines
+	CLines::RenderLineNoClipping
+	CLines::RenderLineWithClipping
+	CLines::ImmediateLine2D
+
+
+Class const,BatchedModel::C_TextureBucket>>>
+	const,BatchedModel::C_TextureBucket>>>::_M_erase
+
+
+Class CMBlur
+	CMBlur::CreateImmediateModeData
+	CMBlur::CreateImmediateModeData
+	CMBlur::PosInside
+	CMBlur::CheckWithinHudArea
+	CMBlur::AddRenderFx
+	CMBlur::MotionBlurClose
+	CMBlur::~CMBlur
+
+
+Class CStore<CTimeModelInfo,385>
+	CStore<CTimeModelInfo,385>::~CStore
+
+
+Class const,WorldShaderState>>>
+	const,WorldShaderState>>>::_M_erase
+
+
+Class lglResourceCreator
+	lglResourceCreator::~lglResourceCreator
+	lglResourceCreator::~lglResourceCreator
+	lglResourceCreator::onInit
+	lglResourceCreator::onTick
+	lglResourceCreator::lglResourceCreator
+
+
+Class Display::ScopedTextureAddressParamaters
+	Display::ScopedTextureAddressParamaters::ScopedTextureAddressParamaters
+	Display::ScopedTextureAddressParamaters::~ScopedTextureAddressParamaters
+
+
+Class CStore<CWeaponModelInfo,37>
+	CStore<CWeaponModelInfo,37>::~CStore
+
+
+Class glRingBuffers
+	glRingBuffers::glRingBuffers
+	glRingBuffers::destroy
+	glRingBuffers::endFrame
+	glRingBuffers::alloc
+
+
+Class CStore<CElementGroupModelInfo,10>
+	CStore<CElementGroupModelInfo,10>::~CStore
+
+
+Class TiXmlPrinter
+	TiXmlPrinter::VisitEnter
+	TiXmlPrinter::VisitExit
+	TiXmlPrinter::Visit
+	TiXmlPrinter::VisitExit
+	TiXmlPrinter::Visit
+	TiXmlPrinter::Visit
+	TiXmlPrinter::Visit
+	TiXmlPrinter::VisitEnter
+	TiXmlPrinter::~TiXmlPrinter
+	TiXmlPrinter::~TiXmlPrinter
+
+
+Class CStore<CVehicleModelInfo,110>
+	CStore<CVehicleModelInfo,110>::~CStore
+
+
+Class TiXmlHandle
+	TiXmlHandle::FirstChild
+	TiXmlHandle::FirstChild
+	TiXmlHandle::FirstChildElement
+	TiXmlHandle::FirstChildElement
+	TiXmlHandle::Child
+	TiXmlHandle::Child
+	TiXmlHandle::ChildElement
+	TiXmlHandle::ChildElement
+
+
+Class C2dEffect
+	C2dEffect::Shutdown
+
+
+Class lgFixedSizePoolStorage<JobQueueItem>
+	lgFixedSizePoolStorage<JobQueueItem>::~lgFixedSizePoolStorage
+
+
+Class lglRenderQueue
+	lglRenderQueue::~lglRenderQueue
+	lglRenderQueue::lglRenderQueue
+	lglRenderQueue::create
+	lglRenderQueue::destroy
+	lglRenderQueue::reset
+	lglRenderQueue::flushResources
+	lglRenderQueue::read_
+	lglRenderQueue::read_U8
+	lglRenderQueue::read_U16
+	lglRenderQueue::read_U32
+	lglRenderQueue::read_S32
+	lglRenderQueue::read_F32
+	lglRenderQueue::read_PTR
+	lglRenderQueue::read_LGLenum
+	lglRenderQueue::read_LGLsizei
+	lglRenderQueue::read_LGLuint
+	lglRenderQueue::read_LGLint
+	lglRenderQueue::read_LGLboolean
+	lglRenderQueue::read_LGLfloat
+	lglRenderQueue::read_LGLbitfield
+	lglRenderQueue::read_LGLclampf
+	lglRenderQueue::read_LGLintptr
+	lglRenderQueue::read_LGLsizeiptr
+	lglRenderQueue::write_
+	lglRenderQueue::write_U8
+	lglRenderQueue::write_U16
+	lglRenderQueue::write_U32
+	lglRenderQueue::write_F32
+	lglRenderQueue::write_PTR
+	lglRenderQueue::write_LGLenum
+	lglRenderQueue::write_LGLsizei
+	lglRenderQueue::write_LGLuint
+	lglRenderQueue::write_LGLint
+	lglRenderQueue::write_LGLboolean
+	lglRenderQueue::write_LGLfloat
+	lglRenderQueue::write_LGLbitfield
+	lglRenderQueue::write_LGLclampf
+	lglRenderQueue::write_LGLintptr
+	lglRenderQueue::write_LGLsizeiptr
+	lglRenderQueue::beginCommand
+	lglRenderQueue::endCommand
+	lglRenderQueue::flushCommands
+	lglRenderQueue::flushCommandsAndResources
+	lglRenderQueue::resetState
+	lglRenderQueue::set
+	lglRenderQueue::beginFrame
+	lglRenderQueue::endFrame
+	lglRenderQueue::setBackBuffer
+	lglRenderQueue::uploadBuffer
+	lglRenderQueue::lglActiveTexture
+	lglRenderQueue::lglBindFramebuffer
+	lglRenderQueue::lglBindIndexBuffer
+	lglRenderQueue::lglBindTexture
+	lglRenderQueue::lglBindVertexArray
+	lglRenderQueue::lglBindVertexBuffer
+	lglRenderQueue::lglBlendEquation
+	lglRenderQueue::lglBlendEquationSeparate
+	lglRenderQueue::lglBlendFunc
+	lglRenderQueue::lglBlendFuncSeparate
+	lglRenderQueue::lglBufferSubData
+	lglRenderQueue::lglClear
+	lglRenderQueue::lglClearColor
+	lglRenderQueue::lglClearDepthf
+	lglRenderQueue::lglColorMask
+	lglRenderQueue::lglCullFace
+	lglRenderQueue::lglDepthFunc
+	lglRenderQueue::lglDepthMask
+	lglRenderQueue::lglDisable
+	lglRenderQueue::lglDisableVertexAttribArray
+	lglRenderQueue::lglDrawElements
+	lglRenderQueue::lglEnable
+	lglRenderQueue::lglEnableVertexAttribArray
+	lglRenderQueue::lglFlush
+	lglRenderQueue::lglFramebufferRenderbuffer
+	lglRenderQueue::lglGenVertexArrays
+	lglRenderQueue::lglLineWidth
+	lglRenderQueue::lglTexParameteri
+	lglRenderQueue::lglPolygonOffset
+	lglRenderQueue::lglStencilFunc
+	lglRenderQueue::lglStencilOp
+	lglRenderQueue::lglUniform1f
+	lglRenderQueue::lglUniform2fv
+	lglRenderQueue::lglUniform4fv
+	lglRenderQueue::lglUniformMatrix4fv
+	lglRenderQueue::lglUseProgram
+	lglRenderQueue::lglVertexAttribPointer
+	lglRenderQueue::lglViewport
+
+
+Class COcclusion
+	COcclusion::AddOne
+	COcclusion::Write
+
+
+Class BatchedWorld::C_WorldRenderManager
+	BatchedWorld::C_WorldRenderManager::C_WorldRenderManager
+	BatchedWorld::C_WorldRenderManager::RenderOne
+	BatchedWorld::C_WorldRenderManager::Reset
+	BatchedWorld::C_WorldRenderManager::Render
+	BatchedWorld::C_WorldRenderManager::~C_WorldRenderManager
+	BatchedWorld::C_WorldRenderManager::GetFreeDrawCall
+
+
+Class CPedModelInfo
+	CPedModelInfo::RcWriteThis
+	CPedModelInfo::RcWriteEmpty
+	CPedModelInfo::WriteModel
+	CPedModelInfo::Write
+	CPedModelInfo::AddXtraElements
+	CPedModelInfo::SetFaceTexture
+	CPedModelInfo::SetElementGroup
+
+
+Class CRubbish
+	CRubbish::Shutdown
+	CRubbish::ListSize
+
+
+Class CSimpleModelInfo
+	CSimpleModelInfo::RcWriteThis
+	CSimpleModelInfo::RcWriteEmpty
+	CSimpleModelInfo::Write
+	CSimpleModelInfo::WriteModel
+	CSimpleModelInfo::SetElement
+	CSimpleModelInfo::Init
+	CSimpleModelInfo::GetLodDistance
+	CSimpleModelInfo::GetLodElement
+	CSimpleModelInfo::GetNearDistance
+	CSimpleModelInfo::SetLodDistances
+	CSimpleModelInfo::FindRelatedModel
+	CSimpleModelInfo::SetupBigBuilding
+	CSimpleModelInfo::~CSimpleModelInfo
+	CSimpleModelInfo::~CSimpleModelInfo
+
+
+Class JobDesc
+	JobDesc::JobDesc
+	JobDesc::JobDesc
+
+
+Class CTimeModelInfo
+	CTimeModelInfo::FindOtherTimeModel
+	CTimeModelInfo::RcWriteThis
+	CTimeModelInfo::RcWriteEmpty
+
+
+Class SerialiseEncryptionKey
+	SerialiseEncryptionKey::SerialiseEncryptionKey
+
+
+Class CSkidmarks
+	CSkidmarks::Shutdown
+	CSkidmarks::Clear
+
+
+Class lglThreadSync
+	lglThreadSync::lglThreadSync
+	lglThreadSync::waitForWorkerThreadsToBeReady
+	lglThreadSync::tellWorkerThreadsToBegin
+	lglThreadSync::waitForWorkerThreadsToFinish
+	lglThreadSync::tellWorkerThreadsTheyCanEnd
+	lglThreadSync::waitForMainThreadToSayItCanBegin
+	lglThreadSync::waitForMainThreadToSayItCanEnd
+
+
+Class lglWorldManager
+	lglWorldManager::create
+	lglWorldManager::destroy
+	lglWorldManager::destroy
+	lglWorldManager::destroyModel
+	lglWorldManager::~lglWorldManager
+	lglWorldManager::getModel
+
+
+Class CShinyTexts
+	CShinyTexts::RegisterOne
+
+
+Class C3dMarker
+	C3dMarker::C3dMarker
+
+
+Class C3dMarkers
+	C3dMarkers::Write
+	C3dMarkers::Update
+
+
+Class CSprite
+	CSprite::Initialise
+	CSprite::Draw3DSprite
+	CSprite::RenderOneXLUSprite_Rotate_Aspect
+	CSprite::RenderOneXLUSprite_Rotate_2Colours
+	CSprite::RenderOneXLUSprite2D
+	CSprite::RenderOneXLUSprite2D_Rotate_Dimension
+
+
+Class const,Display::ShaderConstant>>>
+	const,Display::ShaderConstant>>>::_M_erase
+
+
+Class CSprite2d
+	CSprite2d::SetRecipNearClip
+	CSprite2d::SetTextureNoDictionary
+	CSprite2d::SetTextureNoDictionary
+	CSprite2d::SetScaleValues
+	CSprite2d::SetScaleFactors
+	CSprite2d::IsVertexBufferEmpty
+	CSprite2d::SetVerticesForSniper
+	CSprite2d::OffsetTexCoordForBilinearFiltering
+	CSprite2d::DrawWithBilinearOffset
+	CSprite2d::DrawTxRect
+	CSprite2d::DrawRectXLU
+	CSprite2d::DrawSpecialRectForSniper
+
+
+Class int,Display::ShaderConstant>
+	int,Display::ShaderConstant>::~map
+
+
+Class CStreaming
+	CStreaming::Shutdown
+	CStreaming::LoadCdDirectory
+	CStreaming::LoadCdDirectory
+	CStreaming::DeleteRslObjectsInOverlapSectorList
+	CStreaming::DeleteFarAwayRslObjects
+	CStreaming::UpdateMemoryUsed
+	CStreaming::InstanceLoadedModelsInSectorList
+	CStreaming::InstanceLoadedModels
+	CStreaming::IsObjectInCdImage
+	CStreaming::ProcessEntitiesInSectorList
+	CStreaming::ProcessEntitiesInSectorList
+	CStreaming::AddModelsToRequestList
+	CStreaming::InstanceBigBuildings
+	CStreaming::RequestIslands
+	CStreaming::RequestAllModels
+	CStreaming::IsTexListUsedByRequestedModels
+	CStreaming::RemoveAllUnusedPeds
+	CStreaming::RemoveBigBuildings
+	CStreaming::RemoveUnusedBigBuildings
+	CStreaming::RemoveBuildings
+	CStreaming::RemoveUnusedBuildings
+	CStreaming::RemoveModelsNotVisibleFromCullzone
+	CStreaming::RemoveModelsNotVisibleFromCullzoneInSectorList
+	CStreaming::ConvertTextureBufferChunk
+	CStreaming::ConvertAnimBufferChunk
+	CStreaming::ConvertCollisionBufferChunk
+	CStreaming::MakeSpaceFor
+	CStreaming::ImGonnaUseStreamingMemory
+	CStreaming::IHaveUsedStreamingMemory
+	CStreaming::GetNextFileOnCd
+	CStreaming::GetCdImageOffset
+	CStreaming::RequestModelStream
+	CStreaming::SetSpecialCharIsDeletable
+	CStreaming::CheckLoadedVehicles
+	CStreaming::GetAvailableVehicleSlot
+	CStreaming::RemoveLoadedVehicle
+	CStreaming::RemoveAllUnusedModels
+	CStreaming::ProcessLoadingChannel
+	CStreaming::RetryLoadFile
+	CStreaming::GetDiscInDrive
+	CStreaming::FlushChannels
+	CStreaming::LoadRequestedModels
+	CStreaming::UpdateForAnimViewer
+	CStreaming::MemoryCardSave
+	CStreaming::MemoryCardLoad
+	CStreaming::PrintStreamingBufferStateToConsole
+	CStreaming::PrintRequestList
+	CStreaming::PrintStreamingBufferState
+	CStreaming::Write
+	CStreaming::ResetLists
+	CStreaming::Init2ndPass
+	CStreaming::RemoveNonReferencedTexLists
+	CStreaming::FixupAfterDefrag
+
+
+Class CWeaponModelInfo
+	CWeaponModelInfo::RcWriteThis
+	CWeaponModelInfo::RcWriteEmpty
+	CWeaponModelInfo::Init
+	CWeaponModelInfo::SetWeaponInfo
+
+
+Class const,BatchedModel::C_BatchBucket>>>
+	const,BatchedModel::C_BatchBucket>>>::_M_erase
+	const,BatchedModel::C_BatchBucket>>>::_M_erase
+	const,BatchedModel::C_BatchBucket>>>::_M_get_insert_hint_unique_pos
+
+
+Class CTexListStore
+	CTexListStore::GetTexListName
+	CTexListStore::Create
+	CTexListStore::RemoveTexListSlot
+	CTexListStore::RemoveTexListChunk
+	CTexListStore::AddRefEvenIfNotInMemory
+	CTexListStore::validateRefs
+	CTexListStore::Write
+
+
+Class CMessages
+	CMessages::CutString
+	CMessages::PrintString
+	CMessages::ClearHelpMessages
+	CMessages::HandleButtonIcons
+	CMessages::GetTokenPadKeyString
+	CMessages::AddMessageIfFree
+	CMessages::AddMessageWithString
+	CMessages::AddMessageSoonWithString
+	CMessages::AddHelpMessage
+	CMessages::ClearThisBigPrintNow
+
+
+Class CPager
+	CPager::Display
+	CPager::AddMessage
+	CPager::AddMessageWithNumber
+	CPager::RestartCurrentMessage
+
+
+Class CText
+	CText::GetUpperCase
+	CText::UpperCase
+	CText::ReadChunkHeader
+	CText::IsLoaded
+	CText::GetNameOfLoadedMissionText
+	CText::Unload
+	CText::Exists
+	CText::GetUTF8
+	CText::CText
+	CText::~CText
+
+
+Class CBoat
+	CBoat::DebugCode
+	CBoat::DisplayHandlingData
+	CBoat::ModifyHandlingValue
+	CBoat::PruneWakeTrail
+	CBoat::IsSectorAffectedByWake
+	CBoat::IsVertexAffectedByWake
+	CBoat::CheckForSkippingCalculations
+
+
+Class CTrainDoor
+	CTrainDoor::IsInUse
+	CTrainDoor::RetTranslationWhenClosed
+	CTrainDoor::IsClosed
+	CTrainDoor::RetTranslationWhenOpen
+	CTrainDoor::IsFullyOpen
+	CTrainDoor::Open
+
+
+Class CCranes
+	CCranes::SetupForMultiplayer
+	CCranes::DeActivateCrane
+	CCranes::FindNumCarsDroppedOff
+	CCranes::Save
+
+
+Class CDoor
+	CDoor::IsInUse
+
+
+Class CFerryDoor
+	CFerryDoor::IsInUse
+	CFerryDoor::RetTranslationWhenClosed
+	CFerryDoor::IsClosed
+	CFerryDoor::RetTranslationWhenOpen
+	CFerryDoor::IsFullyOpen
+	CFerryDoor::Open
+
+
+Class cBuoyancy
+	cBuoyancy::~cBuoyancy
+
+
+Class cHandlingDataMgr
+	cHandlingDataMgr::FindExactWord
+	cHandlingDataMgr::cHandlingDataMgr
+	cHandlingDataMgr::GetHandlingId
+	cHandlingDataMgr::ConvertBikeDataToWorldUnits
+	cHandlingDataMgr::ConvertBikeDataToGameUnits
+	cHandlingDataMgr::GetFlyingPointer
+	cHandlingDataMgr::GetBoatPointer
+	cHandlingDataMgr::RangeCheck
+	cHandlingDataMgr::ConvertDataToWorldUnits
+	cHandlingDataMgr::ConvertDataToGameUnits
+	cHandlingDataMgr::LoadHandlingData
+	cHandlingDataMgr::Initialise
+	cHandlingDataMgr::DisplayHandlingData
+	cHandlingDataMgr::ModifyHandlingValue
+
+
+Class lglMutex
+	lglMutex::lglMutex
+	lglMutex::~lglMutex
+	lglMutex::lock
+	lglMutex::unlock
+
+
+Class to'SocialClubSignUp
+	to'SocialClubSignUp::onTransitionFinished
+	to'SocialClubSignUp::getCountriesFailedWithMessage
+	to'SocialClubSignUp::getLanguageCode
+	to'SocialClubSignUp::~SocialClubSignUp
+	to'SocialClubSignUp::~SocialClubSignUp
+	to'SocialClubSignUp::onButtonTapped
+	to'SocialClubSignUp::succeededWithNothing
+	to'SocialClubSignUp::failedWithErrorMessage
+	to'SocialClubSignUp::getCountriesSucceededWithCountries
+
+
+Class CHeli
+	CHeli::ActivateHeli
+	CHeli::CatalinaTakeOff
+	CHeli::MakeCatalinaHeliFlyAway
+	CHeli::RemoveCatalinaHeli
+	CHeli::HasCatalinaBeenShotDown
+	CHeli::FindPointerToCatalinasHeli
+	CHeli::SetModelIndex
+
+
+Class CPlane
+	CPlane::FlagToDestroyWhenNextProcessed
+	CPlane::RenderAllRemaning
+	CPlane::Write
+	CPlane::SetupForMultiplayer
+	CPlane::Shutdown
+	CPlane::LoadPath
+	CPlane::Init
+	CPlane::UpdatePlanes
+	CPlane::TestRocketCollision
+	CPlane::Save
+	CPlane::Load
+	CPlane::SetModelIndex
+	CPlane::InitPlanes
+	CPlane::DeleteRslObject
+
+
+Class cTransmission
+	cTransmission::cTransmission
+	cTransmission::InitGearRatios
+	cTransmission::DisplayGearRatios
+
+
+Class LgGlAPI
+	LgGlAPI::bindVertexArray
+	LgGlAPI::genVertexArrays
+	LgGlAPI::deleteVertexArrays
+	LgGlAPI::glActiveTexture
+	LgGlAPI::glSetTextureFilter
+	LgGlAPI::glSetTextureAddress
+	LgGlAPI::glEnableCullFace
+	LgGlAPI::glDisableCullFace
+	LgGlAPI::glEnableDepthTest
+	LgGlAPI::glDisableDepthTest
+	LgGlAPI::glEnableDepthMask
+	LgGlAPI::glDisableDepthMask
+	LgGlAPI::glEnableBlend
+	LgGlAPI::glDisableBlend
+	LgGlAPI::glAttachShader
+	LgGlAPI::glBindAttribLocation
+	LgGlAPI::_bindIndexBuffer
+	LgGlAPI::bindIndexBuffer
+	LgGlAPI::glBindFramebuffer
+	LgGlAPI::glBindRenderbuffer
+	LgGlAPI::glBindTexture
+	LgGlAPI::glBlendColor
+	LgGlAPI::glBlendEquation
+	LgGlAPI::glBlendEquationSeparate
+	LgGlAPI::glBlendFunc
+	LgGlAPI::_bindVertexBuffer
+	LgGlAPI::bindVertexBuffer
+	LgGlAPI::glBlendFuncSeparate
+	LgGlAPI::glBufferData
+	LgGlAPI::glBufferIndexData
+	LgGlAPI::glBufferVertexData
+	LgGlAPI::glBufferSubData
+	LgGlAPI::glCheckFramebufferStatus
+	LgGlAPI::glClear
+	LgGlAPI::glClearColor
+	LgGlAPI::glClearDepthf
+	LgGlAPI::glClearStencil
+	LgGlAPI::glColorMask
+	LgGlAPI::glCompileShader
+	LgGlAPI::glCompressedTexImage2D
+	LgGlAPI::glCompressedTexSubImage2D
+	LgGlAPI::glCopyTexImage2D
+	LgGlAPI::glCopyTexSubImage2D
+	LgGlAPI::glCreateProgram
+	LgGlAPI::glCreateShader
+	LgGlAPI::glCullFace
+	LgGlAPI::glDeleteBuffers
+	LgGlAPI::glDeleteFramebuffers
+	LgGlAPI::glDeleteProgram
+	LgGlAPI::glDeleteRenderbuffers
+	LgGlAPI::glDeleteShader
+	LgGlAPI::glDeleteTextures
+	LgGlAPI::glDepthFunc
+	LgGlAPI::glDepthMask
+	LgGlAPI::glDepthRangef
+	LgGlAPI::glDetachShader
+	LgGlAPI::glDisable
+	LgGlAPI::_glDisableVertexAttribArray
+	LgGlAPI::glDisableVertexAttribArray
+	LgGlAPI::glDrawArrays
+	LgGlAPI::glDrawElements
+	LgGlAPI::glEnable
+	LgGlAPI::_glEnableVertexAttribArray
+	LgGlAPI::glEnableVertexAttribArray
+	LgGlAPI::glFinish
+	LgGlAPI::glFlush
+	LgGlAPI::glFramebufferRenderbuffer
+	LgGlAPI::glFramebufferTexture2D
+	LgGlAPI::glFrontFace
+	LgGlAPI::glGenBuffers
+	LgGlAPI::glGenerateMipmap
+	LgGlAPI::glGenFramebuffers
+	LgGlAPI::glGenRenderbuffers
+	LgGlAPI::glGenTextures
+	LgGlAPI::glGetActiveAttrib
+	LgGlAPI::glGetActiveUniform
+	LgGlAPI::glGetAttachedShaders
+	LgGlAPI::glGetAttribLocation
+	LgGlAPI::glGetBooleanv
+	LgGlAPI::glGetBufferParameteriv
+	LgGlAPI::glGetError
+	LgGlAPI::glGetFloatv
+	LgGlAPI::glGetFramebufferAttachmentParameteriv
+	LgGlAPI::glGetIntegerv
+	LgGlAPI::glGetProgramiv
+	LgGlAPI::glGetProgramInfoLog
+	LgGlAPI::glGetRenderbufferParameteriv
+	LgGlAPI::glGetShaderiv
+	LgGlAPI::glGetShaderInfoLog
+	LgGlAPI::glGetShaderPrecisionFormat
+	LgGlAPI::glGetShaderSource
+	LgGlAPI::glGetString
+	LgGlAPI::glGetTexParameterfv
+	LgGlAPI::glGetTexParameteriv
+	LgGlAPI::glGetUniformfv
+	LgGlAPI::glGetUniformiv
+	LgGlAPI::glGetUniformLocation
+	LgGlAPI::glGetVertexAttribfv
+	LgGlAPI::glGetVertexAttribiv
+	LgGlAPI::glGetVertexAttribPointerv
+	LgGlAPI::glHint
+	LgGlAPI::glIsBuffer
+	LgGlAPI::glIsEnabled
+	LgGlAPI::glIsFramebuffer
+	LgGlAPI::glIsProgram
+	LgGlAPI::glIsRenderbuffer
+	LgGlAPI::glIsShader
+	LgGlAPI::glIsTexture
+	LgGlAPI::glLineWidth
+	LgGlAPI::glLinkProgram
+	LgGlAPI::glPixelStorei
+	LgGlAPI::glPolygonOffset
+	LgGlAPI::glReadPixels
+	LgGlAPI::glReleaseShaderCompiler
+	LgGlAPI::glRenderbufferStorage
+	LgGlAPI::glSampleCoverage
+	LgGlAPI::glScissor
+	LgGlAPI::glShaderBinary
+	LgGlAPI::glShaderSource
+	LgGlAPI::glStencilFunc
+	LgGlAPI::glStencilFuncSeparate
+	LgGlAPI::glStencilMask
+	LgGlAPI::glStencilMaskSeparate
+	LgGlAPI::glStencilOp
+	LgGlAPI::glStencilOpSeparate
+	LgGlAPI::glTexImage2D
+	LgGlAPI::glTexParameterf
+	LgGlAPI::glTexParameterfv
+	LgGlAPI::glTexParameteri
+	LgGlAPI::glTexParameteriv
+	LgGlAPI::glTexSubImage2D
+	LgGlAPI::glUniform1f
+	LgGlAPI::glUniform1fv
+	LgGlAPI::glUniform1i
+	LgGlAPI::glUniform1iv
+	LgGlAPI::glUniform2f
+	LgGlAPI::glUniform2fv
+	LgGlAPI::glUniform2i
+	LgGlAPI::glUniform2iv
+	LgGlAPI::glUniform3f
+	LgGlAPI::glUniform3fv
+	LgGlAPI::glUniform3i
+	LgGlAPI::glUniform3iv
+	LgGlAPI::glUniform4f
+	LgGlAPI::glUniform4fv
+	LgGlAPI::glUniform4i
+	LgGlAPI::glUniform4iv
+	LgGlAPI::glUniformMatrix2fv
+	LgGlAPI::glUniformMatrix3fv
+	LgGlAPI::glUniformMatrix4fv
+	LgGlAPI::glUseProgram
+	LgGlAPI::glValidateProgram
+	LgGlAPI::glVertexAttrib1f
+	LgGlAPI::glVertexAttrib1fv
+	LgGlAPI::glVertexAttrib2f
+	LgGlAPI::glVertexAttrib2fv
+	LgGlAPI::glVertexAttrib3f
+	LgGlAPI::glVertexAttrib3fv
+	LgGlAPI::glVertexAttrib4f
+	LgGlAPI::glVertexAttrib4fv
+	LgGlAPI::_glVertexAttribPointer
+	LgGlAPI::glVertexAttribPointer
+	LgGlAPI::glViewport
+	LgGlAPI::glLabelObjectEXT
+	LgGlAPI::glGetObjectLabelEXT
+	LgGlAPI::glInsertEventMarkerEXT
+	LgGlAPI::glPushGroupMarkerEXT
+	LgGlAPI::glPopGroupMarkerEXT
+	LgGlAPI::glDiscardFramebufferEXT
+	LgGlAPI::glGenQueriesEXT
+	LgGlAPI::glDeleteQueriesEXT
+	LgGlAPI::glIsQueryEXT
+	LgGlAPI::glBeginQueryEXT
+	LgGlAPI::glEndQueryEXT
+	LgGlAPI::glGetQueryivEXT
+	LgGlAPI::glGetQueryObjectuivEXT
+	LgGlAPI::glGetBufferPointervOES
+	LgGlAPI::glMapBufferOES
+	LgGlAPI::glUnmapBufferOES
+	LgGlAPI::glMapBufferRangeEXT
+	LgGlAPI::glFlushMappedBufferRangeEXT
+
+
+Class to'hal::CachedFileLoader
+	to'hal::CachedFileLoader::titlesFailedWithError
+	to'hal::CachedFileLoader::titlesSucceededWithFileContents
+
+
+Class CWaterLevel
+	CWaterLevel::DestroyWavyElement
+	CWaterLevel::Shutdown
+	CWaterLevel::GetWaterWavesOnly
+	CWaterLevel::GetWaterNormal
+	CWaterLevel::NearWater
+	CWaterLevel::GetGroundLevel
+	CWaterLevel::IsLocationOutOfWorldBounds_WS
+	CWaterLevel::GetGroundLevel_WS
+	CWaterLevel::RenderShipsOnHorizon
+	CWaterLevel::RenderOneFlatLargeWaterPoly
+	CWaterLevel::RenderOneFlatHugeWaterPoly
+	CWaterLevel::RenderOneFlatExtraHugeWaterPoly
+	CWaterLevel::RenderWakeSegment
+	CWaterLevel::RenderOneFlatSmallWaterPolyBlended
+	CWaterLevel::Write
+	CWaterLevel::DoCodeForAmbienceVolume
+	CWaterLevel::RenderAndEmptyRenderBuffer_Strips
+	CWaterLevel::RenderFerryWakes
+
+
+Class CWeaponEffects
+	CWeaponEffects::~CWeaponEffects
+	CWeaponEffects::CWeaponEffects
+	CWeaponEffects::Shutdown
+	CWeaponEffects::DrawCrossHair
+	CWeaponEffects::DrawBoxCrossHair
+	CWeaponEffects::PlayerTakesDamage
+	CWeaponEffects::SetRotation
+	CWeaponEffects::GetTargetEntity
+
+
+Class ScopedFile
+	ScopedFile::ScopedFile
+	ScopedFile::~ScopedFile
+	ScopedFile::GetFile
+
+
+Class FSWadFile
+	FSWadFile::Write
+	FSWadFile::GetPos
+	FSWadFile::GetLength
+	FSWadFile::SetPos
+	FSWadFile::Read
+	FSWadFile::IsCRCValid
+	FSWadFile::~FSWadFile
+	FSWadFile::~FSWadFile
+	FSWadFile::FSWadFile
+	FSWadFile::Init
+
+
+Class IFile
+	IFile::~IFile
+	IFile::~IFile
+
+
+Class WadHeader
+	WadHeader::Serialise
+	WadHeader::Deserialise
+
+
+Class lglTextureTask
+	lglTextureTask::lglTextureTask
+	lglTextureTask::~lglTextureTask
+	lglTextureTask::reset
+	lglTextureTask::setState
+	lglTextureTask::tryState
+
+
+Class WadFatEntry
+	WadFatEntry::Serialise
+	WadFatEntry::Deserialise
+
+
+Class WadDir
+	WadDir::Serialise
+	WadDir::Deserialise
+
+
+Class const,BatchedModel::C_ShaderBucket>>>
+	const,BatchedModel::C_ShaderBucket>>>::_M_erase
+
+
+Class __cxxabiv1
+	__cxxabiv1::__terminate
+	__cxxabiv1::__unexpected
+
+
+Class WadArchive
+	WadArchive::WadArchive
+	WadArchive::~WadArchive
+	WadArchive::GetFatEntries
+	WadArchive::GetNumFatEntries
+	WadArchive::GetHeader
+	WadArchive::GetFatEntry
+	WadArchive::GetFatEntry
+	WadArchive::ReadDataUnencrypted
+	WadArchive::ReadDataEncrypted
+	WadArchive::ReadData
+	WadArchive::OpenFile
+	WadArchive::GetFileSize
+	WadArchive::BuildPath
+	WadArchive::BuildFilePath
+	WadArchive::OpenWad
+
+
+Class TiXmlText
+	TiXmlText::Accept
+	TiXmlText::Print
+	TiXmlText::CopyTo
+	TiXmlText::Clone
+	TiXmlText::ToText
+	TiXmlText::ToText
+
+
+Class Maths
+	Maths::AxisAngle
+	Maths::FullInverse
+
+
+Class localisation
+	localisation::setLang_de
+	localisation::setLang_en_US
+	localisation::setLang_es_ES
+	localisation::setLang_es_MX
+	localisation::setLang_fr
+	localisation::setLang_it
+	localisation::setLang_ja
+	localisation::setLang_ko
+	localisation::setLang_pl
+	localisation::setLang_pt
+	localisation::setLang_ru
+	localisation::setLang_zh
+
+
+Class Maths::C_Random
+	Maths::C_Random::C_Random
+	Maths::C_Random::SetSeed
+	Maths::C_Random::Rand
+	Maths::C_Random::FRand
+	Maths::C_Random::GetSeed
+	Maths::C_Random::Randomize
+
+
+Class Platform
+	Platform::GetSystemLanguage
+	Platform::GetLocale
+	Platform::GetConsoleRegion
+	Platform::GetDeviceName
+	Platform::GetDevicePerfName
+	Platform::LogFatal
+	Platform::LogError
+	Platform::LogWarning
+	Platform::LogInfo
+	Platform::LogDebug
+	Platform::onBoot
+	Platform::_FileInit
+	Platform::_FileShutdown
+	Platform::GetBundleRoot
+	Platform::GetAppSupportRoot
+	Platform::FileOpenOSFilePath
+	Platform::FileClose
+	Platform::dvFileSize
+	Platform::_FileGetHandle
+	Platform::RemoveFile
+	Platform::RenameFile
+	Platform::NetworkInit
+	Platform::NetworkShutdown
+	Platform::GetThreadID
+	Platform::AtomicIncrement
+	Platform::AtomicDecrement
+	Platform::Init
+	Platform::Shutdown
+	Platform::_LogFatalf
+	Platform::_LogErrorf
+	Platform::_LogWarningf
+	Platform::_LogInfof
+	Platform::_LogDebugf
+	Platform::_LogFatalfLF
+	Platform::_LogErrorfLF
+	Platform::_LogWarningfLF
+	Platform::_LogInfofLF
+	Platform::_LogDebugfLF
+	Platform::OpenDocumentFile
+	Platform::OpenAppSupportFile
+	Platform::RemoveAppSupportFile
+	Platform::RenameAppSupportFile
+	Platform::_MainFileInit
+	Platform::_MainFileShutdown
+	Platform::_OnOpenedFile
+	Platform::GetMainThreadID
+	Platform::GetCurrentEpochTime
+	Platform::SleepMilliseconds
+	Platform::SleepMicroseconds
+	Platform::GetSystemTicksToSecondsScale
+	Platform::GetSystemTicks
+
+
+Class Platform::File
+	Platform::File::~File
+	Platform::File::~File
+	Platform::File::Read
+	Platform::File::Write
+	Platform::File::SetPos
+	Platform::File::GetLength
+	Platform::File::GetPos
+	Platform::File::File
+	Platform::File::IsCRCValid
+
+
+Class const,BatchedModel::C_VBOBucket>>>
+	const,BatchedModel::C_VBOBucket>>>::_M_erase
+
+
+Class Platform::NetAddress
+	Platform::NetAddress::NetAddress
+	Platform::NetAddress::Set
+
+
+Class to'hal::AnimationView
+	to'hal::AnimationView::render
+	to'hal::AnimationView::update
+
+
+Class Platform::ScopedMutex
+	Platform::ScopedMutex::ScopedMutex
+	Platform::ScopedMutex::~ScopedMutex
+
+
+Class Platform::SocketSelectBSD
+	Platform::SocketSelectBSD::~SocketSelectBSD
+	Platform::SocketSelectBSD::Select
+	Platform::SocketSelectBSD::SocketSelectBSD
+	Platform::SocketSelectBSD::~SocketSelectBSD
+
+
+Class Platform::ISocketSelect
+	Platform::ISocketSelect::~ISocketSelect
+	Platform::ISocketSelect::~ISocketSelect
+
+
+Class Display::C_RenderTextureDbl
+	Display::C_RenderTextureDbl::C_RenderTextureDbl
+	Display::C_RenderTextureDbl::Resolve
+	Display::C_RenderTextureDbl::Swap
+	Display::C_RenderTextureDbl::Create
+	Display::C_RenderTextureDbl::~C_RenderTextureDbl
+
+
+Class Platform::Thread
+	Platform::Thread::~Thread
+	Platform::Thread::Thread
+	Platform::Thread::GetName
+	Platform::Thread::Start
+	Platform::Thread::IsStarted
+	Platform::Thread::_SetRunState
+	Platform::Thread::_SetExitCode
+	Platform::Thread::Join
+	Platform::Thread::~Thread
+
+
+Class Platform::CondVarMutex
+	Platform::CondVarMutex::CondVarMutex
+	Platform::CondVarMutex::~CondVarMutex
+	Platform::CondVarMutex::Lock
+	Platform::CondVarMutex::Unlock
+
+
+Class lglModelCreator
+	lglModelCreator::hasPendingTasks
+	lglModelCreator::tick
+	lglModelCreator::destroyAll
+	lglModelCreator::~lglModelCreator
+	lglModelCreator::createReady
+	lglModelCreator::add
+
+
+Class Platform::CondVar
+	Platform::CondVar::CondVar
+	Platform::CondVar::~CondVar
+	Platform::CondVar::Create
+	Platform::CondVar::Destroy
+	Platform::CondVar::Signal
+	Platform::CondVar::Broadcast
+	Platform::CondVar::Wait
+	Platform::CondVar::Wait
+
+
+Class Platform::Semaphore
+	Platform::Semaphore::Semaphore
+	Platform::Semaphore::~Semaphore
+	Platform::Semaphore::Down
+	Platform::Semaphore::Up
+
+
+Class C_ContextProvider
+	C_ContextProvider::C_ContextProvider
+
+
+Class Ut::DoEndianSwap
+	Ut::DoEndianSwap::EndianSwapQ
+	Ut::DoEndianSwap::EndianSwapD
+	Ut::DoEndianSwap::EndianSwapW
+	Ut::DoEndianSwap::EndianSwapQ
+	Ut::DoEndianSwap::EndianSwapD
+	Ut::DoEndianSwap::EndianSwapW
+	Ut::DoEndianSwap::EndianSwap
+
+
+Class const,BatchedWorld::C_DrawCallBucket>>>
+	const,BatchedWorld::C_DrawCallBucket>>>::_M_erase
+	const,BatchedWorld::C_DrawCallBucket>>>::_M_erase
+	const,BatchedWorld::C_DrawCallBucket>>>::_M_get_insert_hint_unique_pos
+
+
+Class JobQueueThread
+	JobQueueThread::ThreadMain
+	JobQueueThread::~JobQueueThread
+	JobQueueThread::~JobQueueThread
+	JobQueueThread::JobQueueThread
+	JobQueueThread::UpdateTickMainThread
+	JobQueueThread::AddJob
+	JobQueueThread::JobQueueEmpty
+	JobQueueThread::Quit
+
+
+Class JobQueue
+	JobQueue::JobQueue
+	JobQueue::~JobQueue
+	JobQueue::AddJob
+	JobQueue::JobQueueEmpty
+	JobQueue::UpdateTickMainThread
+	JobQueue::Wait
+
+
+Class BinarySerialiser
+	BinarySerialiser::BinarySerialiser
+	BinarySerialiser::Init
+	BinarySerialiser::WriteRawUnencrypted
+	BinarySerialiser::WriteRawEncrypted
+	BinarySerialiser::WriteRaw
+	BinarySerialiser::GetPos
+	BinarySerialiser::SetPos
+	BinarySerialiser::Write
+	BinarySerialiser::Write
+	BinarySerialiser::Write
+	BinarySerialiser::Write
+	BinarySerialiser::Write
+	BinarySerialiser::Write
+	BinarySerialiser::Write
+	BinarySerialiser::Write
+	BinarySerialiser::Write
+	BinarySerialiser::Write
+	BinarySerialiser::Write
+	BinarySerialiser::Write
+
+
+Class lgClock
+	lgClock::~lgClock
+	lgClock::Reset
+	lgClock::lgClock
+	lgClock::GetTimeSeconds
+	lgClock::GetTimeMilliseconds
+	lgClock::GetTimeMicroseconds
+	lgClock::GetTimeNanoseconds
+
+
+Class lglLoaderTask
+	lglLoaderTask::lglLoaderTask
+
+
+Class Display
+	Display::CreateDepthStencil
+	Display::ReleaseDepthStencil
+	Display::dvCreateStatGroups
+	Display::Initialise
+	Display::BeginScene
+	Display::EndScene
+	Display::RestoreViewport
+	Display::SetCullMode
+	Display::GetCullMode
+	Display::SetBlendState
+	Display::SetSamplerState
+	Display::SetTexture
+	Display::SetColourWriteState
+	Display::SetDepthState
+	Display::GetDepthState
+	Display::SetStencilTestEnable
+	Display::SetStencilStateFunc
+	Display::SetStencilStateOp
+	Display::EFormatToBytesPerPixel
+	Display::MakeLinelistIndexData
+	Display::MakeQuadlistIndexData
+	Display::MakeTrilistIndexData
+	Display::GetAssetScaleFactor
+	Display::GetScreenWidth
+	Display::GetScreenHeight
+	Display::SetDepthStateSettingEnabled
+	Display::SetTextureSettingEnabled
+	Display::SetSamplerStateSettingEnabled
+	Display::SetBlendStateSettingEnabled
+	Display::SetCullStateSettingEnabled
+	Display::GetOffscreenResolution
+	Display::SetOffscreenResolution
+	Display::SetViewport
+	Display::CreateIndexBuffer
+	Display::ReleaseIndexBuffer
+	Display::SetDepthTexture
+	Display::SetStencilTexture
+	Display::ClearDepthOnly
+	Display::GetDepthStencil
+	Display::GetDesc
+	Display::ClearDepthOnly
+	Display::CreateDepthStencil_Volatile
+	Display::DestroyDepthStencil_Volatile
+	Display::_CreateDepthStencil
+	Display::_ReleaseDepthStencil
+	Display::Clear2
+	Display::AdvanceDrawCallCount
+	Display::GetQuadListIndexBuffer
+	Display::Suspend
+	Display::Resume
+	Display::UseVAOs
+	Display::SetBackBuffer
+	Display::_EndScene
+	Display::RenderValid
+	Display::RecreateRender
+	Display::ClearColourOnly
+	Display::ClearColourOnly
+	Display::SetViewportTransformEnable
+	Display::plt_SetViewport
+	Display::GetTransformMatrix
+	Display::CheckFrameBufferStatus
+	Display::RenderPointSprites
+	Display::RenderPointQuads
+	Display::RenderLineList
+	Display::RenderLineList
+	Display::RenderQuadList
+	Display::RenderQuadList
+	Display::RenderTrilist
+	Display::Resolve
+	Display::_GetOffscreenResolution
+	Display::_SetOffscreenResolution
+	Display::RenderTriList
+	Display::BlockUntilGPUIdle
+	Display::_GetUIScale
+	Display::_OnSurfaceChanged
+	Display::EFormatToGLESFormat
+	Display::EFormatToAttachmentType
+	Display::EFormatHasStencil
+	Display::EFormatHasDepth
+	Display::Clear
+	Display::_BeginScene
+	Display::EFormatToGLESDataType
+	Display::_Initialise
+	Display::AllocatePoolBuffer
+	Display::ReleasePoolBuffer
+	Display::CreateIndexBuffer_Volatile
+	Display::DestroyIndexBuffer_Volatile
+	Display::_CreateIndexBuffer
+	Display::_ReleaseIndexBuffer
+	Display::__SetCullMode
+	Display::_SetCullMode
+	Display::__SetBlendState
+	Display::_SetBlendState
+	Display::GetBlendState
+	Display::_SetSamplerState
+	Display::__SetSamplerState
+	Display::GetSamplerState
+	Display::__SetColourWriteState
+	Display::_SetColourWriteState
+	Display::__SetDepthState
+	Display::_SetDepthState
+	Display::SetZBias
+	Display::SetDepthWriteEnable
+	Display::SetDepthTestEnable
+	Display::GetDepthStencilState
+	Display::ToGLStencilFunc
+	Display::ToGLStencilOp
+	Display::SetStencilState
+	Display::__SetStencilState
+	Display::_SetStencilState
+	Display::GetStencilState
+	Display::TranslateTextureState
+	Display::__SetTexture
+	Display::ResolveRenderState
+	Display::InvalidateRenderState
+	Display::GetRenderTarget
+	Display::GetDesc
+	Display::SetRenderTarget
+	Display::SetRenderTarget
+	Display::CreateRenderTarget_Volatile
+	Display::DestroyRenderTarget_Volatile
+	Display::_CreateRenderTarget
+	Display::_ReleaseRenderTarget
+	Display::GetGLESUsage
+	Display::VDESC_GetStreamType
+	Display::VDESC_GetStreamNormalised
+	Display::BuildDecl
+	Display::GetActiveShader
+	Display::GetFragmentShaderUniformStringId
+	Display::GetVertexShaderUniformStringId
+	Display::SetFragmentShaderConstantF
+	Display::SetVertexShaderConstantF
+	Display::SetShaderConstantF
+	Display::SetShaderConstantArrayMatF
+	Display::SetShaderConstantArrayVec4F
+	Display::AddFragmentShaderConstantEntryF
+	Display::AddVertexShaderConstantEntryF
+	Display::AddShaderConstantEntryF
+	Display::AddVertexShaderConstantEntryArrayF
+	Display::AddShaderConstantEntryArrayF
+	Display::ShaderInitialise
+	Display::BuildShaderOSPath
+	Display::LoadShaderFromFile
+	Display::InitShader
+	Display::CreateProgramFromBuffer
+	Display::BlockUntilNotBusy
+	Display::_SetTexture
+	Display::LockRect
+	Display::UnlockRect
+	Display::LockSubRect
+	Display::UnlockSubRect
+	Display::GetDesc
+	Display::LoadTGATexture
+	Display::UploadCompressedTexture
+	Display::CreateTexture_Volatile
+	Display::DestroyTexture_Volatile
+	Display::_IsTextureFormatSupported
+	Display::_CreateTexture
+	Display::_ReleaseTexture
+	Display::ShouldMapVertexBuffers
+	Display::CreateVertexBuffer_Volatile
+	Display::DestroyVertexBuffer_Volatile
+	Display::_CreateVertexBuffer
+	Display::DisableVertexBuffer
+	Display::CreateVAOForActiveShader
+	Display::_ReleaseVertexBuffer
+	Display::SetVAO
+	Display::RenderPassThrough
+	Display::util_number_is_power_2
+	Display::PVRTDecompressPVRTC
+	Display::PVRTextureFormatToDisplayFormat
+	Display::CreateDummyTexture
+	Display::DecompressPVRTC
+	Display::DecompressETC
+	Display::GetPixelFormatName
+	Display::ReadPVRV3Metadata
+	Display::LoadPVRTextureV3FromBuffer
+	Display::LoadPVRTextureFromBuffer
+	Display::ResetRenderState
+	Display::SetStateCacheEnabled
+	Display::GetStateCacheEnabled
+	Display::SetDeferredRenderStateUpdatesEnabled
+	Display::GetDeferredStateUpdatesEnabled
+	Display::DepthStateAsString
+	Display::BlendStateAsString
+	Display::CullModeStateAsString
+	Display::GetNoStatGroups
+	Display::SetStatGroupName
+	Display::GetStatGroupName
+	Display::CreateRenderTarget
+	Display::ReleaseRenderTarget
+	Display::IsRenderTargetValid
+	Display::Project
+	Display::VDESC_GetNumStreams
+	Display::VDESC_GetStreamCount
+	Display::VDESC_GetStreamStride
+	Display::VDESC_GetStreamOffset
+	Display::VDESC_GetStreamUsage
+	Display::VDESC_GetVertexStride
+	Display::EShaderDefineToString
+	Display::EShaderToString
+	Display::GetShaderBinding
+	Display::SetupShaderBindings
+	Display::SetupConstantTables
+	Display::SetMaxFadeDepth
+	Display::GetUIFadeValueForWorldDepth
+	Display::GetFadeParams
+	Display::ShaderState_Init
+	Display::InitTextureSystem
+	Display::ReleaseTextureNow
+	Display::AcquireTextureRef
+	Display::GetTextureRefCount
+	Display::GetLastUsedFrame
+	Display::SetLastUsedFrame
+	Display::IsTextureFormatSupported
+	Display::CreateTexture
+	Display::LoadPNGTextureFromBuffer
+	Display::LoadPNGTexture
+	Display::LoadPVRTexture
+	Display::LoadJPGTextureFromBuffer
+	Display::CreateChecker1px
+	Display::Texture_LoadShadowPNGTextureBackgroundThread
+	Display::Texture_MainThreadGPUUpload
+	Display::ReleaseTexture
+	Display::CreateVertexBuffer
+	Display::ReleaseVertexBuffer
+
+
+Class Display::C_Culling
+	Display::C_Culling::SetModelMatrix
+	Display::C_Culling::SetViewMatrix
+	Display::C_Culling::SetProjectionPerspective
+	Display::C_Culling::SetProjectionFOV
+	Display::C_Culling::SetProjectionOrthographic
+	Display::C_Culling::Update
+	Display::C_Culling::ForceUpdate
+	Display::C_Culling::DrawVolume
+	Display::C_Culling::ReleaseDrawVolume
+	Display::C_Culling::SquaredDistPointAABB
+	Display::C_Culling::PerformPointCullCheck
+	Display::C_Culling::PerformSphereCullCheck
+	Display::C_Culling::PerformAABoundingBoxCullCheck
+
+
+Class Display::C_DepthStencil
+	Display::C_DepthStencil::C_DepthStencil
+	Display::C_DepthStencil::~C_DepthStencil
+
+
+Class LgGlAPI::lg_glState
+	LgGlAPI::lg_glState::resetStats
+
+
+Class LgGl
+	LgGl::ProbeGLESExtension
+	LgGl::IsGLExtensionSupported
+	LgGl::InitGLExtensions
+	LgGl::CheckGLError
+	LgGl::SetDumpGLStateFunc
+
+
+Class Display::C_RenderTarget
+	Display::C_RenderTarget::C_RenderTarget
+	Display::C_RenderTarget::~C_RenderTarget
+
+
+Class const,std::vector<Display::ShaderConstant>>>>
+	const,std::vector<Display::ShaderConstant>>>>::_M_erase
+
+
+Class int,std::vector<Display::ShaderConstant>>
+	int,std::vector<Display::ShaderConstant>>::~map
+
+
+Class Display::ShaderGLES
+	Display::ShaderGLES::ShaderGLES
+	Display::ShaderGLES::~ShaderGLES
+	Display::ShaderGLES::Release
+	Display::ShaderGLES::GetAttribLocation
+	Display::ShaderGLES::GetUniformLocation
+	Display::ShaderGLES::SetUniformF
+	Display::ShaderGLES::SetUniformI
+	Display::ShaderGLES::CacheParameters
+
+
+Class Display::ShaderManagerGLES
+	Display::ShaderManagerGLES::ShaderManagerGLES
+	Display::ShaderManagerGLES::Init
+	Display::ShaderManagerGLES::Reset
+	Display::ShaderManagerGLES::~ShaderManagerGLES
+	Display::ShaderManagerGLES::GetShader
+	Display::ShaderManagerGLES::FreeShader
+	Display::ShaderManagerGLES::Close
+	Display::ShaderManagerGLES::GetStaticUniformState
+	Display::ShaderManagerGLES::SetStaticUniformState
+	Display::ShaderManagerGLES::CreateShaderFromBuffers
+	Display::ShaderManagerGLES::LoadShader
+
+
+Class Display::C_VertexBuffer
+	Display::C_VertexBuffer::getVBO
+	Display::C_VertexBuffer::Lock
+	Display::C_VertexBuffer::Unlock
+	Display::C_VertexBuffer::C_VertexBuffer
+	Display::C_VertexBuffer::Reset
+	Display::C_VertexBuffer::~C_VertexBuffer
+
+
+Class Display::C_RenderTargetDesc
+	Display::C_RenderTargetDesc::C_RenderTargetDesc
+
+
+Class CStateTracker
+	CStateTracker::cmpset
+	CStateTracker::invalidate
+	CStateTracker::CStateTracker
+	CStateTracker::VertexAttribEnabledState
+	CStateTracker::VertexAttribPointerState
+	CStateTracker::BindBufferState
+
+
+Class Display::C_RenderState
+	Display::C_RenderState::InvalidateTextures
+	Display::C_RenderState::Invalidate
+	Display::C_RenderState::C_RenderState
+	Display::C_RenderState::QueueSetColourWriteState
+	Display::C_RenderState::QueueSetDepthState
+	Display::C_RenderState::QueueSetCullMode
+	Display::C_RenderState::QueueSetBlendState
+	Display::C_RenderState::QueueSetStencilState
+	Display::C_RenderState::QueueSetShader
+	Display::C_RenderState::QueueSetTexture
+	Display::C_RenderState::QueueSetSamplerState
+
+
+Class Display::ShaderBase
+	Display::ShaderBase::~ShaderBase
+	Display::ShaderBase::~ShaderBase
+	Display::ShaderBase::Set
+	Display::ShaderBase::ShaderBase
+	Display::ShaderBase::ClearLastShader
+
+
+Class const,Display::ShaderBinding>>>
+	const,Display::ShaderBinding>>>::_M_erase
+
+
+Class gpuDraw
+	gpuDraw::gpuDraw
+	gpuDraw::create
+	gpuDraw::createVolatile
+	gpuDraw::destroyVolatile
+	gpuDraw::destroy
+	gpuDraw::setWindow
+	gpuDraw::setCamera
+	gpuDraw::setCamera
+
+
+Class glRingBuffer
+	glRingBuffer::glRingBuffer
+	glRingBuffer::create
+	glRingBuffer::destroy
+	glRingBuffer::alloc
+	glRingBuffer::flush
+	glRingBuffer::endFrame
+
+
+Class BatchedModel::C_DeferredBatch
+	BatchedModel::C_DeferredBatch::C_DeferredBatch
+	BatchedModel::C_DeferredBatch::~C_DeferredBatch
+
+
+Class BatchedWorld::C_DrawCall
+	BatchedWorld::C_DrawCall::~C_DrawCall
+	BatchedWorld::C_DrawCall::Reset
+	BatchedWorld::C_DrawCall::C_DrawCall
+
+
+Class to'hal::ToggleButton
+	to'hal::ToggleButton::~ToggleButton
+	to'hal::ToggleButton::~ToggleButton
+	to'hal::ToggleButton::buttonTouchMove
+	to'hal::ToggleButton::buttonTouchCancel
+	to'hal::ToggleButton::buttonTouchDown
+	to'hal::ToggleButton::buttonTouchUp
+
+
+Class BatchedModel
+	BatchedModel::BindBuffers
+
+
+Class BatchedWorld
+	BatchedWorld::BindBuffers
+
+
+Class const,BatchedWorld::C_VBOBucket>>>
+	const,BatchedWorld::C_VBOBucket>>>::_M_erase
+
+
+Class ,WorldShaderState>
+	,WorldShaderState>::~map
+
+
+Class GAScreenViewTracking
+	GAScreenViewTracking::GAScreenViewTracking
+	GAScreenViewTracking::~GAScreenViewTracking
+	GAScreenViewTracking::~GAScreenViewTracking
+
+
+Class lglDynamicVB::Item
+	lglDynamicVB::Item::Item
+
+
+Class lglDynamicVB::Pool
+	lglDynamicVB::Pool::Pool
+	lglDynamicVB::Pool::get
+	lglDynamicVB::Pool::reset
+
+
+Class lglGeometryDestroyer
+	lglGeometryDestroyer::hasPendingTasks
+	lglGeometryDestroyer::add
+	lglGeometryDestroyer::tick
+	lglGeometryDestroyer::destroyAll
+	lglGeometryDestroyer::~lglGeometryDestroyer
+	lglGeometryDestroyer::destroyFreed
+
+
+Class lglLoader
+	lglLoader::~lglLoader
+	lglLoader::~lglLoader
+	lglLoader::onLoad
+	lglLoader::onTick
+	lglLoader::addTask
+
+
+Class lglTextureDestroyer
+	lglTextureDestroyer::lglTextureDestroyer
+	lglTextureDestroyer::hasPendingTasks
+	lglTextureDestroyer::add
+	lglTextureDestroyer::tick
+	lglTextureDestroyer::sync
+	lglTextureDestroyer::destroyFreed
+	lglTextureDestroyer::removeIfExists
+	lglTextureDestroyer::destroyAll
+	lglTextureDestroyer::~lglTextureDestroyer
+
+
+Class lglCondVarMutex
+	lglCondVarMutex::lglCondVarMutex
+	lglCondVarMutex::~lglCondVarMutex
+	lglCondVarMutex::lock
+	lglCondVarMutex::unlock
+
+
+Class lglCondVar
+	lglCondVar::lglCondVar
+	lglCondVar::create
+	lglCondVar::destroy
+	lglCondVar::~lglCondVar
+	lglCondVar::broadcast
+	lglCondVar::signal
+	lglCondVar::wait
+
+
+Class lglVarrayDestroyer
+	lglVarrayDestroyer::lglVarrayDestroyer
+	lglVarrayDestroyer::add
+	lglVarrayDestroyer::tick
+	lglVarrayDestroyer::sync
+	lglVarrayDestroyer::destroyAll
+	lglVarrayDestroyer::~lglVarrayDestroyer
+	lglVarrayDestroyer::destroyFreed
+
+
+Class lglVarrayRecycler
+	lglVarrayRecycler::destroy
+	lglVarrayRecycler::get
+	lglVarrayRecycler::tick
+	lglVarrayRecycler::add
+
+
+Class lglWorldCreator
+	lglWorldCreator::hasPendingTasks
+	lglWorldCreator::add
+	lglWorldCreator::remove
+	lglWorldCreator::tick
+	lglWorldCreator::createReady
+	lglWorldCreator::destroyAll
+	lglWorldCreator::~lglWorldCreator
+
+
+Class GASocialTracking
+	GASocialTracking::GASocialTracking
+	GASocialTracking::~GASocialTracking
+	GASocialTracking::~GASocialTracking
+
+
+Class GAExceptionTracking
+	GAExceptionTracking::GAExceptionTracking
+	GAExceptionTracking::~GAExceptionTracking
+	GAExceptionTracking::~GAExceptionTracking
+
+
+Class GTALCSDelegate
+	GTALCSDelegate::SocialClubOffline
+	GTALCSDelegate::SocialClubSignedIn
+	GTALCSDelegate::SocialClubInvokedFromIngame
+	GTALCSDelegate::SocialClubRevokedFromIngame
+
+
+Class Guid
+	Guid::Guid
+	Guid::Guid
+	Guid::Guid
+	Guid::Guid
+	Guid::Guid
+	Guid::operator=
+	Guid::operator==
+	Guid::operator!=
+	Guid::generateUUID4
+
+
+Class to'hal::AlertBox
+	to'hal::AlertBox::onLoaded
+	to'hal::AlertBox::onTapped
+	to'hal::AlertBox::onButtonTapped
+
+
+Class const,hal::Point>>>
+	const,hal::Point>>>::_M_erase
+
+
+Class const,std::vector<hal::AnimationLayerData>>>>
+	const,std::vector<hal::AnimationLayerData>>>>::_M_erase
+
+
+Class const,int>
+	const,int>::~map
+
+
+Class const>
+	const>::~map
+
+
+Class to'hal::Screen
+	to'hal::Screen::onTransitionFinished
+	to'hal::Screen::~Screen
+	to'hal::Screen::~Screen
+
+
+Class to'hal::TabViewManager
+	to'hal::TabViewManager::~TabViewManager
+	to'hal::TabViewManager::~TabViewManager
+	to'hal::TabViewManager::onToggled
+
+
+Class *hal::Util
+	*hal::Util::stringWithFormat
+
+
+Class to'hal::Variant
+	to'hal::Variant::~Variant
+	to'hal::Variant::~Variant
+
+
+Class const,hal::smart_ptr<hal::Variant>>>>
+	const,hal::smart_ptr<hal::Variant>>>>::_M_erase
+
+
+Class const,hal::ZipFileEntry>>>
+	const,hal::ZipFileEntry>>>::_M_erase
+
+
+Class MainUpdateHandler
+	MainUpdateHandler::run
+
+
+Class to'SocialClubAccountDetails
+	to'SocialClubAccountDetails::onTransitionFinished
+	to'SocialClubAccountDetails::onToggled
+	to'SocialClubAccountDetails::succeeded
+	to'SocialClubAccountDetails::failedWithMessage
+	to'SocialClubAccountDetails::~SocialClubAccountDetails
+	to'SocialClubAccountDetails::~SocialClubAccountDetails
+	to'SocialClubAccountDetails::onAlertBoxDismissed
+	to'SocialClubAccountDetails::onButtonTapped
+
+
+Class UIMap
+	UIMap::~UIMap
+	UIMap::selectView
+
+
+Class to'ScSaveData
+	to'ScSaveData::succeeded
+	to'ScSaveData::failedWithError
+	to'ScSaveData::failedWithMessage
+	to'ScSaveData::succeededWithFlag
+
+
+Class to'SocialClubForgottenPassword
+	to'SocialClubForgottenPassword::failedWithMessage
+	to'SocialClubForgottenPassword::onAlertBoxDismissed
+	to'SocialClubForgottenPassword::succeeded
+	to'SocialClubForgottenPassword::onButtonTapped
+
+
+Class to'SocialClubPolicyScreen
+	to'SocialClubPolicyScreen::failedWithMessageLegalDoc
+	to'SocialClubPolicyScreen::succeededWithDocType
+	to'SocialClubPolicyScreen::onButtonTapped
+
+
+Class to'SocialClubSignIn
+	to'SocialClubSignIn::onAlertBoxDismissed
+	to'SocialClubSignIn::SocialClubSignInFailed
+	to'SocialClubSignIn::onTransitionFinished
+	to'SocialClubSignIn::onToggled
+	to'SocialClubSignIn::~SocialClubSignIn
+	to'SocialClubSignIn::~SocialClubSignIn
+	to'SocialClubSignIn::timerTick
+	to'SocialClubSignIn::timerExpired
+	to'SocialClubSignIn::succeededWithStatus
+	to'SocialClubSignIn::getLanguageCode
+	to'SocialClubSignIn::onButtonTapped
+	to'SocialClubSignIn::getCountriesFailedWithMessage
+	to'SocialClubSignIn::getCountriesSucceededWithCountries
+
+
+Class ,std::vector<std::pair<std::string,std
+	,std::vector<std::pair<std::string,std::string>>>>
+	,std::vector<std::pair<std::string,std::string>>>>
+	,std::vector<std::pair<std::string,std::string>>>>
+	,std::vector<std::pair<std::string,std::string>>>>
+	,std::vector<std::pair<std::string,std::string>>>,int>
+
+
+Class dvContainerAllocDefaultPolicy
+	dvContainerAllocDefaultPolicy::Alloc
+	dvContainerAllocDefaultPolicy::Free
+
+
+Class TiXmlString
+	TiXmlString::reserve
+	TiXmlString::assign
+	TiXmlString::append
+
+
+Class TiXmlComment
+	TiXmlComment::Accept
+	TiXmlComment::Print
+	TiXmlComment::CopyTo
+	TiXmlComment::operator=
+	TiXmlComment::Clone
+	TiXmlComment::ToComment
+	TiXmlComment::ToComment
+
+
+Class TiXmlNode
+	TiXmlNode::CopyTo
+	TiXmlNode::RemoveChild
+	TiXmlNode::FirstChild
+	TiXmlNode::LastChild
+	TiXmlNode::IterateChildren
+	TiXmlNode::NextSibling
+	TiXmlNode::IterateChildren
+	TiXmlNode::PreviousSibling
+	TiXmlNode::FirstChildElement
+	TiXmlNode::FirstChildElement
+	TiXmlNode::NextSiblingElement
+	TiXmlNode::NextSiblingElement
+	TiXmlNode::InsertEndChild
+	TiXmlNode::InsertBeforeChild
+	TiXmlNode::InsertAfterChild
+	TiXmlNode::ReplaceChild
+	TiXmlNode::ToDocument
+	TiXmlNode::ToElement
+	TiXmlNode::ToComment
+	TiXmlNode::ToUnknown
+	TiXmlNode::ToText
+	TiXmlNode::ToDeclaration
+	TiXmlNode::ToDocument
+	TiXmlNode::ToElement
+	TiXmlNode::ToComment
+	TiXmlNode::ToUnknown
+	TiXmlNode::ToText
+	TiXmlNode::ToDeclaration
+
+
+Class TiXmlAttribute
+	TiXmlAttribute::Next
+	TiXmlAttribute::Previous
+	TiXmlAttribute::Print
+	TiXmlAttribute::QueryIntValue
+	TiXmlAttribute::QueryDoubleValue
+	TiXmlAttribute::SetIntValue
+	TiXmlAttribute::SetDoubleValue
+	TiXmlAttribute::IntValue
+	TiXmlAttribute::DoubleValue
+	TiXmlAttribute::Print
+	TiXmlAttribute::~TiXmlAttribute
+	TiXmlAttribute::~TiXmlAttribute
+
+
+Class TiXmlAttributeSet
+	TiXmlAttributeSet::Find
+	TiXmlAttributeSet::Add
+	TiXmlAttributeSet::FindOrCreate
+
+
+Class logger
+	logger::initializeCrashLogWriter
+	logger::writeToCrashLog
+	logger::write
+
+
+Class short>
+	short>::_M_fill_insert
+	short>::_M_default_append
+
+
+Class GUIDGenerator
+	GUIDGenerator::InitOnceImpl
+
+
+Class __cxxabiv1::__vmi_class_type_info
+	__cxxabiv1::__vmi_class_type_info::~__vmi_class_type_info
+	__cxxabiv1::__vmi_class_type_info::~__vmi_class_type_info
+	__cxxabiv1::__vmi_class_type_info::__do_find_public_src
+	__cxxabiv1::__vmi_class_type_info::__do_dyncast
+	__cxxabiv1::__vmi_class_type_info::__do_upcast
+
+
+Class __cxxabiv1::__si_class_type_info
+	__cxxabiv1::__si_class_type_info::~__si_class_type_info
+	__cxxabiv1::__si_class_type_info::~__si_class_type_info
+	__cxxabiv1::__si_class_type_info::__do_find_public_src
+	__cxxabiv1::__si_class_type_info::__do_dyncast
+	__cxxabiv1::__si_class_type_info::__do_upcast
+
+
+Class __cxxabiv1::__class_type_info
+	__cxxabiv1::__class_type_info::__do_upcast
+	__cxxabiv1::__class_type_info::__do_find_public_src
+	__cxxabiv1::__class_type_info::~__class_type_info
+	__cxxabiv1::__class_type_info::~__class_type_info
+	__cxxabiv1::__class_type_info::__do_upcast
+	__cxxabiv1::__class_type_info::__do_catch
+	__cxxabiv1::__class_type_info::__do_dyncast
+
+
+Class __cxxabiv1::__forced_unwind
+	__cxxabiv1::__forced_unwind::~__forced_unwind
+	__cxxabiv1::__forced_unwind::~__forced_unwind
+
+
+Class __cxxabiv1::__foreign_exception
+	__cxxabiv1::__foreign_exception::~__foreign_exception
+	__cxxabiv1::__foreign_exception::~__foreign_exception
+
+
+Class <global>
+	_beginDeferredModelsGather
+	_renderDeferredModels
+	_beginDeferredWorldGather
+	_renderDeferredWorld
+	_requestClearRenderLists
+	const&>
+	GetPassStateFromPassMask
+	CalcScreenSize
+	GetLucidWorldKey
+	IsLucidWorldCreated
+	IncLucidWorldRefCount
+	AllocLudicWorld
+	ModelIsTransient
+	ResetLucidWorld
+	ConstructMeshBuffers
+	ConstructModelBuffers
+	CanDestroyLucidWorld
+	DestroyLucidWorld
+	FreeLucidWorld
+	ReadPacket
+	CreateLucidWorld
+	const&>
+	SetUpDebugBanksInfo
+	OS_AudioSuspend
+	OS_AudioResume
+	const&>
+	SampmanInitialiseBanks
+	SampmanInitialise
+	SampmanInit
+	CdStreamInitThread
+	CdStreamShutdown
+	CdStreamGetStatus
+	CdStreamGetLastPosn
+	CdStreamSync
+	CdStreamGetCurrentDisc
+	AddToQueue
+	CdStreamRead
+	GetFirstInQueue
+	GetLastInQueue
+	RemoveFirstInQueue
+	CdStreamAddImage
+	CdStreamGetImageName
+	CdStreamRemoveImages
+	CdStreamGetNumImages
+	CdStreamSetLastPosnRead
+	createGameTickThread
+	destroyGameTickThread
+	gameTickThreadBound
+	bindGameTickThread
+	unbindGameTickThread
+	requestEnableGameTickThread
+	gameTickThreadPendingStateChange
+	syncGameTickThread
+	IsCheatEnabled
+	IsMouseInverted
+	GetMobileEffectSetting
+	WasButtonReleased
+	LoadMenuIcons
+	UnloadMenuIcons
+	GetIconForOption
+	CurrentOptionIs3DTouch
+	CurrentOptionIsDisabled
+	SwitchScreenToTvVersion
+	HasTappedScreen
+	IsCloudSaveSlot
+	FindStringWithGameType
+	FindStringWithGameMap
+	SetLocalizedLegalScreen
+	Inflate
+	DrawShadowedText
+	DrawMenuBackground
+	DrawControllerIcon
+	CheckForAppRate
+	InitRadarMap
+	DeleteRadarMap
+	CheckGL
+	RecalculatePixelsHeight
+	RecalculatePixelsWidth
+	LoadIOPKernel
+	VBlankCounter
+	WaitVBlank
+	andysCleanUp
+	PrintVersionString
+	EnsureAsMuchOfStreamingMemIsAsMovableAsPossible
+	ShMemoryFailureHandler
+	MainMemoryFailureHandler
+	CreateOffscreenTextures
+	GameInit
+	IdleThread
+	DoRslStuffBeginFrame
+	RenderHorizon
+	DoRslRenderHorizon
+	DrawLoadingText
+	UmdUpdateLoadingScreen
+	DoRslStuffEndFrame
+	ComponentAttach
+	IsSplashActive
+	DestroySplashScreen
+	DrawLoadingBar
+	PrintMemoryUsage
+	TheModelViewerCore
+	TheModelViewer
+	ProfileOverhead
+	RenderDebugShit
+	FredIsInFirstPersonCam
+	RenderMenus
+	MultiplayerSplashScreenOn
+	MemoryFailureHandler
+	NonSubMainMemoryFailureHandler
+	NonSubShMemoryFailureHandler
+	DrawGameBackground
+	GameStart
+	LucidGameInit
+	GTAGameInit
+	GTAGameTick
+	RenderFullscreenQuadHack
+	DrawGame
+	GameCoreTick
+	lgDebugTweakInit
+	lgDebugTweakUpdate
+	lgDebugTweakShutdown
+	GetTexture
+	RenderAABB
+	RenderSolidAABB
+	RenderBox
+	Render3DLine
+	AND_GamepadInitialize
+	AND_GamepadUpdate
+	OS_GamepadIsConnected
+	OS_GamepadAnyInput
+	OS_GamepadButton
+	OS_GamepadAxis
+	OS_GamepadTouchpad
+	AND_GamepadUpdateAccelerometer
+	OS_GamepadAccelerometer
+	OS_LanguageUserSelected
+	OS_LanguageDeviceRegion
+	OS_MoviePlay
+	OS_MovieIsPlaying
+	AND_TouchInitialize
+	AND_TouchEvent
+	OS_PointerGetNumber
+	OS_PointerLock
+	OS_PointerGetType
+	AND_TimeInitialize
+	OS_TimeAccurate
+	OS_TimeMS
+	OS_ThreadSleep
+	GetDeviceLanguage
+	PlayMovie
+	IsPlayingMovie
+	OS_PlaylistInit
+	OS_PlaylistPlay
+	OS_PlaylistPause
+	OS_PlaylistPlaying
+	OS_PlaylistHasMusic
+	OS_PlaylistHasGooglePlaylist
+	OS_PlaylistSetVolume
+	OS_IsTVDevice
+	OS_HasVibrator
+	OS_GoToURL
+	OS_ShowLoadingScreen
+	OS_HideLoadingScreen
+	OS_UpdateLoadingBar
+	StartSocialClub
+	CallSocialClubUpdate
+	CallSocialClubSignOut
+	OS_QuitApp
+	RemoveFrameRateLock
+	setKeepScreenOn
+	SetInUI
+	GetAndroidVersionName
+	AndroidUtil_JNIInit
+	Java_com_rockstargames_gtalcs_GTAActivity_initTouchSense
+	NVThreadInit
+	NVThreadGetCurrentJNIEnv
+	NVThreadSpawnJNIThread
+	NVThreadSleep
+	WarGamepad_ProcessTouchpadAsPointer
+	GetThiz
+	WarGamepadInit
+	WarGamepadShutdown
+	WarGamepad_GetGamepadType
+	WarGamepad_GetGamepadButtons
+	WarGamepad_GetGamepadAxis
+	LIB_InputEvent
+	LIB_PointerGetCoordinates
+	LIB_PointerGetButton
+	LIB_PointerGetForce
+	LIB_PointerGetWheel
+	LIB_PointerSetDoubleClickDelay
+	LIB_PointerDoubleClicked
+	LIB_KeyboardIsDown
+	LIB_KeyboardState
+	LIB_KeyboardPressed
+	LIB_KeyboardUpdateKey
+	LIB_KeyboardComboPressed
+	LIB_KeyboardDoubleTapped
+	LIB_GamepadState
+	LIB_ClearInputNextUpdate
+	LIB_InputUpdate
+	operator==
+	GetEoL
+	WriteMasterMissingTextureLog
+	RemoveFromMasterTextureList
+	LogMissingTexture
+	GetTextureMetaData
+	RemoveFromMissingTextureList
+	CheckCase2
+	CheckCase3
+	OutputCaseMismatch
+	FixMasterTextureMappingCase
+	LoadFallbackTextures
+	WriteMasterTextureMapping
+	OpenTextureLogFile
+	WriteTextureToLogFile
+	WriteTextureLogFile
+	AlignPointer
+	GetShaderForDecl
+	ConsumeStrip
+	PspGetNumMeshes
+	GetPspGeometryMesh
+	RslLgMeshAddRef
+	RslLgMeshDestroy
+	CanDestroyLucidModel
+	DestroyLucidModel
+	GetRemappedTexturePath
+	GetTXDTextureGetTexture
+	ReadTextureMapping
+	ReadMasterMissingTextureLog
+	ResolveTextureMappings
+	RemoveMissingTexturesFromMasterList
+	ReadTextureMetaData
+	ReadMasterTextureMapping
+	const&>
+	const&>
+	const&>
+	const&>
+	const&>
+	SetSaveName
+	getWriteBufferBytes
+	writeDataBlock
+	readDataBlockTag
+	PopulateRadioStationPositionList
+	InitRadioStationPositionList
+	GetSavedRadioStationPosition
+	ReadDataFromFile
+	CloseFile
+	DoGameSpecificStuffAfterSucessLoad
+	MakeSpaceForSizeInBufferPointer
+	DoGameSpecificStuffBeforeSave
+	MakeSaveNameSave
+	MakeValidSaveName
+	GetNameOfSavedGame
+	CheckDataNotCorrupt
+	CheckSlotDataValid
+	InitNewSettingsAfterLoad
+	RestoreForStartLoad
+	align4bytes
+	CopySizeAndPreparePointer
+	GetMemStickFreeSpace
+	checkForMemstick
+	AutoloadGame
+	CheckForSavedGame
+	RestoreButtonControlDefaults
+	GetDefaultReflectionsEnabled
+	GetDefaultDynamicShadowsEnabled
+	GetContentScaleFactorScale
+	GetDefaultGraphicsDetailLevel
+	GetDefaultGameDetailLevel
+	GetLODSettingsLevel
+	GetCullFadeLevel
+	GetMipLevelCap
+	GetWorldOcclusionQueries
+	GetModelOcclusionQueries
+	GetOffscreenResScale
+	GetDrawDistance
+	GetMaxRenderedPeds
+	GetMaxRenderedVehicles
+	GetMaxRenderedRainStreaks
+	GetMaxNumberOfSteamParticles
+	GetRenderFogLightEffects
+	GetMaxRenderedOther
+	DeviceRequiresOffscreenRender
+	GetFrameRate
+	SetGraphicsDetail
+	RestoreDisplayDefaults
+	DisplaySaveResult
+	RetryMission
+	IsPlayingGame
+	SaveGameForPause
+	IsSaveGameForPause
+	OS_ApplicationTick
+	OS_AppSuspend
+	OS_AppResume
+	InitialiseLanguage
+	IsHudAdjElement
+	HandleTapToTarget
+	ReleaseTargetingLock
+	IsZoomedIn
+	IsZoomGun
+	IsRCVehicle
+	IsRemoteSindaccoCar
+	IsRCCar
+	IsPlane
+	IsHunter
+	IsHeli
+	IsRidingTrain
+	IsBike
+	IsBoat
+	OnThePhone
+	CanSprint
+	CanJump
+	IsGettingInCar
+	IsGettingOutOfCar
+	GunCanZoom
+	IsRocketLauncher
+	HasZoomWeapon
+	WeaponCanAutoAim
+	IsFreeAimWeapon
+	UseFreeAimIcon
+	IsGunMode
+	IsCarTurret
+	IsPredatorBoat
+	IsSMG
+	IsDeliveryMission
+	IsCarDriveby
+	IsDodo
+	CanVehicleShoot
+	IsMissionVehicle
+	UpdateVehicleIcon
+	IsVehicleNearby
+	IsPlayerPunching
+	IsPlayerThrowing
+	IsScriptRunning
+	IsBikeTurretMission
+	CanPlayerTarget
+	CreateSprite
+	GetFingerMidpoint
+	GetFingerDistance
+	HandleDebugCamera
+	HandleMarketingCamera
+	DebugString
+	BlueBorder
+	const&>
+	const&>
+	int>>
+	const&>
+	const&>
+	const&>
+	const&>
+	const&>
+	int>
+	const&>
+	strcmpIgnoringDigits
+	sceVfpuHfloatSub
+	NodeUpdateCallBackWithVelocityExtractionSkinned
+	NodeUpdateCallBackOffscreen
+	NodeUpdateCallBackWith3dVelocityExtractionSkinned
+	NodeUpdateCallBackSkinned
+	NodeUpdateCallBackWithVelocityExtractionNonSkinned
+	NodeUpdateCallBackWith3dVelocityExtractionNonSkinned
+	NodeUpdateCallBackNonSkinned
+	RslAnimBlendElementGroupGetFirstAssociation
+	GetNextLine
+	RslAnimBlendNodeGetName
+	RslAnimBlendNodeSetName
+	RslAnimBlendAllocateData
+	RslAnimBlendElementGroupFindNode
+	RslAnimBlendElementGroupFindNodeFromHashKey
+	RslAnimBlendElementGroupFindBone
+	RslAnimBlendElementGroupFillNodeArray
+	RslAnimBlendElementGroupIsInitialized
+	RslAnimBlendElementGroupAddAssociation
+	RslAnimBlendElementGroupRemoveAssociations
+	RslAnimBlendElementGroupGetAssociation
+	RslAnimBlendElementGroupGetAssociation
+	RslAnimBlendElementGroupGetMainAssociation
+	RslAnimBlendElementGroupGetMainPartialAssociation
+	RslAnimBlendElementGroupGetMainAssociation_N
+	RslAnimBlendElementGroupGetMainPartialAssociation_N
+	RslAnimBlendElementGroupGetFirstAssociation
+	RslAnimBlendGetNextAssociation
+	RslAnimBlendGetNextAssociation
+	RslAnimBlendElementGroupPauseAllAnimations
+	RslAnimBlendElementGroupUnPauseAllAnimations
+	RslAnimBlendElementGroupGetNumAssociations
+	RslAnimBlendElementGroupGetNumPartialAssociations
+	RslAnimBlendElementGroupGetNumNonPartialAssociations
+	IsPedComment
+	GetSfxName
+	GetCollisionInSectorList
+	GetCollisionInSector
+	LevelPos
+	SameSide
+	TestSphereLine
+	GetMaxRandomCars
+	GetMaxParkedCars
+	ModifyStringLabelForControlSetting
+	RemoveUnusedCollision
+	SleepThisPed
+	WakeThisPed
+	GetPointerToScriptVariable
+	DoesLineSegmentIntersect
+	NextModelId
+	FirstCarModelId
+	LastPedModelId
+	PlayAnimation
+	LoadIFP
+	EntityPos
+	cmp
+	PauseEntityAnims
+	GetAABB
+	GetFilename
+	LoadingScreenLoadingFile
+	SetModelInfoFlags
+	GetLevelName
+	shitOutChunkFile
+	ValidateVersion
+	ChunkName
+	WriteOrder
+	UnpatchTextures
+	IsChunked
+	SaveResourceImage
+	LoadResourceImage
+	SaveResource
+	SaveResource
+	SaveResource
+	SaveResource
+	SaveAnimBlock
+	SaveModel
+	SaveResource
+	SaveResource
+	SaveResource
+	SaveResource
+	SaveResource
+	SaveResource
+	SaveResource
+	InitModelIndices
+	MatchTexListString
+	MatchModelString
+	TestModelIndices
+	IntToStr
+	ObrInt
+	ObrInt2
+	ObrInt3
+	ObrInt4
+	ObrInt5
+	ObrInt6
+	CONFIG_NOT_DONE_YET
+	BikeWheelsCheat
+	WallClimbingCheat
+	ChangePlayerModel
+	ChangePlayerCheat
+	SlowClockCheat
+	OnlyRenderWheelsCheat
+	BigHeadsCheat
+	DoShowChaseStatCheat
+	DoChicksWithGunsCheat
+	PinkCarsCheat
+	BackToTheFuture
+	FlyingFishCheat
+	DoMobileCheat
+	FindPlayerEntity
+	FindPlayerHeight
+	ClipRadarTileCoords
+	RequestMapSection
+	RemoveMapSection
+	IsPointInsideRadar
+	GetTextureCorners
+	GetDistToPlane
+	operator<
+	IsPickup
+	DrawColourTweaker
+	FillGaps<float>
+	char>
+	char>
+	FillGaps<short>
+	ResumePerformanceCounters
+	VsyncVBlankCounter
+	operator+
+	operator-
+	DotProduct
+	InitSlerp
+	operator*
+	CrossProduct
+	Multiply3x3
+	Multiply3x3
+	Multiply4x4
+	operator*
+	sceKernelDelayThread
+	sceKernelSetGPO
+	sceKernelSetEventFlag
+	sceKernelClearEventFlag
+	sceKernelCreateEventFlag
+	sceKernelWaitEventFlag
+	sceKernelPollEventFlag
+	AddTrackedTexture
+	AddTrackedState
+	RenderTrackedTextureLists
+	SetPassState
+	MattRenderScene
+	const&>
+	const&>
+	beginOcclusionQuery
+	endOcclusionQuery
+	handleOcclusionQuery
+	UmdInit
+	UmdTell
+	UmdPoll
+	UmdWait
+	UmdMediaError
+	UmdMediaShowLoading
+	ReadRepathedTextureLog
+	WriteRepathedTextureLog
+	Deflate
+	operator<
+	operator<
+	MinRadiusForFloat16Sphere
+	Cleanup
+	HandleTextureRepathing
+	sceVfpuHfloatFromFloat
+	StreamCentrePoint
+	const&>
+	const&>
+	const&>
+	const&>
+	const&>
+	const&>
+	const&>
+	const&>
+	const&>
+	>>>,int>
+	>>>,int>
+	const&>
+	sceKernelCreateSema
+	sceKernelWaitSema
+	sceKernelSignalSema
+	CheckStructSizes
+	PreConstructLevel
+	PS2WorldStreamDepthMask
+	PS2WorldStreamAlphaFunc
+	PS2VehicleAlphaFunc
+	PS2WorldStreamBackfaceCulling
+	PS2WorldStreamDepthOffset
+	SetBlendModeForPass
+	eWorldGeomMasksAsString
+	MakePs2DynamicMatrix
+	const&>
+	const&>
+	,int,sAlphaInstance>
+	,int>
+	PrintObjectPos
+	SetElementVisibilityCB
+	RemoveAnimsFromAnimationBlock
+	const&>
+	const&>
+	const&>
+	const&>
+	SetPedElementVisibilityCB
+	RecurseFrameChildrenVisibilityCB
+	DuplicateElementToFrameCB
+	RecurseFrameChildrenToDuplicateCB
+	GetTouchDistance
+	GetPopulationCullRange
+	GetPopulationCullRangeOffScreen
+	GetPopulationCullRangeFarAway
+	GetPopulationAddMinRadius
+	GetPopulationAddMaxRadius
+	GetDriverHighDetailRange
+	GetBoatRiderHighDetailRange
+	RenderLightBloom
+	MemoryMgrMalloc
+	MemoryMgrFree
+	MemoryMgrRealloc
+	MemoryMgrCalloc
+	RslMallocAlign
+	RslFreeAlign
+	RslSkinGetNumBones
+	RslSkinGetVertexBoneIndices
+	RslSkinGetVertexBoneWeights
+	RslTAnimTreeGetMatrixArray
+	RslTAnimIDGetIndex
+	RslTAnimTreeUpdateMatrices
+	RslTAnimAnimationDestroy
+	RslTAnimFrameGetTree
+	RslSkinElementGetTAnimTree
+	RslCameraDestroy
+	RslCameraSetViewWindow
+	RslCameraSetNearClipPlane
+	GPUFinish
+	RslCameraClear
+	RslCameraSetFogDistance
+	RslCameraGetFogDistance
+	RslCameraGetCurrent
+	PrepareNonBuildingProjMatrix
+	SetNonBuildingNearClip
+	SetBuildingNearClip
+	ClearDrawDisplayListVerts
+	sceGuDrawArray
+	MakeUvsCorrectForTextureSize
+	Draw2DLine
+	LoadVertices
+	LoadVertices
+	MakePspMartix
+	Draw3DDebugSphere
+	Draw3DDebugLines
+	sceGuDrawArray
+	Draw3DEnd
+	Draw3DBezier
+	GrabMemFor2dVerts
+	Render2DLine
+	Render3DTransform
+	Render3DPrimitive
+	Draw2DPrimitive
+	SwapDynamicVertexBufferLists
+	Draw3DLine
+	Draw3DPrimitive
+	Draw2DIndexedPrimitive
+	const&>
+	RslElementGetLgMesh
+	RslElementSetLgMesh
+	sceGuBoneMatrix
+	sceGuDrawArray
+	ElementDefaultRenderCallBackReverse
+	RenderBoxForElement
+	RslElementGroupGetNumElements
+	NodeNameStreamRead
+	RslTAnimTreeStreamRead
+	RslNodeListStreamRead
+	RslMaterialTextureStreamRead
+	RslMatFXStreamReadTexture
+	RslMaterialFXStreamRead
+	RslMaterialStreamRead
+	RslMaterialListStreamRead
+	RslElementStreamRead
+	CreateLucidModel
+	RslSkinFindMaxWeights
+	RslSkinFindNumUsedBones
+	RslSkinCreateSkinData
+	RslSkinCreate
+	RslSkinStreamRead
+	RslElementGroupStreamRead
+	RslEngineStart
+	RslRenderStateGet
+	RslRenderStateSet
+	SetScissorTest
+	RslRenderSetTextureSampler
+	GeometryAnnihilate
+	CanDestroyLucidGeometry
+	DestroyLucidGeometry
+	RslMaterialSetTexture
+	RslMaterialDestroy
+	RslMatFXMaterialSetEffects
+	RslMatFXMaterialGetEffects
+	RslMatFXMaterialSetupEnvMap
+	RslMaterialListGetMaterial
+	RslMaterialListDeinitialize
+	RslMaterialListSetSize
+	RslMaterialListInitialize
+	RslMaterialAddRef
+	RslMaterialListAppendMaterial
+	RslMatFXMaterialGetEnvMapTexture
+	RslMatrixTranslate
+	RslMatrixInvert
+	RslNodeForAllChildren
+	RslNodeTranslate
+	RslNodeSetIdentity
+	RslNodeScale
+	RslNodeDestroy
+	RslNodeDirty
+	RslPixelDataCreate
+	RslPixelDataSubPixelData
+	RslPixelDataDestroy
+	RslPixelDataGetCurrent
+	GlCreateTexture
+	GlBindTexture
+	GlDestroyTexture
+	GlCreateTexture
+	RslPixelDataSetCurrent
+	RslfClose
+	RslfExist
+	RslfRead
+	RslfWrite
+	RslfEof
+	RslfGets
+	RslfPuts
+	RslfSeek
+	RslfFlush
+	RslfTell
+	SkyInstallFileSystem
+	SkySetDirectory
+	SkyRegisterFileOnCd
+	RslStreamOpen
+	RslStreamClose
+	RslStreamSkip
+	RslStreamRead
+	RslStreamReadReal
+	RslStreamReadInt32
+	RslImageSetPath
+	_rslStreamReadChunkHeader
+	RslStreamFindChunk
+	RslTexListFindHashNamedTexture
+	RslTextureCreate
+	RslTexListCreate
+	RslTexListDestroy
+	RslTexListAddTexture
+	RslTexListRemoveTexture
+	binLog2
+	RslExpandPalTexture
+	UnSwizzle4
+	RslCreatePixData
+	RslTextureStreamRead
+	RslTextureDestroy
+	destroyTexture
+	RslTextListOutputPNGs
+	RslTexListStreamRead
+	VramManager
+	CheckElementReferences
+	SetFontExtraY
+	readFile
+	isJapanesePunctuation
+	isNoBreak
+	UnicodeStrcat
+	UnicodeStrcpy
+	UnicodeStrlen
+	GetJIndex
+	ReadMetFile
+	GetJapaneseWidth
+	UnicodeMakeUpperCase
+	containsNonAscii
+	IsPunctuation
+	DrawFPS
+	DoesInfiniteLineCrossFiniteLine
+	DoesInfiniteLineTouchScreen
+	GetMaxParticlesByType
+	Invert
+	FindPedFrameFromNameCB
+	GetElementListCB
+	AttachElementsFromListCB
+	CountElementsCB
+	FindHeadRadiusCB
+	StartStoringShadow
+	StoreShadowVert
+	FinishStoringShadow
+	FinishStoringShadowAndRender
+	DoRejectTest
+	CalcScreenZ
+	SetSpriteShader
+	SetSprite2DShader
+	FileExistsOnMemCard
+	LoadIslandScreen
+	DeleteIsland
+	DeleteTextureDisplayList
+	SplayNormals
+	GetOkAndDamagedElementCB
+	RenderOneRainStreak
+	IsPointWithinArbitraryArea
+	GetFirstElementCallback
+	GetFirstFrameCallback
+	ObrsPrintfString
+	GetFirstChild
+	RslElementGroupGetBoundingSphere
+	SkinGetBonePositions
+	SkinSetBonePositions
+	SetColoursForCharacterSelectMenu
+	AndysTurnOffTheLights
+	ArbitraryRotationMatrix
+	ClampVectorAngle
+	SetNodeNodeName
+	CameraDestroy
+	RsKeyFromScanCode
+	RslInputDeviceAttach
+	RslKeyboardEventHandler
+	RslPadEventHandler
+	SearchForeignTable
+	AsciiToGameCode
+	GameToAsciiCode
+	UnicodeToAnsi
+	UnicodeToAsciiForSaveLoad
+	AsciiNToUnicode
+	TextCopy
+	ConvertGameTextToUnicode
+	ConvertUnicodeToGameText
+	DisableMatFx
+	SetBikeElementVisibilityCB
+	GetBikeElementObjectCB
+	GetBoatElementObjectCB
+	CranesLoad
+	GetHeliElementObjectCB
+	StartCatalinaFlyBy
+	CreateIncomingCesna
+	IsOnScreen
+	SetWaterSectionVertColours
+	MakeDispListForWaterSection
+	ConstrainRow
+	WaterLevelInitialise2
+	TransformVector
+	TransformPoint
+	TransformVector
+	TransformPoint
+	TransformVectors
+	TransformPoints
+	TransformVectors
+	TransformPoints
+	FireInstantHitParticles
+	DumpCallback
+	QueryEGLError
+	GetJNIEnv
+	AttachJNIToCurrentThread
+	DetachJNIFromCurrentThread
+	GetAssetManager
+	Java_com_rockstargames_gtalcs_GTAJNIlib_setAssetManager
+	Java_com_rockstargames_gtalcs_GTAJNIlib_setPrivateFilesDir
+	Java_com_rockstargames_gtalcs_GTAJNIlib_setIsTVDevice
+	Java_com_rockstargames_gtalcs_GTAJNIlib_setHasVibrator
+	Java_com_rockstargames_gtalcs_GTAJNIlib_setFileInstalled
+	Java_com_rockstargames_gtalcs_GTAJNIlib_setGameFilesDir
+	Java_com_rockstargames_gtalcs_GTAJNIlib_TestJNI
+	Java_com_rockstargames_gtalcs_GTAJNIlib_viewOnDrawFrame
+	Java_com_rockstargames_gtalcs_GTAJNIlib_callSocialClubUpdate
+	Java_com_rockstargames_gtalcs_GTAJNIlib_callSocialClubSignOut
+	DumpOpenGLInfo
+	InitGame
+	Java_com_rockstargames_gtalcs_GTAJNIlib_viewOnInit
+	isInFamily
+	containsHardware
+	AllowOptionChanges
+	SetOverrideDefaults
+	HandleAmazonDevices
+	SetDevicePerfIndex
+	Java_com_rockstargames_gtalcs_GTAJNIlib_setDisplaySize
+	Java_com_rockstargames_gtalcs_GTAJNIlib_setDeviceInfo
+	Java_com_rockstargames_gtalcs_GTAJNIlib_viewOnPause
+	Java_com_rockstargames_gtalcs_GTAJNIlib_getGameBuildType
+	Java_com_rockstargames_gtalcs_GTAJNIlib_onTouchStart
+	Java_com_rockstargames_gtalcs_GTAJNIlib_onTouchMove
+	Java_com_rockstargames_gtalcs_GTAJNIlib_onTouchEnd
+	Java_com_rockstargames_gtalcs_GTAJNIlib_setNoJoysticks
+	Java_com_rockstargames_gtalcs_GTAJNIlib_setJoyAxis
+	Java_com_rockstargames_gtalcs_GTAJNIlib_onBackButtonPressed
+	Java_com_rockstargames_gtalcs_GTAJNIlib_isOnMainMenuScreen
+	Java_com_rockstargames_gtalcs_GTAJNIlib_onJoyButtonDown
+	Java_com_rockstargames_gtalcs_GTAJNIlib_onJoyButtonUp
+	clearButtonsPress
+	JNI_OnLoad
+	Java_com_rockstargames_gtalcs_GTAJNIlib_viewOnResume
+	JoypadbuttonDown
+	GetJoypadAxis
+	GetJoypadsConnected
+	CreateLoadingGLContext
+	lglBindLoadingContext
+	lglUnbindLoadingContext
+	Java_com_rockstargames_gtalcs_GTAJNIlib_setAccelerometer
+	Java_com_rockstargames_gtalcs_GTAJNIlib_setOSVersion
+	QueryEGLConfigs
+	const&>
+	lgstrcpy_s
+	Hash_CRC32Init
+	Hash_CRC32Shutdown
+	Hash_CRC32CalcBlock
+	Hash_CRC32Calc
+	Hash_CRC32Calc
+	GetMd5
+	FSFile_CalculateCRC
+	GetExpectedMainWADCRC
+	FSWadFile_VerifyMainWadCRC
+	LogicalFS_AddBundleRoot
+	LogicalFS_RemoveBundleRoot
+	LogicalFS_OpenBundleFile
+	LogicalFS_MountWadFromLogicalFilePath
+	LogicalFS_MountWadFromPhysicalFilePath
+	_LogicalFS_Init
+	Wad_GetPaddingRequired
+	lgGetTotalMemoryAvail
+	OutOfMemoryPrint
+	UntrackedAlignedMalloc
+	UntrackedAlignedRealloc
+	UntrackedAlignedFree
+	UntrackedUnalignedMalloc
+	UntrackedUnalignedRealloc
+	UntrackedUnalignedFree
+	lgMemMalloc
+	lgMemRealloc
+	lgMemFree
+	lgMemCalloc
+	lgMemTrackingDisableCountInc
+	lgMemTrackingDisableCountDec
+	lgMemTrackingGetDisableCount
+	lgMemMalloc2
+	lgMemRealloc2
+	lgMalloc
+	lgCalloc
+	lgRealloc
+	lgFree
+	lgDisableCountInc
+	lgDisableCountDec
+	lgGetDisableCount
+	GetFileExtension
+	ReplaceFileExtension
+	ExtractFilename
+	NormaliseFilePath
+	LucidDebugBreak
+	LGAssertReport
+	SerialiseEncryptSetKey
+	SerialiseEncryptDecryptBuffer
+	lgGetEpochTime
+	lgGetGlobalTimeSeconds
+	lgGetGlobalTimeMilliseconds
+	const&>
+	UnbindVAO
+	lglOcclusionQueryInitialise
+	lglOcclusionQueryCreate
+	lglOcclusionQueryBegin
+	lglOcclusionQueryEnd
+	lglOcclusionQueryAvailable
+	lglOcclusionQueryVisible
+	lglOcclusionQueryEndFrame
+	const&>
+	const&>
+	InitGLESExtensionsEGL
+	initVertexArrays
+	const&>
+	UnsetTrackedTextures
+	UnSetTexture
+	PerfHelperEnabled
+	RenderPostProcessQuad
+	SetupPostProcessShaders
+	FlushTexturesToDelete
+	AddTextureToDelete
+	const&>
+	gpuDrawCreate
+	gpuDrawCreateVolatile
+	gpuDrawDestroyVolatile
+	gpuDrawDestroy
+	gpuDrawBegin
+	gpuDrawBegin
+	gpuDrawFlush
+	gpuDrawEnd
+	gpuDrawVtx
+	gpuDrawP2F
+	gpuDrawP3F
+	gpuDrawP4F
+	gpuDrawC4I
+	gpuDrawC4IL
+	gpuDrawT2F
+	gpuDrawP2F
+	gpuDrawP2F
+	gpuDrawP2F
+	gpuDrawP3F
+	gpuDrawP3F
+	gpuDrawP3F
+	gpuDrawAxis
+	gpuDrawGrid
+	gpuVectorLen
+	gpuVectorSub
+	gpuVectorDot
+	gpuVectorCross
+	gpuVectorLen
+	gpuVectorSub
+	gpuVectorDot
+	gpuVectorCross
+	gpuVectorSet
+	gpuVectorNormalize
+	gpuMatrixSetIdentity
+	gpuMatrixLookAtLH
+	gpuMatrixLookAtRH
+	gpuMatrixPerspectiveFovLH
+	gpuMatrixPerspectiveFovRH
+	gpuMatrixOrthoOffCenterLH
+	gpuMatrixOrthoOffCenterRH
+	gpuMatrixTranslation
+	gpuMatrixRotationX
+	gpuMatrixRotationY
+	gpuMatrixRotationZ
+	gpuMatrixMultiply
+	gpuUpdateMemoryManagers
+	glRingBufferIsCreated
+	glRingBufferCreate
+	glRingBufferDestroy
+	glRingBufferEnd
+	glRingBufferFlush
+	glRingBufferAlloc
+	const&>
+	GetModelSortKey
+	GetWorldSortKey
+	brSetShadowCentre
+	brSetProjectionMatrix
+	brSetWorldViewMatrix
+	brSetModelFogColour
+	brSetModelFogParams
+	brSetModelEmissiveLightColour
+	brSetWorldAmbientLight
+	brSetWorldEmissiveLight
+	brSetSkyBottom
+	brSetSkyTop
+	GlSetTexture
+	GlSetPassState
+	GlAdvanceDrawCallCount
+	SetFragmentUniformMat4
+	SetVertexUniformVec4
+	SetFragmentUniformVec4
+	SetHighlightColour
+	SetFragmentUniformVec2
+	SetVertexUniformVec4
+	SetVertexUniformMat4
+	_updateRenderLists
+	lglBoundsRenderSetup
+	lglBoundsRenderBeginRender
+	lglBoundsRenderSetUniform4fv
+	lglBoundsRenderSetUniformMatrix4fv
+	lglBoundsRenderDraw
+	lglSetLineWidth
+	lglCreateBufferCreator
+	lglDestroyBufferCreator
+	lglCreateBufferDestroyer
+	lglDestroyBufferDestroyer
+	lglAtomicSet
+	lglAtomicAdd
+	lglAtomicSub
+	lglHash
+	const&>
+	lglVarrayDestroyed
+	lglDestroyVarray
+	lglBufferCreated
+	lglBufferDestroyed
+	lglDestroyBufferId
+	lglDestroyBuffer
+	lglTextureCreated
+	lglTextureDestroyed
+	lglCreateTexture2D
+	lglCreateTexture2D
+	lglCreateTexture
+	lglDestroyTextureId
+	lglDestroyTexture
+	lglClearNoRQ
+	lglFlushNoRQ
+	lglFlush
+	lglCreateBuffer
+	lglCreateVertexBuffer
+	lglCreateIndexBuffer
+	lglCreateBuffer
+	lglFinish
+	lglCreateGeometryDestroyer
+	lglDestroyGeometryDestroyer
+	const&>
+	lglCreateModelCreator
+	lglDestroyModelCreator
+	const&>
+	lglCreateModelDestroyer
+	lglDestroyModelDestroyer
+	lglIsRenderQueueBound
+	lglSetSetBackBufferFuncPtr
+	lglCreateRenderQueue
+	lglDestroyRenderQueue
+	lglFlushRenderQueue
+	RQ_CHECK_FUNC
+	lglCreateResourceCreator
+	lglDestroyResourceCreator
+	lglEnableResourceCreator
+	lglDisableResourceCreator
+	lglCreateStreamer
+	lglDestroyStreamer
+	lglStreamerTickFromRenderQueue
+	lglStreamerTickFromMainThread
+	lglCreateTextureManager
+	lglHasStreamerFinishedTasks
+	lglWaitForStreamerToFinishTasks
+	lglDestroyTextureManager
+	lglCreateTextureCreator
+	lglDestroyTextureCreator
+	lglCreateTextureDestroyer
+	lglDestroyTextureDestroyer
+	lglTextureFallbackCreate
+	lglTextureFallbackDestroy
+	lglCreateTextureLoader
+	lglDestroyTextureLoader
+	lglCreateTextureRecycler
+	lglDestroyTextureRecycler
+	lglSleep
+	lglGetThreadId
+	lglSetGameThreadId
+	lglIsGameThread
+	lglSetMainThreadId
+	lglIsMainThread
+	lglSetTextureThreadId
+	lglIsTextureThread
+	lglSetStreamerThreadId
+	lglIsStreamerThread
+	lglSetResourceThreadId
+	lglIsResourceThread
+	lglGetTextureSize
+	lglCreateVarrayDestroyer
+	lglDestroyVarrayDestroyer
+	lglCreateVarrayRecycler
+	lglDestroyVarrayRecycler
+	lglCreateWorldCreator
+	lglDestroyWorldCreator
+	lglCreateWorldDestroyer
+	lglDestroyWorldDestroyer
+	prepareForUploadPNG
+	uploadPNGTexture
+	checkPVRValidity
+	checkPVRFormat
+	prepareForUploadPVR
+	uploadPVRTexture
+	int>
+	jniPreamble
+	jniPostamble
+	getJNIEnv
+	assignStdStringFromJstring
+	makeGlobalRef
+	releaseGlobalRef
+	makePlatformHandle
+	releasePlatformHandle
+	getClassCached
+	getClassAndStaticMethod
+	callStaticObject
+	createObject
+	callStaticBool
+	callStaticBool
+	callStaticByte
+	callStaticByte
+	callStaticChar
+	callStaticChar
+	callStaticShort
+	callStaticShort
+	callStaticInt
+	callStaticInt
+	callStaticLong
+	callStaticLong
+	callStaticFloat
+	callStaticFloat
+	callStaticDouble
+	callStaticDouble
+	callStaticVoid
+	callStaticVoid
+	callStaticString
+	callStaticString
+	callStaticVoidWithString
+	callStaticVoidWithStrings
+	callStaticVoidWithStrings
+	callStaticBoolWithStrings
+	getClassAndMethod
+	callObject
+	callBool
+	callBool
+	callByte
+	callByte
+	callChar
+	callChar
+	callShort
+	callShort
+	callInt
+	callInt
+	callLong
+	callLong
+	callFloat
+	callFloat
+	callDouble
+	callDouble
+	callVoid
+	callVoid
+	callString
+	callString
+	callVoidWithString
+	Java_com_rockstargames_hal_andButton_onTouchUp
+	Java_com_rockstargames_hal_andButton_onTouchMove
+	Java_com_rockstargames_hal_andButton_onTouchCancel
+	Java_com_rockstargames_hal_andButton_onTouchDown
+	Java_com_rockstargames_hal_andColourPicker_onChildClick
+	Java_com_rockstargames_hal_andColourPicker_onTryLocked
+	Java_com_rockstargames_hal_andHttp_onReceivedData
+	Java_com_rockstargames_hal_andHttp_onError
+	Java_com_rockstargames_hal_andHttp_onConnectionFinished
+	Java_com_rockstargames_hal_andHttp_onReceivedResponse
+	const&>
+	getJObject
+	getJObject
+	Java_com_rockstargames_hal_ActivityWrapper_runUpdateCallback
+	Java_com_rockstargames_hal_ActivityWrapper_setLanguage
+	Java_com_rockstargames_hal_ActivityWrapper_setVersionNumber
+	Java_com_rockstargames_hal_ActivityWrapper_setUserAgent
+	Java_com_rockstargames_hal_ActivityWrapper_main
+	Java_com_rockstargames_hal_ActivityWrapper_setCurrentScreenSize
+	Java_com_rockstargames_hal_ActivityWrapper_onStartApp
+	Java_com_rockstargames_hal_ActivityWrapper_onResumeApp
+	Java_com_rockstargames_hal_ActivityWrapper_onPauseApp
+	Java_com_rockstargames_hal_ActivityWrapper_onBackPressed
+	Java_com_rockstargames_hal_ActivityWrapper_SelectNextItem
+	Java_com_rockstargames_hal_ActivityWrapper_PressSelectedItem
+	Java_com_rockstargames_hal_ActivityWrapper_getLocalisedString
+	Java_com_rockstargames_hal_andScrollView_scrollViewDidScroll
+	Java_com_rockstargames_hal_andScrollView_scrollViewPageWillChange
+	Java_com_rockstargames_hal_andScrollView_scrollViewPageDidChange
+	Java_com_rockstargames_hal_andScrollView_onTouchEvent
+	Java_com_rockstargames_hal_andTable_getCell
+	Java_com_rockstargames_hal_andTextInput_textChanged
+	Java_com_rockstargames_hal_andTextInput_onFocusLost
+	Java_com_rockstargames_hal_andTextInput_onFocusGained
+	Java_com_rockstargames_hal_andTextInput_onEnterKey
+	Java_com_rockstargames_hal_andThread_runNativeRunnable
+	Java_com_rockstargames_hal_andVideo_VideoFinishedCB
+	Java_com_rockstargames_hal_andView_setPlatformSize
+	Java_com_rockstargames_hal_andView_onTouchEvent
+	Java_com_rockstargames_hal_andView_onAttachedToWindow
+	Java_com_rockstargames_hal_andWebView_onLoaded
+	operator<<
+	hexDigitToChar
+	hexPairToChar
+	rand32
+	const&>
+	const&>
+	const&>
+	const&>
+	const>>
+	const&>
+	const&>
+	const&>
+	const&>
+	const&>
+	const&>
+	const&>
+	const&>
+	decodePNG
+	const*>
+	const&>
+	UpdateSC
+	const&>
+	SCLog
+	lcsCloudIsBusy
+	lcsCloudGetLastError
+	lcsCloudSetHardwareID
+	lcsCloudStartGetManifest
+	lcsCloudWriteFile
+	lcsCloudGetFile
+	lcsCloudSetDelegate
+	xmlCreateStructStartTag
+	xmlCreateStructEndTag
+	xmlReadStruct
+	lcsGetFileSlotInfo
+	lcsCloudAddContent
+	lcsCloudCreateContent
+	lcsCloudMalloc
+	lcsCloudInit
+	lcsCloudFree
+	lcsCloudExit
+	lcsCloudUpdate
+	accountlinkRemoteCancel
+	accountlinkDoOpenURL
+	accountlinkExecuteUrl
+	resetAccountlinkExecuteUrl
+	accountLinkGetUrlToExecute
+	accountlinkInit
+	accountlinkExit
+	accountlinkIsBusy
+	accountlinkGetLastError
+	scaccountlinkWebCallback
+	accountlinkIsLinked
+	accountlinkCallHttpGet
+	accountlinkCallCheckIsLinked
+	accountlinkCallGetAuthToken
+	accountlinkGetAuthHeaderFromUnPw
+	accountlinkGetAuthHeaderFromUrl
+	accountlinkAddWebView
+	accountlinkRemoveWebView
+	accountlinkStartLink
+	accountlinkStartsWith
+	accountlinkInsertLogonDetails
+	accountlinkContains
+	accountlinkAddScAuthToken
+	accountlinkAddReturnLabel
+	accountlinkCreateRequestUrl
+	accountlinkUpdate
+	accountlinkMatches
+	accountlinkSubUrl
+	accountlinkGetDomain
+	accountlinkResetAuthCounters
+	accountlinkGetUnPw
+	authSetLoggedOutReason
+	authGetLoggedOutReason
+	authIsLoggedIn
+	authClearCredentials
+	authLogout
+	authClearErrors
+	authIsBusy
+	authIsSettling
+	authGetLastError
+	authGetResponse
+	authGetNickname
+	authGetRockstarId
+	authInitResponse
+	authBackoffTimeDurationReset
+	authSetCredentials
+	authBackoffTimeDurationInc
+	authBackoffTimeDurationGet
+	authSetExpiryTimeFromResponse
+	authMalloc
+	authInit
+	authReadAlloc
+	authStrAlloc
+	authCreateAccount
+	authResetPassword
+	authFree
+	authFreeResponse
+	authPopulateResponse
+	authExit
+	authUpdate
+	authCreateKey
+	authTokenGetExit
+	authTokenGetIsBusy
+	authTokenGetLastError
+	authTokenGetReset
+	authTokenGetInit
+	authTokenGetUpdate
+	authTokenGetStartGet
+	authTokenGetIsPopulated
+	authTokenGetAuthTokenInfo
+	avatarIsBusy
+	avatarGetLastError
+	avatarStartDownload
+	avatarCreateUrl
+	avatarIsAvailable
+	avatarGetImageData
+	avatarGetImageLength
+	avatarMalloc
+	avatarInit
+	avatarFree
+	avatarExit
+	avatarReset
+	avatarUpdate
+	cloudIsBusy
+	cloudGetLastError
+	cloudStartDownload
+	cloudStartDoesExist
+	cloudStartCheckMod
+	cloudGetDoesExist
+	cloudGetBufferPtr
+	cloudGetBufferLen
+	cloudGetPublishUrl
+	cloudAddContent
+	cloudCreateContent
+	cloudModListReset
+	cloudModAddWatch
+	cloudModFind
+	cloudModRemoveWatch
+	cloudModIsModified
+	cloudModSetModified
+	cloudModReset
+	cloudMalloc
+	cloudInit
+	cloudStartUpload
+	cloudStartPublish
+	cloudFree
+	cloudExit
+	cloudGetFree
+	cloudUpdate
+	cfgUpdate
+	cfgGetTitleId
+	cfgGetProtocol
+	cfgGetEnv
+	cfgGetVersion
+	cfgGetAppName
+	cfgHasAppOnlinePlatformBeenSet
+	cfgSetSubAppName
+	cfgGetSubAppName
+	cfgSetAppPlatformInformation
+	cfgGetAppPlatform
+	cfgGetAppOnlinePlatform
+	cfgIsPlatformInformationChanged
+	cfgResetPlatformInformationChanged
+	cfgGetRosPlatform
+	cfgMalloc
+	cfgInit
+	cfgFree
+	cfgExit
+	countriesInit
+	countriesIsBusy
+	countriesGetLastError
+	countriesStartGet
+	countriesReset
+	countriesGetNext
+	countriesFree
+	countriesExit
+	countriesUpdate
+	crewgetExit
+	crewgetIsBusy
+	crewgetGetLastError
+	crewgetReset
+	crewgetInit
+	crewgetStartGet
+	crewgetIsPopulated
+	crewgetGetCrewInfo
+	crewgetProcessCrewReply
+	CrewCreateUrl
+	crewMalloc
+	crewFree
+	crewgetUpdate
+	crewIsAvailable
+	crewGetImageData
+	crewGetImageLength
+	eggTimerGetSysSeconds
+	eggtimerReset
+	eggtimerSetAlarm
+	eggtimerIsAlarm
+	eggtimerGetSeconds
+	fbappgetExit
+	fbappgetIsBusy
+	fbappgetGetLastError
+	fbappgetReset
+	fbappgetInit
+	fbappgetStartGet
+	fbappgetIsPopulated
+	fbappgetGetAppId
+	fbappgetProcessFbAppReply
+	fbappgetUpdate
+	halAssert
+	halHttpInit
+	halHttpShutdown
+	halHttpHead
+	halHttpCancel
+	halHttpStdVectorAlloc
+	halHttpStdVectorPush
+	halHttpStdVectorSize
+	halHttpStdVectorGetData
+	halHttpStdVectorFree
+	halHttpDecrypt
+	halCompatIsHighDef
+	halIsNetworkReachable
+	halWebViewInit
+	halWebViewShutdown
+	halWebViewShow
+	halWebViewHide
+	halWebViewOpenUrl
+	halHttpGet
+	halHttpPost
+	halAESDecrypt
+	halAESEncrypt
+	httpUpdate
+	httpParseServerTime
+	httpUpdateServerTimeSecondsAhead
+	httpGetServerTimeSecondsAhead
+	httpPost
+	httpGet
+	httpHead
+	httpCancel
+	httpWait
+	httpPopWaitMessage
+	httpCheck
+	httpGetLocationUrl
+	httpGetDate
+	httpCalculateRosSecret
+	httpNextHeader
+	httpMalloc
+	httpFree
+	httpCleanup
+	httpExit
+	httpConReset
+	httpInit
+	httpConFind
+	httpConnectionDidReceieveResponse
+	httpConnectionDidReceiveData
+	httpConnectionDidFailWithError
+	httpConnectionDidFinishLoading
+	httpIsSuccess
+	docIsBusy
+	docGetLastError
+	docConvertAppleLanguageCodeToScsCode
+	docStartGet
+	docGetType
+	docGetBuffer
+	docGetVersion
+	convertMuSymbolToUnbreakableSpace
+	docMalloc
+	docInit
+	docCleanup
+	docFree
+	docExit
+	docGetFree
+	docUpdate
+	platesIsBusy
+	platesGetLastError
+	platesGetChangedCount
+	platesGetPlateIndex
+	platesStartGet
+	platesGetReset
+	platesGetNext
+	platesGetTagData
+	platesStartCheckText
+	platesIsSwearWord
+	platesStartChange
+	platesStartSetIndex
+	platesGetLastChangedPlate
+	platesFind
+	platesFindIdx
+	platesMalloc
+	platesInit
+	platesFree
+	platesExit
+	platesPopulateList
+	platesUpdate
+	platesStartIsValid
+	platesIsValidValid
+	platesIsValidProfane
+	platesIsValidReserved
+	platesIsValidMalformed
+	platesCanBeDeleted
+	platesIsSPPlateTagged
+	platesIsMPPlateTagged
+	platesStartDelete
+	platesStartChangeNoInsert
+	platesDeleteLocalSocialClubPlate
+	linkgetIsBusy
+	linkgetGetLastError
+	stolower
+	linkgetStartGet
+	linkgetIsPopulated
+	linkgetGetLnkInfo
+	linkgetInitLinkedAccount
+	linkgetInit
+	linkgetFreeLinkedAccount
+	linkgetExit
+	linkgetReset
+	xmlGrabPlayerAccount
+	linkgetPopulateLinkedAccount
+	linkgetProcessLinkedAccountReply
+	linkgetUpdate
+	scmainSetTheBuildKeyBeforeScIsInitalised
+	scmainGetTheBuildKeyBeforeScIsInitalised
+	scmainInit
+	scmainExit
+	scmainHandlePresenceMessages
+	scmainUpdate
+	scmainTestMeUpdate
+	scmainSignOut
+	scmemAlloc
+	scmemFree
+	scnewsfeedInit
+	scnewsfeedExit
+	scnewsfeedUpdate
+	scnewsfeedRefresh
+	scnewsfeedIsRefreshFinished
+	scnewsfeedRefreshResetFinished
+	scnewsfeedIsReadingFeed
+	scnewsfeedGet
+	scnwactivityInit
+	scnwactivityExit
+	scnwactivityTypeToInt
+	scnwactivityTranslateGameName
+	scnwactivityFillIn
+	scnwactivityAllocActivity
+	scnwactivityCreateUnknown
+	scnwactivityRelease
+	scnwactivityJsEod
+	scnwactivityJsSkipWhite
+	scnwactivityJsStrCmpRange
+	scnwactivityJsCheckPrev
+	scnwactivityJsCleanStr
+	scnwactivityJsGetData
+	scnwactivityGetData
+	scnwactivityGetTime
+	scnwactivityJsFindOpen
+	scnwactivityJsFindClose
+	scnwactivityJsCutOut
+	scnwactivityCreateComment
+	scnwactivityReadComments
+	scnwactivityCreateStatusUpdate
+	scnwactivityCreateWroteWallMessage
+	scnwactivityCreateCrewCreate
+	scnwactivityCreateCrewJoined
+	scnwactivityCreateCrewEmblemSubmitted
+	scnwactivityCreateHighScoreGame
+	scnwactivityCreateGameAccomplishmentAchieved
+	scnwactivityCreateCrewEmblemPublished
+	scnwactivityCreateCrewAccomplishmentAchieved
+	scnwactivityCreateFriendAcceptedInvite
+	scnwactivityGetNext
+	scnwavatarFree
+	scnwavatarExit
+	scnwavatarRelease
+	scnwavatarFindImg
+	scnwavatarFindFree
+	scnwavatarResetPending
+	scnwavatarInit
+	scnwavatarCheckPending
+	scnwavatarGet
+	scnwavatarCreateUrl
+	scnwavatarUpdate
+	scnwgetInit
+	scnwgetIsBusy
+	scnwgetReset
+	scnwgetGetRawFeed
+	scnwgetGetLastError
+	scnwgetReturnDataGet
+	scnwgetReturnDataFree
+	scnwgetExit
+	scnwgetUpdate
+	scnwreadInit
+	scnwreadIsBusy
+	scnwreadGetLastError
+	scnwreadIsAvailable
+	scnwreadResetNewsCache
+	scnwreadExit
+	scnwreadGetNewsCount
+	scnwreadGetNewsData
+	scnwreadGetNewPostAvailableCount
+	scnwreadIsNewPostAvailable
+	scnwreadResetNewPostAvailable
+	scnwreadDownloadActivityAvatar
+	scnwreadSetFilters
+	scnwreadStartNewsDownload
+	scnwreadDoesPassFilterRule
+	scnwreadMoveUp
+	scnwreadInsertActivity
+	scnwreadUpdate
+	scpresenceInit
+	scpresenceExit
+	scpresencePause
+	scpresenceUpdate
+	scpresenceLogout
+	scpresenceReconnect
+	scpresencePopMessage
+	scpresenceFakeKickTest
+	remotecfgInit
+	remotecfgIsBusy
+	remotecfgGetLastError
+	remotecfgAESConvert
+	remotecfgClearConfig
+	remotecfgExit
+	remotecfgSetCfgFile
+	remotecfgUpdate
+	remotecfgIsAvalable
+	remotecfgGetString
+	remotecfgGetContents
+	remotecfgGetInt
+	remotecfgStartGet
+	remotecfgJsCleanStr
+	remoteCfgUseHTTPS
+	repInit
+	repGetContentType
+	repSetUserAgent
+	repEncrpyt
+	repGetCiphertextSize
+	repGetCiphertext
+	repGetPlaintextSize
+	repGetPlaintext
+	repReleaseCtx
+	repDecrypt
+	repPrintDebugString
+	sha1Create
+	sha1Destroy
+	sha1Reset
+	sha1ProcessMessageBlock
+	sha1Update
+	sha1PadMessage
+	sha1Result
+	tlmInit
+	tlmExit
+	tlmSetGameParams
+	tlmSubmissionAlloc
+	tlmCat
+	tlmAddMetric
+	tlmGetBaseTime
+	tlmFlush
+	tlmUpdate
+	utilCatRosServiceUrl
+	utilCatCloudServiceUrl
+	utilGetConfigFilePath
+	utilTerminatePostData
+	utilUrlEncodeChr
+	utilStrCatUrlEncode
+	utilAddPostDataStr
+	utilAddPostDataInt
+	utilTranslateErrorCode
+	utilStringFromData
+	utilGetFileNameFromPath
+	utilGetDirFromPath
+	utilStrDupeAlloc
+	utilStrDupeFree
+	utilReadAssignDupe
+	utilIsNetworkReachable
+	utilMsgQueueCreate
+	utilMsgQueueDestroy
+	utilMsgQueuePush
+	utilMsgQueuePop
+	utilMsgQueueFlush
+	utilNextPresencePrm
+	utilStripCloudPath
+	utilJsonHelperSkipWhite
+	utilJsonHelperReadKey
+	utilJsonHelperReadData
+	utilJsonHelperNext
+	utilJsonHelperReadInt
+	utilBase64GetMaxEncodedSize
+	utilBase64GetMaxDecodedSize
+	utilBase64Encode
+	utilBase64CodeToVal
+	utilBase64Decode
+	validAgeInit
+	validAgeExit
+	validAgeIsBusy
+	validAgeGetLastError
+	validAgeStartGet
+	validAgeParseResponse
+	validAgeUpdate
+	validAgeGetResult
+	xmlCreateStartTag
+	xmlCreateEndTag
+	xmlStripWhite
+	xmlSkipPast
+	xmlCutOut
+	xmlCopyTo
+	xmlReadSeg
+	xmlReadString
+	xmlReadBetween
+	xmlStrCat
+	xmlReadAssign
+	xmlAXtoI
+	xmlReadIntHex
+	xmlItoAX
+	xmlItoAX8
+	xmlWriteIntHex
+	xmlAtoI
+	xmlReadInt
+	xmlReadAssignI
+	xmlItoA
+	xmlStrCatI
+	xmlAtoI64
+	xmlReadInt64
+	xmlAXtoI64
+	xmlI64toA
+	xmlI64toAX
+	xmlAtoF
+	xmlFtoA
+	repAllocKeySalt
+	repFreeKeySalt
+	splitToParagraphs
+	const&>
+	dvNextPrime
+	png_zalloc
+	png_zfree
+	png_sig_cmp
+	png_reset_crc
+	png_calculate_crc
+	png_create_info_struct
+	png_info_init_3
+	png_free_data
+	png_destroy_info_struct
+	png_get_io_ptr
+	png_init_io
+	png_save_int_32
+	png_convert_to_rfc1123_buffer
+	png_convert_to_rfc1123
+	png_get_copyright
+	png_get_header_ver
+	png_user_version_check
+	png_create_png_struct
+	png_get_libpng_ver
+	png_get_header_version
+	png_handle_as_unknown
+	png_chunk_unknown_handling
+	png_reset_zstream
+	png_access_version_number
+	png_zstream_error
+	png_colorspace_sync_info
+	png_colorspace_sync
+	png_icc_check_length
+	png_icc_check_header
+	png_icc_check_tag_table
+	png_check_IHDR
+	png_check_fp_number
+	png_check_fp_string
+	png_ascii_from_fp
+	png_ascii_from_fixed
+	png_muldiv
+	png_muldiv_warn
+	png_reciprocal
+	png_colorspace_set_endpoints
+	png_colorspace_set_chromaticities
+	png_gamma_significant
+	png_colorspace_set_gamma
+	png_colorspace_set_sRGB
+	png_icc_set_sRGB
+	png_colorspace_set_ICC
+	png_reciprocal2
+	png_gamma_8bit_correct
+	png_gamma_16bit_correct
+	png_gamma_correct
+	png_destroy_gamma_table
+	png_build_gamma_table
+	png_set_option
+	png_image_free
+	png_image_error
+	png_safecat
+	png_format_number
+	png_warning
+	png_warning_parameter
+	png_warning_parameter_unsigned
+	png_warning_parameter_signed
+	png_formatted_warning
+	png_chunk_warning
+	png_free_jmpbuf
+	png_longjmp
+	png_error
+	png_app_warning
+	png_app_error
+	png_chunk_error
+	png_chunk_benign_error
+	png_chunk_report
+	png_benign_error
+	png_set_longjmp_fn
+	png_set_error_fn
+	png_get_error_ptr
+	png_safe_error
+	png_safe_warning
+	png_safe_execute
+	png_get_valid
+	png_get_rowbytes
+	png_get_rows
+	png_get_image_width
+	png_get_image_height
+	png_get_bit_depth
+	png_get_color_type
+	png_get_filter_type
+	png_get_interlace_type
+	png_get_compression_type
+	png_get_x_pixels_per_meter
+	png_get_y_pixels_per_meter
+	png_get_pixels_per_meter
+	png_get_pixel_aspect_ratio
+	png_get_pixel_aspect_ratio_fixed
+	png_get_x_offset_microns
+	png_get_y_offset_microns
+	png_get_x_offset_pixels
+	png_get_y_offset_pixels
+	png_get_pixels_per_inch
+	png_get_x_pixels_per_inch
+	png_get_y_pixels_per_inch
+	png_get_x_offset_inches_fixed
+	png_get_y_offset_inches_fixed
+	png_get_x_offset_inches
+	png_get_y_offset_inches
+	png_get_pHYs_dpi
+	png_get_channels
+	png_get_signature
+	png_get_bKGD
+	png_get_cHRM
+	png_get_cHRM_XYZ
+	png_get_cHRM_XYZ_fixed
+	png_get_cHRM_fixed
+	png_get_gAMA_fixed
+	png_get_gAMA
+	png_get_sRGB
+	png_get_iCCP
+	png_get_sPLT
+	png_get_hIST
+	png_get_IHDR
+	png_get_oFFs
+	png_get_pCAL
+	png_get_sCAL_fixed
+	png_get_sCAL
+	png_get_sCAL_s
+	png_get_pHYs
+	png_get_PLTE
+	png_get_sBIT
+	png_get_text
+	png_get_tIME
+	png_get_tRNS
+	png_get_unknown_chunks
+	png_get_rgb_to_gray_status
+	png_get_user_chunk_ptr
+	png_get_compression_buffer_size
+	png_get_user_width_max
+	png_get_user_height_max
+	png_get_chunk_cache_max
+	png_get_chunk_malloc_max
+	png_get_io_state
+	png_get_io_chunk_type
+	png_get_palette_max
+	png_malloc_base
+	png_malloc
+	png_calloc
+	png_malloc_default
+	png_malloc_warn
+	png_free_default
+	png_free
+	png_destroy_png_struct
+	png_set_mem_fn
+	png_get_mem_ptr
+	png_create_read_struct_2
+	png_create_read_struct
+	png_read_update_info
+	png_start_read_image
+	png_read_rows
+	png_read_image
+	png_read_end
+	png_destroy_read_struct
+	png_set_read_status_fn
+	png_image_begin_read_from_stdio
+	png_image_begin_read_from_file
+	png_image_begin_read_from_memory
+	png_image_finish_read
+	png_set_read_fn
+	png_set_crc_action
+	png_set_background_fixed
+	png_set_background
+	png_set_scale_16
+	png_set_strip_16
+	png_set_strip_alpha
+	png_set_quantize
+	png_set_expand
+	png_set_palette_to_rgb
+	png_set_expand_gray_1_2_4_to_8
+	png_set_tRNS_to_alpha
+	png_set_expand_16
+	png_set_gray_to_rgb
+	png_set_rgb_to_gray_fixed
+	png_set_rgb_to_gray
+	png_set_read_user_transform_fn
+	png_init_read_transformations
+	png_do_unpack
+	png_do_unshift
+	png_do_scale_16_to_8
+	png_do_chop
+	png_do_read_swap_alpha
+	png_do_read_invert_alpha
+	png_do_read_filler
+	png_do_gray_to_rgb
+	png_do_rgb_to_gray
+	png_build_grayscale_palette
+	png_do_compose
+	png_do_gamma
+	png_do_encode_alpha
+	png_do_expand_palette
+	png_do_expand
+	png_do_expand_16
+	png_do_quantize
+	png_do_read_intrapixel
+	png_get_uint_32
+	png_get_int_32
+	png_get_uint_16
+	png_crc_read
+	png_crc_error
+	png_crc_finish
+	png_handle_iCCP
+	png_handle_sCAL
+	png_read_chunk_header
+	png_do_read_interlace
+	png_read_filter_row
+	png_read_finish_IDAT
+	png_read_finish_row
+	png_set_bKGD
+	png_set_cHRM_fixed
+	png_set_cHRM_XYZ_fixed
+	png_set_cHRM
+	png_set_cHRM_XYZ
+	png_set_gAMA_fixed
+	png_set_gAMA
+	png_set_hIST
+	png_set_IHDR
+	png_set_oFFs
+	png_set_sCAL
+	png_set_sCAL_fixed
+	png_set_pHYs
+	png_set_sBIT
+	png_set_sRGB
+	png_set_sRGB_gAMA_and_cHRM
+	png_set_iCCP
+	png_set_text_2
+	png_set_tIME
+	png_set_tRNS
+	png_set_sPLT
+	png_set_unknown_chunks
+	png_set_unknown_chunk_location
+	png_permit_mng_features
+	png_set_keep_unknown_chunks
+	png_set_read_user_chunk_fn
+	png_set_rows
+	png_set_invalid
+	png_set_user_limits
+	png_set_chunk_cache_max
+	png_set_chunk_malloc_max
+	png_set_benign_errors
+	png_set_check_for_invalid_index
+	png_set_bgr
+	png_set_swap
+	png_set_packing
+	png_set_packswap
+	png_set_shift
+	png_set_interlace_handling
+	png_set_filler
+	png_set_add_alpha
+	png_set_swap_alpha
+	png_set_invert_alpha
+	png_set_invert_mono
+	png_do_invert
+	png_do_swap
+	png_do_packswap
+	png_do_strip_channel
+	png_do_bgr
+	png_do_check_palette_indexes
+	png_set_user_transform_info
+	png_get_user_transform_ptr
+	png_get_current_row_number
+	png_get_current_pass_number
+	png_default_flush
+	png_flush
+	png_set_write_fn
+	png_write_info_before_PLTE
+	png_convert_from_struct_tm
+	png_convert_from_time_t
+	png_create_write_struct_2
+	png_create_write_struct
+	png_write_rows
+	png_write_image
+	png_set_flush
+	png_write_flush
+	png_destroy_write_struct
+	png_set_filter_heuristics
+	png_set_filter_heuristics_fixed
+	png_set_compression_level
+	png_set_compression_mem_level
+	png_set_compression_strategy
+	png_set_compression_window_bits
+	png_set_compression_method
+	png_set_text_compression_level
+	png_set_text_compression_mem_level
+	png_set_text_compression_strategy
+	png_set_text_compression_window_bits
+	png_set_text_compression_method
+	png_set_write_status_fn
+	png_set_write_user_transform_fn
+	png_write_png
+	png_image_write_to_stdio
+	png_image_write_to_file
+	png_do_pack
+	png_do_shift
+	png_do_write_swap_alpha
+	png_do_write_invert_alpha
+	png_do_write_intrapixel
+	png_save_uint_32
+	png_save_uint_16
+	png_write_sig
+	png_write_chunk_start
+	png_write_chunk_data
+	png_write_chunk_end
+	png_free_buffer_list
+	png_write_IEND
+	png_write_gAMA_fixed
+	png_write_sRGB
+	png_write_sBIT
+	png_write_cHRM_fixed
+	png_write_tRNS
+	png_write_bKGD
+	png_write_hIST
+	png_write_oFFs
+	png_write_sCAL_s
+	png_write_pHYs
+	png_write_tIME
+	png_write_start_row
+	png_write_finish_row
+	png_do_write_interlace
+	png_write_find_filter
+	adler32
+	adler32_combine
+	adler32_combine64
+	compress2
+	compress
+	compressBound
+	get_crc_table
+	crc32_combine
+	crc32_combine64
+	deflateSetDictionary
+	deflateResetKeep
+	deflateReset
+	deflateSetHeader
+	deflatePending
+	deflatePrime
+	deflateTune
+	deflateBound
+	deflate
+	deflateParams
+	deflateEnd
+	deflateInit2_
+	deflateInit_
+	deflateCopy
+	inflateBackInit_
+	inflateBack
+	inflateBackEnd
+	inflate_fast
+	inflateResetKeep
+	inflateReset
+	inflatePrime
+	inflate
+	inflateGetDictionary
+	inflateSetDictionary
+	inflateGetHeader
+	inflateSync
+	inflateSyncPoint
+	inflateCopy
+	inflateUndermine
+	inflateMark
+	inflate_table
+	tr_init
+	tr_stored_block
+	tr_flush_bits
+	tr_align
+	tr_flush_block
+	tr_tally
+	uncompress
+	zlibVersion
+	zlibCompileFlags
+	zError
+	INT123_safe_realloc
+	INT123_compat_open
+	INT123_compat_close
+	INT123_dct64
+	INT123_do_equalizer
+	mpg123_feature
+	mpg123_rates
+	mpg123_encodings
+	mpg123_encsize
+	INT123_frame_output_format
+	mpg123_fmt_none
+	mpg123_format_none
+	mpg123_fmt_all
+	mpg123_format_all
+	mpg123_fmt
+	mpg123_format
+	mpg123_fmt_support
+	mpg123_format_support
+	INT123_invalidate_format
+	INT123_samples_to_bytes
+	samples_to_storage
+	INT123_bytes_to_samples
+	postprocess_buffer
+	mpg123_new_pars
+	mpg123_delete_pars
+	mpg123_reset_eq
+	INT123_frame_outbuffer
+	mpg123_replace_buffer
+	INT123_frame_index_setup
+	INT123_frame_buffers
+	INT123_frame_buffers_reset
+	INT123_frame_fill_toc
+	INT123_frame_exit
+	mpg123_info
+	INT123_frame_index_find
+	INT123_frame_ins2outs
+	INT123_frame_outs
+	INT123_frame_expect_outsamples
+	INT123_frame_offset
+	INT123_frame_gapless_init
+	INT123_frame_init_par
+	INT123_frame_init
+	INT123_frame_reset
+	INT123_frame_gapless_realinit
+	INT123_frame_gapless_update
+	INT123_frame_set_frameseek
+	INT123_frame_skip
+	INT123_frame_set_seek
+	INT123_do_rva
+	mpg123_volume
+	mpg123_volume_change
+	mpg123_getvolume
+	INT123_init_icy
+	INT123_clear_icy
+	INT123_reset_icy
+	INT123_icy2utf8
+	INT123_init_id3
+	INT123_exit_id3
+	INT123_reset_id3
+	INT123_id3_link
+	INT123_id3_to_utf8
+	INT123_parse_new_id3
+	INT123_fi_init
+	INT123_fi_exit
+	INT123_fi_resize
+	INT123_fi_add
+	INT123_fi_set
+	INT123_fi_reset
+	INT123_do_layer1
+	INT123_init_layer12
+	INT123_init_layer12_stuff
+	INT123_init_layer12_table
+	INT123_do_layer2
+	INT123_init_layer3_gainpow2
+	INT123_init_layer3
+	INT123_init_layer3_stuff
+	INT123_dct36
+	INT123_do_layer3
+	mpg123_init
+	mpg123_exit
+	mpg123_parnew
+	mpg123_new
+	mpg123_decoder
+	mpg123_par
+	mpg123_param
+	mpg123_getpar
+	mpg123_getparam
+	mpg123_getstate
+	mpg123_eq
+	mpg123_geteq
+	INT123_decode_update
+	mpg123_safe_buffer
+	mpg123_outblock
+	mpg123_framebyframe_decode
+	mpg123_framebyframe_next
+	mpg123_decode_frame
+	mpg123_feed
+	mpg123_decode
+	mpg123_read
+	mpg123_clip
+	mpg123_getformat
+	mpg123_timeframe
+	mpg123_tell
+	mpg123_tellframe
+	mpg123_tell_stream
+	mpg123_feedseek
+	mpg123_seek_frame
+	mpg123_set_filesize
+	mpg123_length
+	mpg123_scan
+	mpg123_seek
+	mpg123_meta_check
+	mpg123_id3
+	mpg123_icy
+	mpg123_icy2utf8
+	mpg123_enc_from_id3
+	mpg123_store_utf8
+	mpg123_index
+	mpg123_set_index
+	mpg123_close
+	mpg123_open
+	mpg123_open_fd
+	mpg123_open_handle
+	mpg123_open_feed
+	mpg123_replace_reader
+	mpg123_replace_reader_handle
+	mpg123_delete
+	mpg123_plain_strerror
+	mpg123_errcode
+	mpg123_strerror
+	INT123_ntom_val
+	INT123_synth_ntom_set_step
+	INT123_ntom_set_ntom
+	INT123_ntom_frame_outsamples
+	INT123_ntom_frmouts
+	INT123_ntom_ins2outs
+	INT123_ntom_frameoff
+	INT123_defdec
+	INT123_decclass
+	INT123_set_synth_functions
+	INT123_dectype
+	INT123_frame_cpu_opt
+	INT123_check_decoders
+	mpg123_current_decoder
+	*mpg123_decoders
+	*mpg123_supported_decoders
+	INT123_frame_bitrate
+	INT123_frame_freq
+	INT123_set_pointer
+	INT123_compute_bpf
+	INT123_read_frame
+	mpg123_tpf
+	mpg123_position
+	INT123_get_songlen
+	INT123_feed_more
+	INT123_feed_set_pos
+	INT123_open_bad
+	INT123_open_feed
+	INT123_open_stream
+	INT123_open_stream_handle
+	mpg123_init_string
+	mpg123_free_string
+	mpg123_resize_string
+	mpg123_grow_string
+	mpg123_copy_string
+	mpg123_add_substring
+	mpg123_add_string
+	mpg123_set_substring
+	mpg123_set_string
+	mpg123_strlen
+	INT123_synth_1to1
+	INT123_synth_1to1_mono
+	INT123_synth_1to1_m2s
+	INT123_synth_2to1
+	INT123_synth_2to1_mono
+	INT123_synth_2to1_m2s
+	INT123_synth_4to1
+	INT123_synth_4to1_mono
+	INT123_synth_4to1_m2s
+	INT123_synth_ntom
+	INT123_synth_ntom_mono
+	INT123_synth_ntom_m2s
+	INT123_synth_1to1_8bit
+	INT123_synth_1to1_8bit_mono
+	INT123_synth_1to1_8bit_m2s
+	INT123_synth_1to1_8bit_wrap
+	INT123_synth_1to1_8bit_wrap_mono
+	INT123_synth_1to1_8bit_wrap_m2s
+	INT123_synth_2to1_8bit
+	INT123_synth_2to1_8bit_mono
+	INT123_synth_2to1_8bit_m2s
+	INT123_synth_4to1_8bit
+	INT123_synth_4to1_8bit_mono
+	INT123_synth_4to1_8bit_m2s
+	INT123_synth_ntom_8bit
+	INT123_synth_ntom_8bit_mono
+	INT123_synth_ntom_8bit_m2s
+	INT123_synth_1to1_real
+	INT123_synth_1to1_real_mono
+	INT123_synth_1to1_real_m2s
+	INT123_synth_2to1_real
+	INT123_synth_2to1_real_mono
+	INT123_synth_2to1_real_m2s
+	INT123_synth_4to1_real
+	INT123_synth_4to1_real_mono
+	INT123_synth_4to1_real_m2s
+	INT123_synth_ntom_real
+	INT123_synth_ntom_real_mono
+	INT123_synth_ntom_real_m2s
+	INT123_synth_1to1_s32
+	INT123_synth_1to1_s32_mono
+	INT123_synth_1to1_s32_m2s
+	INT123_synth_2to1_s32
+	INT123_synth_2to1_s32_mono
+	INT123_synth_2to1_s32_m2s
+	INT123_synth_4to1_s32
+	INT123_synth_4to1_s32_mono
+	INT123_synth_4to1_s32_m2s
+	INT123_synth_ntom_s32
+	INT123_synth_ntom_s32_mono
+	INT123_synth_ntom_s32_m2s
+	INT123_prepare_decode_tables
+	INT123_make_decode_tables
+	INT123_make_conv16to8_table
+	operator+
+	operator+
+	operator+
+	TiXmlFOpen
+	const&>
+	const&>
+	CreateGUID
+	GUIDToString
+	my_strlen
+	my_strcmp
+	my_strncmp
+	my_strtoui
+	my_uint_len
+	my_uitos
+	my_strchr
+	my_strrchr
+	my_memchr
+	my_read_hex_ptr
+	my_read_decimal_ptr
+	my_memset
+	my_strlcpy
+	my_strlcat
+	my_isspace
+	const&>
+	const&>
+	ConvertUTF32toUTF16
+	ConvertUTF16toUTF32
+	ConvertUTF16toUTF8
+	isLegalUTF8Sequence
+	ConvertUTF8toUTF16
+	ConvertUTF32toUTF8
+	ConvertUTF8toUTF32
+	_cxa_guard_acquire
+	_cxa_guard_abort
+	_cxa_guard_release
+	_cxa_get_exception_ptr
+	_cxa_begin_catch
+	_cxa_end_catch
+	_cxa_call_unexpected
+	_cxa_get_globals_fast
+	_cxa_get_globals
+	_cxa_throw
+	_cxa_rethrow
+	_dynamic_cast
+	_cxa_end_cleanup
+	_cxa_type_match
+	_cxa_begin_cleanup
+	_gnu_end_cleanup
+	_cxa_allocate_exception
+	_cxa_free_exception
+	_cxa_allocate_dependent_exception
+	_cxa_free_dependent_exception
+	_cxa_pure_virtual
+	_cxa_deleted_virtual
+	double>
+	_cxa_bad_cast
+	_cxa_bad_typeid
+	_cxa_demangle
+	_gcclibcxx_demangle_callback
+	_cxa_current_exception_type
+	_popcountsi2
