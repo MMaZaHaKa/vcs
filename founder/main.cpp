@@ -625,6 +625,7 @@ int main()
     //    return 0;
     //}
 
+#if 0 // 2 source files, dump diff
     { // cmp test
         // Parse input
         std::vector<FuncNodeDB> vcsfL = ParseIdaFuncs("vcs.c");
@@ -797,6 +798,7 @@ int main()
         //copyToClipboard(clipboardText.c_str());
         return 0;
     }
+#endif
 
     bool sh = (GetAsyncKeyState(VK_SHIFT) & 0x8000);
     if (sh) { convbase(); } // if call with nums, no enums
