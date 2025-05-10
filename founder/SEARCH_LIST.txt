@@ -1,0 +1,7 @@
+cAudioManager::PlayOneShot   xrefs
+cDMAudio::PlayOneShot   xrefs
+cDMAudio::PlayFrontEndSound  xrefs
+CPed::Say  xrefs x2
+cAudioManager::SetupPedComments   xrefs
+cAudioManager::GetPedCommentSfx  xrefs
+cAudioManager::GetGenericMaleTalkSfx  xrefs

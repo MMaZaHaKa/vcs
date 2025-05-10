@@ -1,0 +1,7 @@
+Line		FuncPtr		FuncName	Substring		(Query: comment)
+136741 [658]	001BBA60	cAudioManager::ProcessVehicleOneShots	cAudioManager::SetupPedComments(v100, v102, v103);
+139695 [1268]	001BFBC0	cAudioManager::ProcessPedOneShots	cAudioManager::SetupPedComments(a1, a2, (eSOUND)*(unsigned __int16 *)(v14 + 56 * *(_DWORD *)(a1 + 48) + v12));
+140091 [34]	001C21D8	cAudioManager::SetupPedComments	result = cAudioManager::GetPedCommentSfx(a1, *(int *)(a2 + 8), (unsigned __int16)sound);
+141476 [168]	001C3D70	cAudioManager::ProcessOneShotScriptObject	cAudioManager::SetupPedComments(a1, (unsigned int)v64, SOUND_INJURED_PED_MALE_OUCH);
+141482 [174]	001C3D70	cAudioManager::ProcessOneShotScriptObject	cAudioManager::SetupPedComments(a1, (unsigned int)v64, SOUND_INJURED_PED_FEMALE);
+
