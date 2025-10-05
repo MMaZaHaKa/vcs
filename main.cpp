@@ -4,13 +4,21 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <map>
+#include <algorithm>
 #include <fstream>
+#include <cstdint>
+#include <cstring>
+#include <iomanip>
 #include "mips.hpp"
 
 #include "hdr.h"
 #include "test.hpp"
 #include "AudioSamples.h"
 #include "tools/magic_enum/magic_enum.hpp"
+
+#define null NULL
+#define nil NULL
 
 void SetColor(WORD wAttributes)
 {
@@ -58,6 +66,39 @@ std::vector<MemoryRegion> inline FindRegions(SIZE_T targetSize, DWORD targetType
 	}
 	return regions;
 }
+void* SearchPointerByPattern(void* ptrStart, int block_size, std::string pattern)
+{
+#define INRANGE(x, a, b) (x >= a && x <= b)
+#define getBits(x) (INRANGE((x & (~0x20)), 'A', 'F') ? ((x & (~0x20)) - 'A' + 0xa) : (INRANGE(x, '0', '9') ? x - '0' : 0))
+#define getByte(x) (getBits(x[0]) << 4 | getBits(x[1]))
+	const char* buffptr_pattern = pattern.c_str();
+	uintptr_t pMatch = 0;
+	for (uintptr_t MemPtr = (uintptr_t)ptrStart; MemPtr < ((uintptr_t)ptrStart + block_size); MemPtr++)
+	{
+		if (!*buffptr_pattern) { break; }
+		if (*(PBYTE)buffptr_pattern == '\?' || *(BYTE*)MemPtr == getByte(buffptr_pattern))
+		{
+			if (!pMatch) { pMatch = MemPtr; }
+			if (!buffptr_pattern[2]) { break; } // паттерн закончился
+			//PWORD первых 2 символа из паттерна, PBYTE первый символ
+			if (*(PWORD)buffptr_pattern == '\?\?' || *(PBYTE)buffptr_pattern != '\?') { buffptr_pattern += 3; }
+			else { buffptr_pattern += 2; } //one ?
+		}
+		else
+		{ // срыв совпадения
+			buffptr_pattern = pattern.c_str();
+			if (pMatch) { MemPtr = pMatch; }
+			pMatch = 0;
+		}
+	}
+	//free((void*)buffptr_pattern); // GetProcAddressNoExternCExport
+	if (!pMatch) { return NULL; }
+	//printf("found str: 0x%p\n", (char*)pMatch);
+	return (void*)pMatch;
+#undef getByte;
+#undef getByte;
+#undef INRANGE;
+}
 
 inline static uintptr_t CalcPointerFromOffset(uintptr_t op_addr, uintptr_t offset) // call offset => pointer func (restore)
 {
@@ -77,9 +118,9 @@ inline static uintptr_t CalcOffset(uintptr_t op_addr, uintptr_t dst) { return (d
 #define P_PCSX2_END  0x21FFFFFF
 #define P_ELF_BASE  0x00100000 // P_PCSX2_BASE + P_ELF_BASE = 1st byte elf program
 //#define IDATRANSLATE(p) (((uintptr_t)p) + P_PCSX2_BASE) // IDA -> PCSX2
-#define PCSX2POINTER(p) (((uintptr_t)p) + P_PCSX2_BASE) // VIRTUAL -> PHYSICAL
-#define PCSXTRANSLATE(p) (((uintptr_t)p) - P_PCSX2_BASE) // PCSX2 -> IDA
-#define IDATRANSLATE(p) PCSX2POINTER(p)
+#define PCSX2POINTER(p)  ( (p) ? (((uintptr_t)p) + P_PCSX2_BASE) : null ) // pPS2(ida) -> pPCSX2(win) (null saving)
+#define PCSXTRANSLATE(p) ( (p) ? (((uintptr_t)p) - P_PCSX2_BASE) : null ) // pPCSX2(win) -> pPS2(ida) (null saving)
+#define IDATRANSLATE(p) (((uintptr_t)p) + P_PCSX2_BASE) /*PCSX2POINTER(p)*/ // null non save
 void* gpPCSX2base = NULL;
 uint32_t inline TranslatePCSX2IDAPTR(uint32_t idap) {
 	if (!gpPCSX2base) { gpPCSX2base = FindRegions(0x6C4000, MEM_IMAGE, 0, MEM_COMMIT)[0].baseAddress; }
@@ -87,12 +128,22 @@ uint32_t inline TranslatePCSX2IDAPTR(uint32_t idap) {
 }
 #define IDA2PCSX2160(p) TranslatePCSX2IDAPTR((uint32_t)p) // pcsx2 asm (patch pcsx2)
 #define RESET_RECOMP_EE() { auto recResetEE = (void(__stdcall*)())IDA2PCSX2160(0x665570); recResetEE(); } // reset recompiler EE (prevent cached exec)(4patch)
+bool is_valid_pointer(void* ptr)
+{
+	if (!ptr) { return false; }
+	MEMORY_BASIC_INFORMATION mbi;
+	if (VirtualQuery(ptr, &mbi, sizeof(mbi)) == 0) { return false; }
+	return (mbi.State == MEM_COMMIT) && !(mbi.Protect & PAGE_NOACCESS);
+}
+
+bool inline WaitElf(bool check = false) {
+	if (check) { return (is_valid_pointer((void*)P_PCSX2_BASE) && ((uint32_t*)P_PCSX2_BASE)[0]); }
+	while (!(is_valid_pointer((void*)P_PCSX2_BASE) && ((uint32_t*)P_PCSX2_BASE)[0])) { Sleep(1); }
+}
 // TODO ADD SUPPORT PCSX2 pnach (need?)
 bool& eeCpuExecuting = *(bool*)IDA2PCSX2160(0x02FD4EB8);
 bool& eeRecNeedsReset = *(bool*)IDA2PCSX2160(0x02FD4E13);
 //auto fdbg = (void(__stdcall*)())IDA2PCSX2160(0x665490);
-#define null NULL
-#define nil NULL
 // GET_REG(eax, _eax); printf("eax: 0x%p\n", _eax);
 #define GET_REG(reg, varname) \
     uint32_t varname; \
@@ -105,12 +156,15 @@ bool& eeRecNeedsReset = *(bool*)IDA2PCSX2160(0x02FD4E13);
 template <typename T, typename R = uint32_t> R inline _stackcast(T v) { return *((R*)&v); } // const reinterpret_cast (stack)
 #define BYTESF2U32(f) _stackcast<float, uint32_t>(f)
 #define BIT(num) (1<<(num)) // mask BIT[31...0] (x86 Little Endian)
+#define GET_BITS(value, mask, shift) (((value) & (mask)) >> (shift))
 #define GET_BIT(num, n) (((num) >> (n)) & 1) // 11111111(3) 11111111(2) 11111101(1) 11111111(0) mem(FF FD FF FF), 32t_byte1, bit[76543210] <- 1<<(N1)
 #define SET_BIT(num, n, val) ((num) = ((num) & ~BIT(n)) | ((val) << (n)))
 #define GET_BYTE(num, n) ((num >> (8 * n)) & 0xFF) // 0-lob, 1-midlob, 2-midhib, 3-hib BYTE[0123] (x86 Little Endian)
 #define SET_BYTE(num, n, val) ((num) = ((num) & ~(0xFF << (8 * (n)))) | ((val) << (8 * (n))))
-#define SWAP_BIT(num, n) SET_BIT(num, n, !GET_BIT(num, n))
-#define DUMP_BITS(num) (printf("%d%d%d%d%d%d%d%d", GET_BIT(num, 7), GET_BIT(num, 6), \
+#define SWAP_BIT(num, n) SET_BIT(num, n, !GET_BIT(num, n)) // flags ^= (1 << 3);
+#define DUMP_BITS(num) (printf("%d%d%d%d%d%d%d%d\n", GET_BIT(num, 7), GET_BIT(num, 6), \
+	GET_BIT(num, 5), GET_BIT(num, 4), GET_BIT(num, 3), GET_BIT(num, 2), GET_BIT(num, 1), GET_BIT(num, 0)))
+#define DUMP_BITS2(num) (printf("0_[%d], 1_[%d], 2_[%d], 3_[%d], 4_[%d], 5_[%d], 6_[%d], 7_[%d]\n", GET_BIT(num, 7), GET_BIT(num, 6), \
 	GET_BIT(num, 5), GET_BIT(num, 4), GET_BIT(num, 3), GET_BIT(num, 2), GET_BIT(num, 1), GET_BIT(num, 0)))
 #define SWAP_ENDIAN(x) ( \
     (((uint32_t) (x) & 0x000000ff) << 24) | \
@@ -118,6 +172,7 @@ template <typename T, typename R = uint32_t> R inline _stackcast(T v) { return *
     (((uint32_t) (x) & 0x00ff0000) >>  8) | \
     (((uint32_t) (x) & 0xff000000) >> 24) \
 ) // PS2 SDK
+#define OFFSET(base, off, type) ((type)&(((uint8_t*)base)[off]) )
 // PDP-10 like byte functions
 #define MASK(p, s) (((1 << (s)) - 1) << (p))
 inline uint32_t dpb(uint32_t b, uint32_t p, uint32_t s, uint32_t w) { uint32_t m = MASK(p, s); return (w & ~m) | ((b << p) & m); } // Deposit Bit Field
@@ -125,8 +180,29 @@ inline uint32_t ldb(uint32_t p, uint32_t s, uint32_t w) { return w >> p & (1 << 
 #define INRANGE(x,a,b) (x >= a && x <= b) // xarex1337
 #define getBits( x ) (INRANGE((x&(~0x20)),'A','F') ? ((x&(~0x20)) - 'A' + 0xa) : (INRANGE(x,'0','9') ? x - '0' : 0))
 #define getByte( x ) (getBits(x[0]) << 4 | getBits(x[1]))
-template<typename T> T inline EMUPOINTER(void* p) { return (T)(p ? PCSX2POINTER(p) : null); }
-template<typename T> T inline EMUPOINTER(uintptr_t p) { return EMUPOINTER<T>((void*)p); }
+//template<typename T> T inline EMUPOINTER(void* p) { return (T)(p ? PCSX2POINTER(p) : null); } // need?
+template<typename T> T inline EMUPOINTER(void* p) { return (T)(PCSX2POINTER(p)); } // need? moved to define
+template<typename T> T inline EMUPOINTER(uintptr_t p) { return EMUPOINTER<T>((void*)p); } // need?
+#define VU2V(v) (*(CVector*)(&v))
+#define V2VU(v) (*(CVuVector*)(&v))
+#define debug(f, ...) printf(f, ##__VA_ARGS__)
+
+
+//uint64_t& flags = *OFFSET(p, 0x1D8, uint64_t*);
+//if (flags & (1ULL << 3)) { flags &= ~(1ULL << 3); }
+//else { flags |= (1ULL << 3); }
+
+#define STRU_PAD_PASTE(a,b) a##b
+#define STRU_PAD(num, size) \
+    uint8_t STRU_PAD_PASTE(_pad, num)[size];
+#define STRU_PAD_LINE(size) \
+    uint8_t STRU_PAD_PASTE(_pad, __LINE__)[size];
+#if defined(__COUNTER__)
+#define STRU_PAD_C(size) \
+    uint8_t STRU_PAD_PASTE(_pad, __COUNTER__)[size];
+#else
+#define STRU_PAD_C(size) STRU_PAD_LINE(size)
+#endif
 
 // rw so funny :/
 #define LLLinkGetData(linkvar,type,entry) \
@@ -142,7 +218,11 @@ template<typename T> T inline EMUPOINTER(uintptr_t p) { return EMUPOINTER<T>((vo
 	((type*)((char*)(base) + (offset)))
 
 #define RWRGBAINT(r, g, b, a) ((uint32)((((a)&0xff)<<24)|(((b)&0xff)<<16)|(((g)&0xff)<<8)|((r)&0xff)))
-
+#define PI (3.1415f)
+#define TWOPI (PI * 2)
+#define HALFPI (PI / 2)
+#define DEGTORAD(x) ((x) * PI / 180.0f)
+#define RADTODEG(x) ((x) * 180.0f / PI)
 
 #define MYDLL_EXPORTS
 #define MAZAHAKA // PCSX2 ver 1.6.0 x86  SLUS-215.90
@@ -168,6 +248,7 @@ void inline patch(uintptr_t address, T value/*, bool idaptr = false*/)
 template<typename T>
 void inline patch(void* address, T value/*, bool idaptr = false*/) { patch<T>((uintptr_t)address, value/*, idaptr*/); }
 //#define IDApatch(p, t, v) patch<t>(IDATRANSLATE(p), v); // 	IDApatch(0x123, char, 77);
+#define SET_VAL_NOVP patch
 void inline patchblock(uintptr_t pto, uintptr_t pfrom, uint32_t size/*, bool idaptr = false*/)
 {
 	DWORD vp[2];
@@ -189,15 +270,6 @@ uintptr_t inline UNJAL(uintptr_t pos, uintptr_t val) {
 	// Восстанавливаем старшие 4 бита на основе адреса следующей инструкции
 	uintptr_t upper = (pos + 4) & 0xF0000000;
 	return upper | target;
-}
-
-
-bool is_valid_pointer(void* ptr)
-{
-	if (!ptr) { return false; }
-	MEMORY_BASIC_INFORMATION mbi;
-	if (VirtualQuery(ptr, &mbi, sizeof(mbi)) == 0) { return false; }
-	return (mbi.State == MEM_COMMIT) && !(mbi.Protect & PAGE_NOACCESS);
 }
 
 bool
@@ -285,6 +357,34 @@ std::vector<std::string> FileReadAllLines(std::string filePath)
 	return lines;
 }
 
+std::vector<uint8_t> FileReadAllBytes(std::string filePath)
+{
+	std::vector<uint8_t> buffer;
+	std::ifstream file(filePath, std::ios::binary | std::ios::ate);
+	if (!file.is_open()) { return buffer; }
+	std::streamsize size = file.tellg();
+	buffer.resize(size);
+	file.seekg(0, std::ios::beg);
+	if (!file.read((char*)(buffer.data()), size)) { return buffer; }
+	return buffer;
+}
+
+bool FileWriteAllBytes(std::string filePath, std::vector<uint8_t>& buffer)
+{
+	std::ofstream file(filePath, std::ios::binary);
+	if (!file.is_open()) { return false; }
+	file.write((char*)(buffer.data()), buffer.size());
+	return file.good();
+}
+
+bool FileWriteAllBytes(std::string filePath, const uint8_t* buffer, uint32_t size)
+{
+	std::ofstream file(filePath, std::ios::binary);
+	if (!file.is_open()) { return false; }
+	file.write((char*)(buffer), size);
+	return file.good();
+}
+
 void inline reverseString(char* str) {
 	int length = strlen(str);
 	for (int i = 0; i < length / 2; i++) {
@@ -293,7 +393,6 @@ void inline reverseString(char* str) {
 		str[length - i - 1] = temp;
 	}
 }
-
 
 void transformCheat(char* input, bool encode = true) {
 	if (!input) { return; }
@@ -321,6 +420,14 @@ void U_SetCurrentDirectory()
 	GetModuleFileNameA(NULL, currentDir, MAX_PATH);
 	std::string::size_type pos = std::string(currentDir).find_last_of("\\/");
 	SetCurrentDirectoryA(std::string(currentDir).substr(0, pos).c_str());
+}
+
+void PrintCurrDir()
+{
+	char buffer[MAX_PATH];  // MAX_PATH is typically 260
+	DWORD length = GetCurrentDirectoryA(MAX_PATH, buffer);
+	if (!length || length > MAX_PATH) { return; }
+	printf("Current directory: %s\n", buffer);
 }
 
 #define NUMSECTORS_X 50
@@ -352,20 +459,43 @@ void U_SetCurrentDirectory()
 #define gpStreaming ((char*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x489FF8)))
 #define gpModelIndices ((int16_t*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48A040))) // CModelIndices
 
-#define pEmpireHud ((CEmpireHud*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48F370)))
+// Empire
+#define EmpireHud ((CEmpireHud*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48F370)))
 #define EmpireMgr ((CEmpireMgr*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48F050)))
-#define EntryExitManager ((char*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48FF48)))
+#define InteriorManager ((CInteriorManager*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48FF48)))
+#define CObjectData_ms_aObjectInfo ((char*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x488054)))
 
+#define C3dMarkers_m_aMarkerArray ((C3dMarker*)IDATRANSLATE(0x4E01D0)) // 32
+#define C3dMarkers_m_pRslElementGroupArray ((int32_t*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x4CD160))) // 9
+#define CTheScripts_ScriptSphereArray ((script_sphere_struct*)IDATRANSLATE(0x50CE10)) // 16
+
+#define TheRadar ((CRadar*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48F548)))
+#define TheDollarParticleFX ((char*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x488784)))
+#define FrontEndMenuManager  ((char**)IDATRANSLATE(0x729480))									// CMenuManager (page, ismenuactive)
+#define FrontEndMenuManagerSettings ((char*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48F3D0))) // CMenuManagerSettings (settings val, prefs)
 #define CFont_Details ((void*)IDATRANSLATE(0x711F30)) // ?
 
-#define gpSkidTex ((void*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48A5B0)))
-#define currentTexDict ((void*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x4887B8)))
+#define CPopulation_ms_pPedGroups ((char*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x488014)))
+#define cWorldStream ((cWorldStream*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48F4F8)))
 
+#define gpSkidTex ((char*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48A5B0)))
+#define currentTexDict ((void*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x4887B8)))
+#define musicNameIdAssoc ((tMusicNameIdAssoc*)IDATRANSLATE(0x48A788))
+#define gPhoneInfo ((char*)IDATRANSLATE(0x51F710))
+#define ThePaths ((CPathFind*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x487490)))
+
+#define CutsceneMgr ((CCutsceneMgr*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48F820)))
+#define TheAnimManager ((CAnimManager*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48F048)))
+
+#define MusicManager ((cMusicManager*)IDATRANSLATE(0x4E41E0))
+#define AudioManager ((cAudioManager*)IDATRANSLATE(0x514A90))
 #define SampleManager ((cSampleManager*)IDATRANSLATE(0x4CDA08))
 #define gAm_sfxgxt ((sMissionAudioManager*)IDATRANSLATE(0x4CDA40))
+#define aEngineSounds ((tEngineSounds*)IDATRANSLATE(0x4A9538))
 #define TOTAL_AUDIO_SAMPLES 7721
 
-#define aEngineSounds ((tEngineSounds*)IDATRANSLATE(0x4A9538))
+#define CClock_ms_nGameClockHours ((uint8_t*)IDATRANSLATE(0x4CD148))
+//#define CTimer_ms_fTimeScale ((float*)IDATRANSLATE(0x4CD168))
 
 #define TheCamera ((uint32_t*)IDATRANSLATE(0x6F44D0))
 //#define CMBlur_Drunkness ((float*)IDATRANSLATE(0x6F50A8)) // wrong. todo int32
@@ -383,6 +513,7 @@ void U_SetCurrentDirectory()
 #define CPools_ms_pDummyPool ((CPool*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x487AAC))) // 96
 #define CPools_ms_pAudioScriptObjectPool ((CPool*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x487AB0))) // 48
 #define CTexListStore_ms_pTexListPool ((CPool*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x489ECC))) // 28
+#define CColStore_ms_pColPool ((CPool*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x4818F8))) // 72
 
 #define POOLFLAG_ID 0x7F
 #define POOLFLAG_ISFREE 0x80
@@ -404,17 +535,25 @@ inline bool CPools_GetSlotIsFree(CPool* p, int32_t i) { return !!(((uint8_t*)PCS
 
 #define CTheScripts_aCommandsHandlers ((int64_t*)IDATRANSLATE(0x4BEAF0))
 #define CTheScripts_ScriptSpace ((char*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48741C))) // CScriptThread :)
-#define CTheScripts_pActiveScripts ((CRunningScript*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x4CD3C4)))
-#define CTheScripts_pIdleScripts ((CRunningScript*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x4CD3C8)))
+#define CTheScripts_ScriptsArray ((CRunningScript*)IDATRANSLATE(0x72F8D0)) // script pool
+#define CTheScripts_pActiveScripts ((CRunningScript**)IDATRANSLATE(0x4CD3C4))
+#define CTheScripts_pIdleScripts ((CRunningScript**)IDATRANSLATE(0x4CD3C8))
+#define CTheScripts_ActiveScripts ((CRunningScript*)PCSX2POINTER(*CTheScripts_pActiveScripts))
+#define CTheScripts_IdleScripts ((CRunningScript*)PCSX2POINTER(*CTheScripts_pIdleScripts))
 #define CTheScripts_MainScriptSize ((*(uint32_t*)IDATRANSLATE(0x4CD3D8))) // COMMAND_LOAD_AND_LAUNCH_MISSION_INTERNAL
 #define CTheScripts_LargestMissionScriptSize ((*(uint32_t*)IDATRANSLATE(0x4CD3E8))) // COMMAND_LOAD_AND_LAUNCH_MISSION_INTERNAL
 #define CTheScripts_MultiScriptArray ((int32_t*)IDATRANSLATE(0x7404D0)) // missions offsets
-#define ScriptParams ((uint32_t*)IDATRANSLATE(0x50DEF8))
+#define CTheScripts_NextProcessId ((int32_t*)IDATRANSLATE(0x48742C))
+#define CTheScripts_bAlreadyRunningAMissionScript ((bool*)IDATRANSLATE(0x4CD3E7))
+#define CTheScripts_InTheScripts ((bool*)IDATRANSLATE(0x487428))
+//#define CTheScripts_ScriptSphereArray ((script_sphere_struct*)IDATRANSLATE(0x50CE10)) // 16
+#define ScriptParams ((int32_t*)IDATRANSLATE(0x50DEF8))
 bool& gbGlassCheat = *(bool*)IDATRANSLATE(0x489EB4);
 bool& CSpecialFX_bLiftCam = *(bool*)IDATRANSLATE(0x481CD8);
 bool& CPad_bHasPlayerCheated = *(bool*)IDATRANSLATE(0x487A54);
 float& CTimer_ms_fTimeScale = *(float*)IDATRANSLATE(0x4CD168);
 int& CGame_currArea = *(int*)IDATRANSLATE(0x489F7C);
+int& CGame_currLevel = *(int*)IDATRANSLATE(0x4CD118);
 int& CRenderer_ms_nNoOfVisibleEmpires = *(int*)IDATRANSLATE(0x4CD5A0);
 //int& CWorld_ms_aSectors[50][50] = *(int*)IDATRANSLATE();
 RwObjectNameIdAssocation** CVehicleModelInfo_ms_vehicleDescs = (RwObjectNameIdAssocation**)IDATRANSLATE(0x489E38); // size 10
@@ -434,8 +573,9 @@ RwObjectNameIdAssocation** CVehicleModelInfo_ms_vehicleDescs = (RwObjectNameIdAs
 #define DUMPSCRSTRVAR(i) printf("SCRSTR_%d: %.7s\n", i, SCRBYTEVAR(SCRSTRIP(*SCRVAR(i)))) // strvar is ip in scm where str
 #define DUMPSCRARRAY(i, sz) printf("SCR_%d [", i); for (int j = 0; j < sz; j++) { printf("%d ", *SCRVAR(i+j)); } printf("]\n");
 #define DUMPSCRSTRARRAY(i, sz) printf("SCRSTR_%d [", i); for (int j = 0; j < sz; j++) { printf("%.7s ", SCRBYTEVAR(SCRSTRIP(*SCRVAR(i+j)))); } printf("]\n");
-#define DUMPVEC(s, vec) printf("%s %f %f %f\n", s, vec.x, vec.y, vec.z)
-#define DUMPPOS(vec) printf("x:%f  y:%f  z:%f\n",vec.x, vec.y, vec.z)
+#define DUMPVEC(vec) printf("%f %f %f\n", ((vec).x), ((vec).y), ((vec).z))
+#define DUMPSVEC(s, vec) printf("%s %f %f %f\n", s, ((vec).x), ((vec).y), ((vec).z))
+//#define DUMPPOS(vec) DUMPVEC(vec) // tmp. todo remove
 void inline SETCHEAT(uintptr_t p, const char* c) { // T S X C  L R U D  (L1)1 (R1)2
 	if (p && c)	{ char ch[100] = { 0 }; strcpy(ch, c); reverseString(ch); transformCheat(ch); patchstring(IDATRANSLATE(p), ch); }
 }
@@ -479,6 +619,106 @@ CVehicle* FindPlayerVehicle() {
 	return EMUPOINTER<CVehicle*>(pPed ? pPed->m_pMyVehicle : null);
 }
 CVector FindPlayerPos() { return FindPlayerPed() ? (*(CVector*)&FindPlayerPed()->CPed.CPhysical.CEntity.CPlaceable.m_pMat.pos) : CVector{0, 0, 0}; }
+CVector FindPlayerMenuTarget() {
+	CVuVector pos = {0, 0, 0};
+	for (int i = 0; i < 75; i++) { // NUMRADARBLIPS
+		if (TheRadar->ms_RadarTrace[i].m_eRadarSprite == eRadarSprite::RADAR_SPRITE_MP_OBJECTIVE) { pos = TheRadar->ms_RadarTrace[i].m_vecPos; break; }
+	}
+	return {pos.x, pos.y, (pos.z == 0.0f && pos.x != 0.0f && pos.y != 0.0f) ? 12.0f : pos.z};
+}
+
+void DumpScriptList(CRunningScript* first_in_list, const char* desc = "") {
+	CRunningScript* pScript = first_in_list;
+	while (pScript)
+	{
+		printf("%sSC index %d, IP: %d, SC name: %s\n", desc, ((uintptr_t)pScript - ((uintptr_t)CTheScripts_ScriptsArray)) / sizeof(CRunningScript),
+			pScript->m_nIp, pScript->m_abScriptName);
+		pScript = EMUPOINTER<CRunningScript*>(pScript->m_pNext);
+	}
+}
+
+void InitScript(CRunningScript* pScript, const char* custom_name = "", bool oldscrname = true)
+{
+	if (!pScript) { return; }
+	int id = pScript->m_nId;
+	char buff[8];
+	strcpy(buff, pScript->m_abScriptName);
+	memset(pScript, 0, sizeof(CRunningScript));
+	if (custom_name && custom_name[0] != '\0')
+	{
+		strncpy(pScript->m_abScriptName, custom_name, sizeof(pScript->m_abScriptName) - 1);
+		pScript->m_abScriptName[sizeof(pScript->m_abScriptName) - 1] = '\0';
+	}
+	else if (oldscrname && buff[0]) { sprintf(pScript->m_abScriptName, "%s", buff); }
+	else { sprintf(pScript->m_abScriptName, "id%02i", id); }
+	pScript->m_bDeatharrestEnabled = true;
+}
+
+void RemoveScriptFromList(CRunningScript* removable_script, CRunningScript** ppListScript)
+{
+	if (!removable_script || !ppListScript) { return; }
+	if (removable_script->m_pPrev) { ((CRunningScript*)PCSX2POINTER(removable_script->m_pPrev))->m_pNext = removable_script->m_pNext; }
+	else { *ppListScript = removable_script->m_pNext; }
+	if (removable_script->m_pNext) { ((CRunningScript*)PCSX2POINTER(removable_script->m_pNext))->m_pPrev = removable_script->m_pPrev; }
+}
+
+void AddScriptToList(CRunningScript* addable_script, CRunningScript** ppListScript)
+{
+	if (!addable_script || !ppListScript) { return; }
+	addable_script->m_pNext = *ppListScript; // ps2 ptr into
+	addable_script->m_pPrev = null;
+	if (*ppListScript) { ((CRunningScript*)PCSX2POINTER(*ppListScript))->m_pPrev = (CRunningScript*)PCSXTRANSLATE(addable_script); }
+	*ppListScript = (CRunningScript*)PCSXTRANSLATE(addable_script);
+}
+
+void ClearActiveList()
+{
+	//CRunningScript* pScript = CTheScripts_ActiveScripts;
+	//while (pScript)
+	//{
+	//	RemoveScriptFromList(pScript, CTheScripts_pActiveScripts);
+	//	InitScript(pScript);
+	//	AddScriptToList(pScript, CTheScripts_pIdleScripts);
+	//	pScript = EMUPOINTER<CRunningScript*>(pScript->m_pNext);
+	//}
+	//*CTheScripts_pActiveScripts = null;
+}
+
+void ResetScripts()
+{
+	*CTheScripts_bAlreadyRunningAMissionScript = false;
+	*CTheScripts_NextProcessId = 0;
+	*CTheScripts_pIdleScripts = null;
+	*CTheScripts_pActiveScripts = null;
+	for (int32_t i = 0; i < 128; i++)
+	{
+		CTheScripts_ScriptsArray[i].m_nId = (*CTheScripts_NextProcessId)++;
+		InitScript(&CTheScripts_ScriptsArray[i], "", false);
+		CTheScripts_ScriptsArray[i].m_nIp = 0;
+		AddScriptToList(&CTheScripts_ScriptsArray[i], CTheScripts_pIdleScripts);
+	}
+}
+
+CRunningScript* StartNewScript(uint32_t ip = 0, bool mission = false, const char* custom_name = "")
+{
+	CRunningScript* pNew = CTheScripts_IdleScripts;
+	if (!pNew) { return null; }
+	{
+		RemoveScriptFromList(pNew, CTheScripts_pIdleScripts);
+		pNew->m_nId = (*CTheScripts_NextProcessId)++;
+		InitScript(pNew, custom_name);
+		pNew->m_nIp = ip;
+		AddScriptToList(pNew, CTheScripts_pActiveScripts);
+		pNew->m_bIsActive = true;
+	}
+	if (mission)
+	{
+		pNew->m_bIsMissionScript = true;
+		pNew->m_bMissionFlag = true;
+		*CTheScripts_bAlreadyRunningAMissionScript = true;
+	}
+	return pNew;
+}
 
 const char* GetRwObjectDescByType(int objtype)
 {
@@ -496,6 +736,15 @@ const char* GetRwObjectDescByType(int objtype)
 	}
 }
 
+float halfFloatToFloat(uint16_t half) // Precision
+{
+	uint32_t sign = half & 0x8000;
+	int32_t exp = (half >> 10) & 0x1F;
+	uint32_t mant = half & 0x3FF;
+	uint32_t f = sign << 16 | (exp + 127 - 15) << 23 | mant << 13;
+	return *(float*)&f;
+}
+
 //void SwitchScriptMode(CRunningScript* pScript, bool turnoff = true) {
 //	if (pScript) {
 //		if (turnoff) {
@@ -508,7 +757,62 @@ const char* GetRwObjectDescByType(int objtype)
 //		}
 //	}
 //}
+std::vector<std::string> coms;
 
+class ModelInfoExt
+{
+public:
+	bool inited;
+	int index;
+	uint32_t hash;
+	std::string name; // br
+	//---EXT
+	std::vector<CColModel*> allcolls; // ld steps
+
+	static std::vector<ModelInfoExt> modelInfoExt;
+	static void Init(const char* path)
+	{
+		std::vector<std::string> rows = FileReadAllLines(path);
+		int max_index = -1;
+		for (const auto& row : rows)
+		{
+			if (row.empty()) continue;
+			int index;
+			std::istringstream iss(row);
+			char comma;
+			if (iss >> index >> comma)
+				if (index > max_index)
+					max_index = index;
+		}
+		if (max_index >= 0)
+			modelInfoExt.resize(max_index + 1);
+		for (const auto& row : rows)
+		{
+			if (row.empty()) continue;
+			int index;
+			uint32_t hash;
+			std::string name;
+			std::istringstream iss(row);
+			char comma;
+			if (iss >> index >> comma >> std::hex >> hash >> comma >> name)
+			{
+				if (index >= 0 && index < modelInfoExt.size())
+				{
+					modelInfoExt[index].inited = true;
+					modelInfoExt[index].index = index;
+					modelInfoExt[index].hash = hash;
+					modelInfoExt[index].name = name;
+				}
+				else
+					throw std::out_of_range("Invalid index in ModelInfoExt data");
+			}
+		}
+
+		printf("ModelInfoExt: total %zu\n", modelInfoExt.size());
+	}
+};
+std::vector<ModelInfoExt> ModelInfoExt::modelInfoExt;
+ModelInfoExt* GetModelInfoExt(int mi) { return &ModelInfoExt::modelInfoExt[mi]; }
 
 
 std::vector<MemoryPatcher> patches;
@@ -559,7 +863,6 @@ void InitPatches()
 		//MemoryPatcher(IDATRANSLATE(0x0021EF0C), 0, 4), // matt1 мир
 		//MemoryPatcher(IDATRANSLATE(0x0021EF54), 0, 4), // matt2 вода
 		//MemoryPatcher(IDATRANSLATE(0x0021EF5C), 0, 4), // unk sub like ps2 alpha test
-		//MemoryPatcher(IDATRANSLATE(0x0021F158), 0, 4), // some render empire build 3d
 		//MemoryPatcher(IDATRANSLATE(0x0021F040), 0, 4), // some render 
 
 		//MemoryPatcher(IDATRANSLATE(0x00109420), 0, 4), // matren cws render1  roads builds
@@ -590,9 +893,51 @@ void InitPatches()
 
 		//MemoryPatcher(IDATRANSLATE(0x003F3C3C), 0, 0x003F3D08 - 0x003F3C3C), // fonts reset
 		//MemoryPatcher(IDATRANSLATE(0x003F4478), 0, 0x003F448C - 0x003F4478), // fonts setcol3
+
+		//MemoryPatcher(IDATRANSLATE(0x00343E68), 0, 4), // bike siren prerender test
+		//MemoryPatcher(IDATRANSLATE(0x00343E0C), 0, 4), // bike siren prerender test
+		//MemoryPatcher(IDATRANSLATE(0x0033FEF8), 0, 4), // bike siren prerender test
+
+		//MemoryPatcher(IDATRANSLATE(0x0021F404), 0, 4), // cutscene draw stuff test
+		//MemoryPatcher(IDATRANSLATE(0x1B6004), 0, 4), // jetski audio test nop
+		//MemoryPatcher(IDATRANSLATE(0x1B6288), 0, 4), // forklift audio test nop
+		//MemoryPatcher(IDATRANSLATE(0x1DD4EC), 0, 4), // bike anim test nop
+		//MemoryPatcher(IDATRANSLATE(0x002F7540), 0, 4), // vu0 nop
+		//MemoryPatcher(IDATRANSLATE(0x002F7448), 0, 4), // vu0 nop
+		MemoryPatcher(IDATRANSLATE(0x3BAAC0), 0, 4), // nop CTheScripts::Process() //--------------------------------------------------------------
+		//MemoryPatcher(IDATRANSLATE(0x21E9D0), 0, 4), // nop CGame::Process() //--------------------------------------------------------------
+		//MemoryPatcher(IDATRANSLATE(0x0021EE38), 0, 4), // nop Idle() //--------------------------------------------------------------
+		//MemoryPatcher(IDATRANSLATE(0x0021E978), 0, 0x0021ED5C - 0x0021E978), // nop Idle() //--------------------------------------------------------------
+		//MemoryPatcher(IDATRANSLATE(0x2D8840), 0, 4), // nop driveby
+		//MemoryPatcher(IDATRANSLATE(0x002E5188), 0, 0x002E51F8 - 0x002E5188), // nop empire flags // (all) падает
+		//MemoryPatcher(IDATRANSLATE(0x002E51EC), 0, 0x002E51F8 - 0x002E51EC), // nop empire flags // mi, не падает, остались окна
+		//MemoryPatcher(IDATRANSLATE(0x002E51B0), 0, 0x002E51C0 - 0x002E51B0), // nop empire flags // (flags2) падает, при ударе бред
+		//MemoryPatcher(IDATRANSLATE(0x002E5188), 0, 0x002E51B0 - 0x002E5188), // nop empire flags // (flags1) не падает, бред с колизией
+		//MemoryPatcher(IDATRANSLATE(0x0026BD34), 0, 4), // nop map render stuff empire
+		//MemoryPatcher(IDATRANSLATE(0x332458), 0, 4), // nop interior init
+
+		//MemoryPatcher(IDATRANSLATE(0x21EBF4), 0, 4), // nop effects
+		//MemoryPatcher(IDATRANSLATE(0x21EC24), 0, 4), // nop 2dstuff
+		//MemoryPatcher(IDATRANSLATE(0x21EBCC), 0, 4), // nop renderscene
+		//MemoryPatcher(IDATRANSLATE(0x1093DC), 0, 4), // nop rebderscene cWS1
+		//MemoryPatcher(IDATRANSLATE(0x1093F8), 0, 4), // nop rebderscene cWS2
+		//MemoryPatcher(IDATRANSLATE(0x23E7AC), 0, 0x0023E804 - 0x0023E7AC), // nop barbershop
+		//MemoryPatcher(IDATRANSLATE(0x0021F11C), 0,4), // nop barbershop
+
+		//MemoryPatcher(IDATRANSLATE(0x0021F158), 0, 4), // render empire build 3d
+		//MemoryPatcher(IDATRANSLATE(0x0035D16C), 0, 4), // render empire build PASS1 (сам empire)
+		//MemoryPatcher(IDATRANSLATE(0x0035D21C), 0, 4), // render empire build PASS2 (broken geo)
+		//MemoryPatcher(IDATRANSLATE(0x0035D2B8), 0, 4), // render empire build PASS3 (неон, светящееся окно)
+		//MemoryPatcher(IDATRANSLATE(0x440E5C), 0, 4), // nop upd AUDIO
+		//MemoryPatcher(IDATRANSLATE(0x18A08C), 0, 4), // nop upd ambience 1
+		//MemoryPatcher(IDATRANSLATE(0x18A1E8), 0, 4), // nop upd ambience 2
+
+		//MemoryPatcher(IDATRANSLATE(0x003F5018), 0, 0x003F5058 - 0x003F5018), // 
+		//MemoryPatcher(IDATRANSLATE(0x31C6CC), 0, 4), // hud lift cam
+		//MemoryPatcher(IDATRANSLATE(0x11AD44), 0, 4), // water nose
 	};
 }
-void inline SetPatchesState(bool state) { for (size_t i = 0; i < patches.size(); i++) { if (state) { patches[i].ApplyPatch(); } else { patches[i].RemovePatch(); } } }
+void inline SetPatchesState(bool state) { for (size_t i = 0; i < patches.size(); i++) { state ? patches[i].ApplyPatch() : patches[i].RemovePatch(); } }
 
 
 
@@ -624,33 +969,171 @@ void TeleportPlayer(CVector pos)
 
 bool gbTeleportHold = false;
 int giTeleportIndex = 0;
-void GeneratorTeleporterTick()
+void TeleporterTester()
 {
+	//return;
 	bool prev = (GetAsyncKeyState(VK_OEM_COMMA) & 0x8000);
 	bool next = (GetAsyncKeyState(VK_OEM_PERIOD) & 0x8000);
+	bool allow = (GetAsyncKeyState(VK_CONTROL) & 0x8000);
 	bool tp = false;
-	if (prev && !gbTeleportHold)
+	if (prev && (!gbTeleportHold || allow))
 	{
 		--giTeleportIndex;
 		gbTeleportHold = tp = true;
 	}
-	else if (next && !gbTeleportHold)
+	else if (next && (!gbTeleportHold || allow))
 	{
 		++giTeleportIndex;
 		gbTeleportHold = tp = true;
 	}
 	else if (!prev && !next) { gbTeleportHold = false; }
-	if (giTeleportIndex < 0) { giTeleportIndex = CTheCarGenerators_NumOfCarGenerators - 1; }
-	if (giTeleportIndex >= CTheCarGenerators_NumOfCarGenerators) { giTeleportIndex = 0; }
-	if (tp) {
-		CVector pos = CTheCarGenerators_CarGeneratorArray[giTeleportIndex].m_vecPos;
-		printf("[TP id_%d, mi_%d]: %f %f %f\n", giTeleportIndex, CTheCarGenerators_CarGeneratorArray[giTeleportIndex].m_nModelIndex, pos.z, pos.y, pos.z);
-		pos.x -= 2.0f;
-		pos.y -= 2.0f;
-		pos.z -= 0.5f;
+
+	//// cargens
+	//if (giTeleportIndex < 0) { giTeleportIndex = CTheCarGenerators_NumOfCarGenerators - 1; }
+	//if (giTeleportIndex >= CTheCarGenerators_NumOfCarGenerators) { giTeleportIndex = 0; }
+	//if (tp)
+	//{
+	//	CCarGenerator* gen = &CTheCarGenerators_CarGeneratorArray[giTeleportIndex];
+	//	CVector pos = gen->m_vecPos;
+	//	if (gen->m_nModelIndex != 213) // maverik
+	//		return;
+	//	printf("[TP id_%d, mi_%d]: %f %f %f\n", giTeleportIndex, gen->m_nModelIndex, pos.z, pos.y, pos.z);
+	//	pos.x -= 2.0f;
+	//	pos.y -= 2.0f;
+	//	pos.z -= 0.5f;
+	//	TeleportPlayer(pos);
+	//}
+
+	// cWS
+	//if (tp)
+	//{
+	//	sLevelChunk* pWorldData = EMUPOINTER<sLevelChunk*>(cWorldStream->m_pWorldDataLevelChunk);
+	//	CGroupedBuilding* m_pSwapBuildingGroups = EMUPOINTER<CGroupedBuilding*>(pWorldData ? pWorldData->swapInfos : null);
+
+	//	if (giTeleportIndex < 0) {
+	//		giTeleportIndex = pWorldData ? pWorldData->numSwapInfos - 1 : 0;
+	//	}
+	//	if (giTeleportIndex >= (pWorldData ? pWorldData->numSwapInfos : 0)) { giTeleportIndex = 0; }
+
+	// swaps
+	//	CVector pos = { 0, 0, 0 };
+	//	if (m_pSwapBuildingGroups)
+	//	{
+	//		CEntity* pB = EMUPOINTER<CEntity*>(m_pSwapBuildingGroups[giTeleportIndex].m_pActualBuilding);
+	//		if (pB) {
+	//			pos = *(CVector*)&pB->CPlaceable.m_pMat.pos; 
+	//			printf("%d [TP id_%d, mi_%d]: %f %f %f\n", pWorldData->numSwapInfos, giTeleportIndex,
+	//				//CTheCarGenerators_CarGeneratorArray[giTeleportIndex].m_nModelIndex,
+	//				0,
+	//				pos.z, pos.y, pos.z);
+	//			pos.x -= 2.0f;
+	//			pos.y -= 2.0f;
+	//			pos.z -= 0.5f;
+	//			TeleportPlayer(pos);
+	//		}
+	//	}
+	//}
+
+	// PathNode
+	//if (tp)
+	//{
+	//	int max = ThePaths->m_numPathNodes;
+	//	if (giTeleportIndex < 0) { giTeleportIndex = max - 1; }
+	//	if (giTeleportIndex >= max) { giTeleportIndex = 0; }
+	//	int index = giTeleportIndex;
+	//	CVector pos = { 0.0f, 0.0f, 15.0f };
+	//	CPathNode* n = &EMUPOINTER<CPathNode*>(ThePaths->m_pathNodes)[index];
+	//	pos.x = (n->posX / 8); // or (pos*2) / 16
+	//	pos.y = (n->posY / 8); // or (pos*2) / 16
+	//	printf("[%d] %f %f %f\n", index, pos.x, pos.y, pos.z);
+	//	printf("orig %d %d\n\n", n->posX, n->posY);
+
+	//	TeleportPlayer(pos);
+	//}
+
+	// ScriptSphere and 3dMarker
+	if (tp)
+	{
+		int max = 16; // script sphere
+		if (giTeleportIndex < 0) { giTeleportIndex = max - 1; }
+		if (giTeleportIndex >= max) { giTeleportIndex = 0; }
+		int index = giTeleportIndex;
+		CVector pos = { 0.0f, 0.0f, 15.0f };
+
+#if 1
+		// script sphere
+		pos = VU2V(CTheScripts_ScriptSphereArray[index].m_vecCenter);
+		printf("index: %d, 0x%p type: %d, inuse: %d, pos: %f %f\n", index, &CTheScripts_ScriptSphereArray[index],
+		CTheScripts_ScriptSphereArray[index].m_Type, CTheScripts_ScriptSphereArray[index].m_bInUse, pos.x, pos.y);
+#else
+		max = 32; // 3d marker
+		pos = VU2V(C3dMarkers_m_aMarkerArray[index].m_Matrix.pos);
+		printf("index: %d, 0x%p  %f %f %f\n", index, &C3dMarkers_m_aMarkerArray[index], pos.x, pos.y, pos.z);
+#endif
+
+		if (pos.x == 0.0f && pos.y == 0.0f)
+			return;
+
 		TeleportPlayer(pos);
 	}
 }
+
+void PatchCustomSCM()
+{
+	//for (int i = 0; i < 50; i++) { printf("%X ", CTheScripts_ScriptSpace[i]); }
+	std::vector<uint8_t> buffer = FileReadAllBytes("Plugins\\_VCS_\\freeroam_vcs.scm");
+	//std::vector<uint8_t> buffer = FileReadAllBytes("Plugins\\_VCS_\\main.scm");
+	//std::vector<uint8_t> buffer = FileReadAllBytes("Plugins\\_VCS_\\1.scm"); // no size
+	MemoryPatcher patcher = MemoryPatcher(IDATRANSLATE(0x3BAAC0), 0, 4); // CTheScripts::Process()
+	//MemoryPatcher patcher = MemoryPatcher(IDATRANSLATE(0x21E9D0), 0, 4); // CGame::Process()
+	if (!buffer.size()) { return; }
+	printf("Read scm: %d\n", buffer.size());
+	uint32_t MainScriptSize = *(uint32_t*)buffer.data();
+	int nLargestMissionSize = *(((uint32_t*)buffer.data()) + 1);
+	//printf("main: %d, mission %d\n", MainScriptSize, nLargestMissionSize);
+	buffer.erase(buffer.begin(), buffer.begin() + (4 + 4));
+	patcher.ApplyPatch();
+	RESET_RECOMP_EE();
+	do { Sleep(2 * 1000); } while (*CTheScripts_InTheScripts);
+	//Sleep(2 * 1000);
+	//ClearActiveList();
+	ResetScripts();
+	//DumpScriptList(CTheScripts_ActiveScripts, "(activelist) ");
+	//DumpScriptList(CTheScripts_IdleScripts, "(idlelist) ");
+	//return;
+	//*CTheScripts_bAlreadyRunningAMissionScript = false;
+	//*CTheScripts_pIdleScripts = null;
+	//*CTheScripts_pActiveScripts = null;
+	//*CTheScripts_NextProcessId = 0;
+	//{
+	//	DWORD vp[2];
+	//	void* p = (void*)CTheScripts_ScriptSpace;
+	//	int32_t size = CTheScripts_MainScriptSize + CTheScripts_LargestMissionScriptSize;
+	//	VirtualProtect(p, size, PAGE_EXECUTE_READWRITE, &vp[0]); // !!
+	//	memset(p, 0, size);
+	//	memcpy(p, buffer.data(), buffer.size());
+	//	VirtualProtect(p, size, vp[0], &vp[1]);
+	//}
+	//for (int32_t i = 0; i < 128; i++)
+	//{
+	//	memset(&CTheScripts_ScriptsArray[i], 0, sizeof(CRunningScript));
+	//	CTheScripts_ScriptsArray[i].m_bDeatharrestEnabled = true;
+	//	sprintf(CTheScripts_ScriptsArray[i].m_abScriptName, "id00");
+	//	AddScriptToList(&CTheScripts_ScriptsArray[i], CTheScripts_pIdleScripts);
+	//}
+	memcpy(&CTheScripts_ScriptSpace[0], buffer.data(), CTheScripts_MainScriptSize);
+	CRunningScript* pNew = StartNewScript(0, false, "cleo");
+	//memcpy(&CTheScripts_ScriptSpace[CTheScripts_MainScriptSize], buffer.data(), buffer.size());
+	//CRunningScript* pNew = StartNewScript(CTheScripts_MainScriptSize, false, "mzhk1");
+	//printf("pNew: 0x%p\n", pNew);
+	//DumpScriptList(CTheScripts_ActiveScripts, "(activelist) ");
+	//DumpScriptList(CTheScripts_IdleScripts, "(idlelist) ");
+	patcher.RemovePatch();
+	RESET_RECOMP_EE();
+	//Sleep(2 * 1000);
+	printf("ok\n");
+}
+
 
 // todo hack call ps2 malloc, tmp using script space or any array
 #define MAX_MIPS_PATCH_SIZE (4 * 30) // (msp) [MIPS] [SCM]
@@ -725,7 +1208,7 @@ int32_t PatchSCM()
 	uint8_t mi = tmppedspawnmi;
 	uint8_t cmi = tmpcarspawnmi;
 	pedpos = FindPlayerPos();
-	DUMPVEC("pos %f %f %f\n", pedpos);
+	DUMPVEC(pedpos);
 	//printf("pos %d %d %d %d\n", B(pedpos.x));
 	uint8_t buff[] =
 	{
@@ -757,6 +1240,7 @@ int32_t PatchSCM()
 		//0x26, 0x00, // 0026: return (gosub)
 	};
 
+	//FileWriteAllBytes("C:\\1.scm", buff, sizeof(buff));
 	void* p = SetBuff(buff, sizeof(buff), MAX_MIPS_PATCH_SIZE);
 	int32_t ip = ((int32_t)p - (int32_t)CTheScripts_ScriptSpace);
 	//SETCHEAT(0x481C10, "1122"); // L1 L1 R1 R1   [trashmaster cheat] // simplify
@@ -836,38 +1320,36 @@ void dump_debug_string_array(uintptr_t idaptr, int string_num)
 // flags_E = flags_E & 0xFFFFFFFFFFFFBFFFui64 | 0x4000; &by1[bi6], |by1[bi6] bIsStuck = 1 (cls and set)
 // if (((flags_E >> 15) & 1) == 0) by1[bi7] if(!bIsInSafePosition)
 
-/* 575 */
-enum CE_flagsnum_F // bitpos for SET_BIT
-{
-	CE_flags_F_0 = 0,
-	bUsesCollision = 1,
-	CE_flags_F_2 = 2,
-	CE_flags_F_3 = 3,
-	CE_flags_F_4 = 4,
-	CE_flags_F_5 = 5,
-	bIsStuck = 6,
-	bIsInSafePosition = 7,
-};
 
-/* 576 */
-enum CP_flagsnum_J // bitpos for SET_BIT
+std::vector<RwTexture*> GetRwTexturesFromTxd(RwTexDictionary* pRwTexDictionary)
 {
-	CP_flags_J_0 = 0x0,
-	CP_flags_J_1 = 0x1,
-	CP_flags_J_2 = 0x2,
-	_bIsStaticWaitingForCollision = 0x3,
-	CP_flags_J_4 = 0x4,
-	CP_flags_J_5 = 0x5,
-	CP_flags_J_6 = 0x6,
-	CP_flags_J_7 = 0x7,
-};
+	std::vector<RwTexture*> textures;
+	if (pRwTexDictionary)
+	{
+		RwLinkList* pRLL = EMUPOINTER<RwLinkList*>(pRwTexDictionary->textures__texturesInDict.link.next);
+		RwTexDictionary* pEndDic;
+
+		do
+		{
+			pEndDic = EMUPOINTER<RwTexDictionary*>(pRLL->link.next);
+			RwTexture* pTex = (RwTexture*)&pRLL[-1];
+
+			textures.push_back(pTex);
+
+			pRLL = (RwLinkList*)pEndDic;
+		} while (pEndDic != (RwTexDictionary*)&pRwTexDictionary->textures__texturesInDict);
+	}
+
+	return textures;
+}
+
 
 
 void EmpireTest(int mode)
 {
 	if (mode == 1) { return; } // dll loop
 	//system("cls");
-	CEmpireHud* pEmpireHudInstance = pEmpireHud;
+	CEmpireHud* pEmpireHudInstance = EmpireHud;
 	printf("EmpireHud: 0x%p\n", pEmpireHudInstance);
 	if (!pEmpireHudInstance) { return; }
 	//printf("start: 0x%p  end: 0x%p\n", pEmpireHudInstance->pHudNodeArrayList, pEmpireHudInstance->pHudNodeArrayListEnd);
@@ -875,6 +1357,7 @@ void EmpireTest(int mode)
 	tHudElement** end = EMUPOINTER<tHudElement**>(pEmpireHudInstance->hudElementListEnd);
 	if (!current || !*current || !end || !*end) { return; }
 	int i = 0;
+	int maxi = 0, maxj = 0;
 	while (current != end)
 	{
 		//printf("curr[%d]: 0x%p\n", i, current);
@@ -908,27 +1391,975 @@ void EmpireTest(int mode)
 					infoCurrent->font_crgba_col_field_20.blue,
 					infoCurrent->font_crgba_col_field_20.alpha);
 
+				//----test wrap
+				{
+					//infoCurrent->field_8 = 0; // не выходит из меню
+				}
+
 				// Move to the next element in pHudElementInfoList
 				++infoCurrent;
 				++j;
+				if (j > maxj) maxj = j;
 			}
 		}
 		//else printf("!node\n");
 		++current;
 		++i;
+		if (i > maxi) maxi = i;
+	}
+	printf("[INFO]: maxi: %d, maxj: %d\n", maxi, maxj);
+	printf("\n\n");
+}
+
+void TestingPools()
+{
+	struct tId { int id, poolid; };
+	std::vector<tId> ids;
+
+	int pedpoolfree = 0;
+	for (int32_t i = CPools_ms_pPedPool->m_nSize - 1; i >= 0; i--)
+	{
+		if (CPools_GetSlotIsFree(CPools_ms_pPedPool, i)) { ++pedpoolfree; continue; }
+		CPed* e = (CPed*)CPools_GetSlot(CPools_ms_pPedPool, i, 3360);
+		if (e)
+		{
+			int mi1 = e->CPhysical.CEntity.m_modelIndex;
+			int mi2 = e->CPhysical.CEntity.m_modelIndex2;
+			ids.push_back({ mi1, 0 });
+			if (mi1 != mi2) { MboxSTD("!mi"); }
+		}
+	}
+	int vehpoolfree = 0;
+	for (int32_t i = CPools_ms_pVehiclePool->m_nSize - 1; i >= 0; i--)
+	{
+		if (CPools_GetSlotIsFree(CPools_ms_pVehiclePool, i)) { ++vehpoolfree; continue; }
+		CVehicle* e = (CVehicle*)CPools_GetSlot(CPools_ms_pVehiclePool, i, 2240);
+		if (e)
+		{
+			int mi1 = e->CPhysical.CEntity.m_modelIndex;
+			ids.push_back({ mi1, 1 });
+			int mi2 = e->CPhysical.CEntity.m_modelIndex2;
+			if (mi1 != mi2) { MboxSTD("!mi"); }
+		}
+	}
+	int bldpoolfree = 0;
+	for (int32_t i = CPools_ms_pBuildingPool->m_nSize - 1; i >= 0; i--)
+	{
+		if (CPools_GetSlotIsFree(CPools_ms_pBuildingPool, i)) { ++bldpoolfree; continue; }
+		CEntity* e = (CEntity*)CPools_GetSlot(CPools_ms_pBuildingPool, i, 96);
+		if (e)
+		{
+			int mi1 = e->m_modelIndex;
+			ids.push_back({ mi1, 2 });
+			int mi2 = e->m_modelIndex2;
+			if (mi1 != mi2) { MboxSTD("!mi"); }
+		}
+	}
+	int trpoolfree = 0;
+	for (int32_t i = CPools_ms_pTreadablePool->m_nSize - 1; i >= 0; i--)
+	{
+		if (CPools_GetSlotIsFree(CPools_ms_pTreadablePool, i)) { ++trpoolfree; continue; }
+		CEntity* e = (CEntity*)CPools_GetSlot(CPools_ms_pTreadablePool, i, 96);
+		if (e)
+		{
+			int mi1 = e->m_modelIndex;
+			ids.push_back({ mi1, 3 });
+			int mi2 = e->m_modelIndex2;
+			if (mi1 != mi2) { MboxSTD("!mi"); }
+		}
+	}
+	int objpoolfree = 0;
+	for (int32_t i = CPools_ms_pObjectPool->m_nSize - 1; i >= 0; i--)
+	{
+		if (CPools_GetSlotIsFree(CPools_ms_pObjectPool, i)) { ++objpoolfree; continue; }
+		CEntity* e = (CEntity*)CPools_GetSlot(CPools_ms_pObjectPool, i, 544);
+		if (e)
+		{
+			int mi1 = e->m_modelIndex;
+			ids.push_back({ mi1, 4 });
+			int mi2 = e->m_modelIndex2;
+			if (mi1 != mi2) { MboxSTD("!mi"); }
+		}
+	}
+	int emppoolfree = 0;
+	for (int32_t i = CPools_ms_pEmpirePool->m_nSize - 1; i >= 0; i--)
+	{
+		if (CPools_GetSlotIsFree(CPools_ms_pEmpirePool, i)) { ++emppoolfree; continue; }
+		CEntity* e = (CEntity*)CPools_GetSlot(CPools_ms_pEmpirePool, i, 352);
+		if (e)
+		{
+			int mi1 = e->m_modelIndex;
+			ids.push_back({ mi1, 5 });
+			int mi2 = e->m_modelIndex2;
+			if (mi1 != mi2) { MboxSTD("!mi"); }
+		}
+	}
+	int dumpoolfree = 0;
+	for (int32_t i = CPools_ms_pDummyPool->m_nSize - 1; i >= 0; i--)
+	{
+		if (CPools_GetSlotIsFree(CPools_ms_pDummyPool, i)) { ++dumpoolfree; continue; }
+		CEntity* e = (CEntity*)CPools_GetSlot(CPools_ms_pDummyPool, i, 96);
+		if (e)
+		{
+			int mi1 = e->m_modelIndex;
+			ids.push_back({ mi1, 6 });
+			int mi2 = e->m_modelIndex2;
+			if (mi1 != mi2) { MboxSTD("!mi"); }
+		}
+	}
+	int texpoolfree = 0;
+	for (int32_t i = CTexListStore_ms_pTexListPool->m_nSize - 1; i >= 0; i--)
+	{
+		if (CPools_GetSlotIsFree(CTexListStore_ms_pTexListPool, i)) { ++texpoolfree; continue; }
+		TxdDef* e = (TxdDef*)CPools_GetSlot(CTexListStore_ms_pTexListPool, i, 28);
+		if (e && e->name)
+		{
+			//printf("%s\n", e->name);
+		}
+	}
+	int colpoolfree = 0;
+	for (int32_t i = CColStore_ms_pColPool->m_nSize - 1; i >= 0; i--)
+	{
+		if (CPools_GetSlotIsFree(CColStore_ms_pColPool, i)) { ++colpoolfree; continue; }
+		ColDef* c = (ColDef*)CPools_GetSlot(CColStore_ms_pColPool, i, 72);
+		if (c)
+		{
+			printf("col%d 0x%p  %s\n", i, c, c->name);
+		}
+	}
+	CW_B();
+	int pedpoolsize = CPools_ms_pPedPool->m_nSize;
+	int vehpoolsize = CPools_ms_pVehiclePool->m_nSize;
+	int bldpoolsize = CPools_ms_pBuildingPool->m_nSize;
+	int trpoolsize = CPools_ms_pTreadablePool->m_nSize;
+	int objpoolsize = CPools_ms_pObjectPool->m_nSize;
+	int emppoolsize = CPools_ms_pEmpirePool->m_nSize;
+	int dumpoolsize = CPools_ms_pDummyPool->m_nSize;
+	int texpoolsize = CTexListStore_ms_pTexListPool->m_nSize;
+	int colpoolsize = CColStore_ms_pColPool->m_nSize;
+	printf("Ped: %d/%d\n", pedpoolsize - pedpoolfree, pedpoolsize);
+	printf("Vehicle: %d/%d\n", vehpoolsize - vehpoolfree, vehpoolsize);
+	printf("Building: %d/%d\n", bldpoolsize - bldpoolfree, bldpoolsize);
+	printf("Treadable: %d/%d\n", trpoolsize - trpoolfree, trpoolsize);
+	printf("Object: %d/%d\n", objpoolsize - objpoolfree, objpoolsize);
+	printf("Empire: %d/%d\n", emppoolsize - emppoolfree, emppoolsize);
+	printf("Dummy: %d/%d\n", dumpoolsize - dumpoolfree, dumpoolsize);
+	printf("Txd: %d/%d\n", texpoolsize - texpoolfree, texpoolsize);
+	printf("Col: %d/%d\n", colpoolsize - colpoolfree, colpoolsize);
+	CW_G();
+
+	//std::vector<int> modelIndexes = {
+	//7700, 7701, 7702, 7703, 7704, 7705, 7706, 7707, 7708, 7709,
+	//7710, 7711, 7712, 7713, 7714, 7715, 7716, 7717, 7718, 7719,
+	//7720, 7721, 7722, 7723, 7724, 7725, 7726, 7727, 7728, 7729,
+	//7730, 7731, 7732, 7733, 7734, 7735, 7736, 7737, 7738, 7739,
+	//7740, 7741, 7742, 7743, 7744, 7745, 7746, 7747
+	//};
+	//for (int32_t i = 0; i < modelIndexes.size(); i++)
+	//{
+	//	for (int32_t j = 0; j < ids.size(); j++)
+	//	{
+	//		if (modelIndexes[i] == ids[j].id) { MboxSTD("!!!! mi" + std::to_string(ids[j].id) + " pool:" + std::to_string(ids[j].poolid) ); }
+	//	}
+	//}
+}
+
+Resource* GetResourseFromChunk(sLevelChunk* pChunk, int index) // pChunk normalized
+{
+	if (!pChunk) { return null; }
+	Resource* res = &EMUPOINTER<Resource*>(pChunk->resourceTable)[index]; // 1716 dff
+	return res;
+}
+
+
+
+//inline int getNumLinks(CPathNode n) { return  n.numLinks_AndFlags8 & 0x0F; }
+//inline bool isDeadEnd(CPathNode n) { return (n.numLinks_AndFlags8 & 0x10) != 0; }
+//inline bool isDisabled(CPathNode n) { return (n.numLinks_AndFlags8 & 0x20) != 0; }
+//inline bool isBetweenLvls(CPathNode n) { return (n.numLinks_AndFlags8 & 0x40) != 0; }
+//inline bool useInRoadBlock(CPathNode n) { return (n.numLinks_AndFlags8 & 0x80) != 0; }
+//inline bool bWaterPath(CPathNode n) { return (n.flags9 & 0x01) != 0; }
+//inline bool onlySmallBoats(CPathNode n) { return (n.flags9 & 0x02) != 0; }
+//inline bool selected(CPathNode n) { return (n.flags9 & 0x04) != 0; }
+//inline int speedLimit(CPathNode n) { return (n.flags9 >> 3) & 0x03; }
+//inline int spawnRate(CPathNode n) { return (n.flags9 >> 5) & 0x07; }
+//
+//// in VC path files, coords = world*16.  Our posX/Y are in 1/8 units,
+//// so world units = pos*0.125, times 16 pos*2.0.
+//inline float nodeX(CPathNode n) { return n.posX * 2.0f; } // (x / 8) * 16
+//inline float nodeY(CPathNode n) { return n.posY * 2.0f; }
+//inline float nodeZ(CPathNode n) {
+//	// note: VCS stores Z coarsely, you may need to adjust if its
+//	// actually signed and offset.  Here we just do same *2.0f.
+//	return (float)n.posZ/* * 2.0f*/; // auto find z or model z offset
+//}
+//// This prints the end delimiter after each group:
+//static void PrintEmptyLine(FILE* f) {
+//	fprintf(f, "\t0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1\n");
+//}
+//void DumpPathsToFile(CPathFind* paths, const char* filename)
+//{
+//#define GROUP_SIZE 12
+//
+//	setlocale(LC_NUMERIC, "C");
+//	FILE* f = fopen(filename, "w");
+//	int total = paths->m_numPathNodes;
+//	int carMax = paths->m_numCarPathNodes;
+//	// Пешеходные узлы идут сразу после carMax, до total – их здесь:
+//	int pedStart = carMax;
+//	int pedMax = total;
+//
+//	for (int base = 0; base < total; base += GROUP_SIZE)
+//	{
+//		//int groupType = (base < carMax) ? 1 : 0;
+//		CPathNode firstNode = EMUPOINTER<CPathNode*>(ThePaths->m_pathNodes)[base];
+//		int groupType;
+//		if (bWaterPath(firstNode))
+//			groupType = 2;  // водная группа
+//		else if (base < carMax)
+//			groupType = 1;  // автомобильная группа
+//		else
+//			groupType = 0;  // пешеходная группа
+//
+//		fprintf(f, "%d, -1\n", groupType);
+//
+//		int limit = min(GROUP_SIZE, total - base);
+//		for (int j = 0; j < limit; j++)
+//		{
+//			CPathNode n = EMUPOINTER<CPathNode*>(ThePaths->m_pathNodes)[base + j];
+//
+//			int numL = getNumLinks(n);
+//
+//			// determine NodeType: 1 = external (link outside this group),
+//			//                      2 = internal (link inside group),
+//			//                      0 = null (no link)
+//			int   nodeType = 0;
+//			int   nextNode = -1;
+//			bool  isCross = false;
+//
+//			for (int k = 0; k < numL; k++)
+//			{
+//				// absolute link index in connections array:
+//				int connIdx = n.firstLink + k;
+//				int16_t nodeID = EMUPOINTER<short*>(ThePaths->m_carPathConnections)[connIdx];
+//
+//				// group-relative index if in same group:
+//				int rel = nodeID - base;
+//				if (rel >= 0 && rel < limit) {
+//					nodeType = 2;
+//					nextNode = rel;
+//				}
+//				else {
+//					nodeType = 1;
+//					nextNode = -1;    // or nodeID if you want absolute
+//				}
+//				// cross-road flag stored in bit7 of that connection (v7>>15):
+//				// here we just check if this link has the high bit set
+//				{
+//					int raw = EMUPOINTER<int*>(ThePaths->m_carPathLinks)[connIdx];
+//					if (raw & 0x8000) isCross = true;
+//				}
+//
+//				//// for simplicity, dump only first link per node
+//				break;
+//			}
+//
+//			// write: NodeType, NextNode, IsCrossRoad,
+//			//        X, Y, Z,
+//			//        Median (width), LeftLanes, RightLanes,
+//			//        SpeedLimit, Flags, SpawnRate
+//			fprintf(f,
+//				"\t%d, %d, %d, %.1f, %.1f, %.1f, %.1f, %d, %d, %d, %d, %.2f\n",
+//				nodeType, nextNode, isCross,
+//				nodeX(n), nodeY(n), nodeZ(n),
+//				n.width * /* for ped: WIDTH_TO_PED_NODE_WIDTH; for road: divider */
+//				(31.0f / (500.0f * 8.0f)),
+//				/* LeftLanes */   1,  // you’ll need real data if you have it
+//				/* RightLanes */  1,
+//				speedLimit(n),
+//				/* Flags */      (int)n.flags9,
+//				spawnRate(n) / 7.0f
+//			);
+//		}
+//
+//		PrintEmptyLine(f);
+//	}
+//	fclose(f);
+//}
+//
+
+
+RwRaster*& gpWaterRaster = *(RwRaster**)IDATRANSLATE(0x4874C8);
+RwTexture*& gpWaterTex = *(RwTexture**)IDATRANSLATE(0x4874CC);
+RwRaster*& gpWaterEnvRaster = *(RwRaster**)IDATRANSLATE(0x4874D8);
+RwTexture*& gpWaterEnvTex = *(RwTexture**)IDATRANSLATE(0x4874DC);
+RwRaster*& gpWaterWakeRaster = *(RwRaster**)IDATRANSLATE(0x4874E0);
+RwTexture*& gpWaterWakeTex = *(RwTexture**)IDATRANSLATE(0x4874E4);
+RwRaster*& gpBoatwakeRaster = *(RwRaster**)IDATRANSLATE(0x4874E8);
+RwTexture*& gpBoatwakeTex = *(RwTexture**)IDATRANSLATE(0x4874EC);
+RwRaster*& gpSandRaster = *(RwRaster**)IDATRANSLATE(0x4874D0);
+RwTexture*& gpSandTex = *(RwTexture**)IDATRANSLATE(0x4874D4);
+RwTexture** gpCoronaTexture = (RwTexture**)IDATRANSLATE(0x487758);
+RwTexture* tmptex;
+RwRaster* tmpras;
+
+
+struct tWeaponFilenames
+{
+	const char* name;
+	const char* mask;
+};
+void DumptWeaponFilenames()
+{
+	tWeaponFilenames* pT = EMUPOINTER<tWeaponFilenames*>(0x4883F8);
+	for (int i = 0; i < 72; i++)
+	{
+		const char* name = EMUPOINTER<const char*>((void*)pT[i].name);
+		const char* mask = EMUPOINTER<const char*>((void*)pT[i].mask);
+		printf("[%d] { \"%s\", \"%s\" },\n", i, name[0] != '\0' ? name : "", mask[0] != '\0' ? mask : "");
+	}
+}
+struct tRopeFactor
+{
+	int32_t val1;
+	float val2;
+};
+void DumpRopesHueta()
+{
+	tRopeFactor* pR = EMUPOINTER<tRopeFactor*>(0x00486EA0);
+	printf("{");
+	for (int i = 0; i < 5; i++){
+		printf("%d, %f, ", pR[i].val1, pR[i].val2);
+	}
+	printf("}");
+}
+void ik()
+{
+	CPlayerPed* pp = FindPlayerPed();
+	if (!pp) return;
+	CPedIK* ik = &pp->CPed.m_ik__m_pedIK;
+	uint8_t* pik = OFFSET(pp, 0x330, uint8_t*);
+	assert((CPedIK*)pik == ik);
+	
+	static int mode = 0;
+	mode++;
+	ik->m_flags = 0;
+	if (mode > 1)
+		printf("mode ik: %d\n", mode);
+	float v = 3.14f;
+	switch (mode)
+	{
+		case 2:
+			ik->field_4.pitch = v;
+			break;
+		case 3:
+			ik->field_4.yaw = v;
+			break;
+
+		case 4:
+			ik->m_torsoOrient.pitch = v;
+			break;
+		case 5:
+			ik->m_torsoOrient.yaw = v;
+			break;
+
+		case 6:
+			ik->field_14.pitch = v;
+			break;
+		case 7:
+			ik->field_14.yaw = v;
+			break;
+
+		case 8:
+			ik->field_1C.pitch = v;
+			break;
+		case 9:
+			ik->field_1C.yaw = v;
+			break;
+
+		case 10:
+			ik->____field_24.pitch = v;
+			break;
+		case 11:
+			ik->____field_24.yaw = v;
+			break;
+	}
+
+}
+
+void dump77()
+{
+	int size;
+	uintptr_t address;
+	printf("enter ptr hex: ");
+	scanf("%x", &address);
+	printf("Enter size in decimal: ");
+	scanf("%d", &size);
+	printf("ptr: 0x%p\n", address);
+
+	CVuVector* p = (CVuVector*)address;
+	for (int i = 0; i < 18; i++)
+	{
+		printf("[%d] %f %f %f\n", i, p[i].x, p[i].y, p[i].z);
+		p[i].x = p[i].y = p[i].z = 0.5f;
 	}
 }
 
 bool HW()
 {
-	//int& CRenderer_ms_nNoOfVisibleEmpires = *(int*)IDATRANSLATE(0x4CD5A0);
+	setlocale(LC_NUMERIC, "C");
 
-	//*(int*)IDATRANSLATE(0x48A1DC) = 2; // bank
-	//*(int*)IDATRANSLATE(0x48A1E0) = 1; // bool mode unk
-	//*(float*)IDATRANSLATE(0x48A1E4) = 2.0f; // scale
-	//*(int*)IDATRANSLATE(0x48A1E8) = 0; // растояние widemodestuff
-	//*(int*)IDATRANSLATE(0x48A1EC) = 1; // centre
-	//*(int*)IDATRANSLATE(0x48A200) = 10; // unk
+	///dump77(); return true;
+
+	//gpWaterTex = gpWaterEnvTex;
+	//gpWaterRaster = gpWaterEnvRaster; // krasivo
+
+	gpWaterTex = gpCoronaTexture[2];
+	gpWaterRaster = EMUPOINTER<RwTexture*>(gpWaterTex)->raster;
+	//DumptWeaponFilenames();
+	//DumpRopesHueta();
+	//ik();
+
+	////int& CRenderer_ms_nNoOfVisibleEmpires = *(int*)IDATRANSLATE(0x4CD5A0);
+
+	//struct col
+	//{
+	//	CRGBA c;
+	//	float f;
+	//};
+	//col* colarr = EMUPOINTER<col*>((char*)0x486990); // 47
+	//for (int i = 0; i < 47; i++)
+	//{
+	//	printf("    { %hhu, %hhu, %hhu, %.1ff },\n", colarr[i].c.red, colarr[i].c.green, colarr[i].c.blue, colarr[i].f);
+	//}
+
+
+	////*(int*)IDATRANSLATE(0x48A1DC) = 2; // bank
+	////*(int*)IDATRANSLATE(0x48A1E0) = 1; // bool mode unk
+	////*(float*)IDATRANSLATE(0x48A1E4) = 2.0f; // scale
+	////*(int*)IDATRANSLATE(0x48A1E8) = 0; // растояние widemodestuff
+	////*(int*)IDATRANSLATE(0x48A1EC) = 1; // centre
+	////*(int*)IDATRANSLATE(0x48A200) = 10; // unk
+
+	//CEmpireBuildingInfo* pFirstInfo = EMUPOINTER<CEmpireBuildingInfo*>(EmpireMgr->m_pEmpiresInfosStart);
+	////if (pFirstInfo && pFirstInfo->m_nBuildingState)
+	////{
+	////	CW_R();
+	////	printf("0x%p  %d\n", pFirstInfo, pFirstInfo->m_nBuildingState);
+	////	CW_G();
+	////}
+
+	//tWorldData* pWorldData = EMUPOINTER<tWorldData*>(cWorldStream->pWorldData);
+	//CGroupedBuilding* m_pSwapBuildingGroups = EMUPOINTER<CGroupedBuilding*>(pWorldData ? pWorldData->m_pSwapBuildingGroups : null);
+	////if (m_pSwapBuildingGroups)
+	////{
+	////	for (int i = 0; i < pWorldData->m_nSwapBuildingGroupsCount; i++)
+	////	{
+	////		//if (pSwapEntries[i].origModelIndex == 2169) { pSwapEntries[i].modelHash = 0; }
+	////		//printf("i %d mi: %d, hash 0x%X\n", i, pSwapEntries[i].origModelIndex, pSwapEntries[i].modelHash);
+	////		printf("%d: pActualBuilding=%d, groupNameHash=0x%X, swapState=%d, origModelIndex=%d, replacementModelIndex=%d, currentID=%d, parentArrayPtr=%p\n",
+	////			i,
+	////			m_pSwapBuildingGroups[i].m_pActualBuilding,
+	////			m_pSwapBuildingGroups[i].m_nGroupNameHash,
+	////			m_pSwapBuildingGroups[i].m_nSwapState,
+	////			m_pSwapBuildingGroups[i].m_nOrigModelIndex,
+	////			m_pSwapBuildingGroups[i].m_nReplacementModelIndex,
+	////			m_pSwapBuildingGroups[i].m_nCurrentID,
+	////			(void*)m_pSwapBuildingGroups[i].m_pParentArrayPtr);
+	////	}
+	////	printf("\n");
+	////}
+
+
+	tHandlingData* h = EMUPOINTER<tHandlingData*>(((CVehicleModelInfo*)GetModelInfo(207))->m_pHandlingData);
+	printf("%f\n", h->fDragCoeff);
+
+
+	sLevelChunk* chunk = EMUPOINTER<sLevelChunk*>(cWorldStream ? cWorldStream->m_pWorldDataLevelChunk : null);
+	uint8_t* pBuff = EMUPOINTER<uint8_t*>(cWorldStream ? cWorldStream->m_pUncompressedLvzBuffer : null);
+	printf("cws wd level chunk: 0x%p\n", chunk);
+	sChunkHeader* chk = EMUPOINTER<sChunkHeader*>(chunk->sectorRows[0].header);
+	printf("buff 0x%p, CHK: 0x%p\n", pBuff, chk);
+	printf("0x%p\n", pBuff);
+
+
+	//*(int*)pWorldData = 0;
+	//for (size_t i = 0; i < 25; i++)
+	//{
+	//	pWorldData->m_animGroups[i].numEntries = 0;
+	//	pWorldData->m_animGroups[i].listPtr = 0;
+	//}
+	//float& U = cWorldStream->m_fTextureAnimCurrentU;
+	//float& V = cWorldStream->m_fTextureAnimCurrentV;
+	//printf("U  0x%p  V  0x%p  \n", &U, &V);
+	printf("7436 mi: 0x%p  col 0x%p\n", GetModelInfo(7436), EMUPOINTER<char*>(GetModelInfo(7436)->m_colModel)); // loana
+	printf("7510 mi: 0x%p  col 0x%p\n", GetModelInfo(7510), EMUPOINTER<char*>(GetModelInfo(7510)->m_colModel)); // loanb
+	printf("C 7466 mi: 0x%p  col 0x%p\n", GetModelInfo(7466), EMUPOINTER<char*>(GetModelInfo(7466)->m_colModel)); // loanc
+
+	printf("6432 mi: 0x%p  col 0x%p\n", GetModelInfo(6432), EMUPOINTER<char*>(GetModelInfo(6432)->m_colModel)); // save
+	printf("840 mi: 0x%p  col 0x%p\n", GetModelInfo(840), EMUPOINTER<char*>(GetModelInfo(840)->m_colModel)); // rd
+	//*f1 = 0.0f;
+	//TeleportPlayer({ -1527.52f, 1347.35f, -223.06f }); // colinz
+
+	Resource* texRes83 = GetResourseFromChunk(chunk, 83); // barbershop
+	Resource* texRes81 = GetResourseFromChunk(chunk, 81); // barbershop
+	RwRaster* raster83 = EMUPOINTER<RwRaster*>(texRes83 ? texRes83->raster : null);
+	RwRaster* raster81 = EMUPOINTER<RwRaster*>(texRes81 ? texRes81->raster : null);
+	printf("Raster81: 0x%p\n", raster81);
+	printf("Raster83: 0x%p\n", raster83);
+
+	EmpireTest(0);
+
+
+	//int i = (CPools_ms_pBuildingPool->m_nSize - 1);
+	//while (i--) {
+	//	CEntity* e = (CEntity*)CPools_GetSlot(CPools_ms_pBuildingPool, i, 96);
+	//	if(e->m_rwObject)
+	//	printf("%d 0x%p   rw 0x%p\n", i, e, e->m_rwObject);
+	//}
+
+	//CSpecialFX_bLiftCam = true;
+	//uint8_t* pl = (uint8_t*)(EMUPOINTER<CCarPathLink*>(ThePaths->m_carPathLinks));
+	//uint8_t* st = (pl + (ThePaths->m_numCarPathLinks * 4));
+	////printf("%p %p @@@@@\n", pl, st);
+	//memset(st, 0, (EMUPOINTER<uint8_t*>(ThePaths->m_distances) - st));
+
+	CAutomobile* pAuto = EMUPOINTER<CAutomobile*>(FindPlayerPed() ? FindPlayerPed()->CPed.m_pMyVehicle : null);
+	if (pAuto)
+	{
+		int s1 = 12; // from
+		int s2 = 13; // to LF
+
+		RwFrame* tmp = pAuto->m_aCarNodes[s1];
+		pAuto->m_aCarNodes[s1] = pAuto->m_aCarNodes[s2];
+		pAuto->m_aCarNodes[s2] = tmp;
+		RESET_RECOMP_EE();
+	}
+
+	//C3dMarkers_m_pRslElementGroupArray[6] = C3dMarkers_m_pRslElementGroupArray[7];
+	//for (int i = 0; i < 9; i++) // nil 0, 4, 5
+	//{
+	//	int select = 7;
+	//	if (i == select) continue;
+	//	if(C3dMarkers_m_pRslElementGroupArray[i])
+	//		C3dMarkers_m_pRslElementGroupArray[i] = C3dMarkers_m_pRslElementGroupArray[select];
+	//}
+	return false;
+
+	for (int32_t i = CPools_ms_pVehiclePool->m_nSize - 1; i >= 0; i--)
+	{
+		if (CPools_GetSlotIsFree(CPools_ms_pVehiclePool, i)) { continue; }
+		CEntity* e = (CEntity*)CPools_GetSlot(CPools_ms_pVehiclePool, i, 2240);
+		if (e)
+		{
+			//printf("0x%p AUTO:0x%p\n", e, &((CVehicle*)e)->AutoPilot);
+		}
+	}
+
+
+	//FILE* outputFile = fopen("C:\\vcstmp\\path2.txt", "w");
+	//if (!outputFile) {
+	//	perror("Failed to open file");
+	//	return 1;
+	//}
+	////DumpAllPaths(outputFile);
+	//fclose(outputFile);
+	if(0)
+	{
+
+		for (int i = 0; i < ThePaths->m_numCarPathLinks; i++)
+		{
+			ThePaths->m_carPathLinks[i].unk4 = 0;
+			ThePaths->m_carPathLinks[i].unk5 = 0;
+		}
+
+		//FILE* js = fopen("C:\\vcstmp\\js.txt", "w");
+		// https://ehgames.com/gta/map/
+		int count = 0;
+		const char* header = "{\"name\":\"VCS\",\"activeLayer\":0,\"layers\":[{\"name\":\"Default Layer\",\"mapId\":\"VCS\",\"mapScale\":0.5,\"mapOffset\":{\"x\":0,\"y\":0},\"blips\":[],\"paths\":[],\"areas\":[";
+		char* buffer = (char*)malloc(2 * 1024 * 1024); // 2MB
+		memset(buffer, 0, 2 * 1024 * 1024);
+		int offset = 0;
+		bool firstElement = true;
+		offset += sprintf(buffer + offset, "%s", header);
+		for (int i = 0; i < ThePaths->m_numPathNodes; i++)
+		{
+			//bool last = (i + 1 == ThePaths->m_numPathNodes);
+			CPathNode* n = &EMUPOINTER<CPathNode*>(ThePaths->m_pathNodes)[i];
+			////int l = getNumLinks(*n);
+			////auto n = EMUPOINTER<CPathNodeTest*>(ThePaths->m_pathNodes);
+			////DUMP_BITS2(n->flags);
+			////printf("%d: ", i); DUMP_BITS(n->flags);
+			//printf("%d %d\n", i, n->firstLink);
+			//int l = n->numLinks_AndFlags8 & 0x0F;
+			//if(l != 2)
+			//printf("%d \n", l);
+
+
+			//!!!!!!!!
+			//{
+			//	CPathNode* nodes = EMUPOINTER<CPathNode*>(ThePaths->m_pathNodes);
+			//	// Текущий и следующий узел
+			//	CPathNode& cur = nodes[i];
+			//	int       start = cur.firstLink;
+			//	int       end;
+
+			//	if (i + 1 < ThePaths->m_numPathNodes) {
+			//		// следующий узел даёт границу
+			//		end = nodes[i + 1].firstLink;
+			//	}
+			//	else {
+			//		// для последнего — общее число связей
+			//		end = ThePaths->m_numConnections;
+			//	}
+
+			//	int numLinks = end - start;
+			//	printf("%d Node %4d: %2d links%s\n",
+			//		i, numLinks,
+			//		(cur.numLinks_AndFlags8 & 0x02) ? "  [disabled]" : ""
+			//	);
+			//}
+
+			uint16_t flags = *(uint16_t*)&n->numLinks_AndFlags8;
+			uint16_t flags8 = n->numLinks_AndFlags8;
+			uint16_t flags9 = n->flags9;
+
+			//if (GET_BIT(flags9, 0)) { continue; }
+			//if (flags8 != 2) { continue; } // разные
+			//if (flags8 != 2) { printf("%d  %d\n", i, flags8); }
+			//if (n->firstLink) { printf("%d \n", i); } // exists
+
+			//if (!GET_BIT(flags9, 0)) { continue; } // water
+			//if (GET_BIT(flags9, 1)) { continue; } // NONE
+			uint8_t numlinks = flags8 & 0b00001111;
+			//printf("%d %d\n", i, numlinks);
+
+			//if (!GET_BIT(flags8, 0)) { continue; } //
+			//if (!(numlinks > 2)) { continue; }
+			//if (numlinks != 1) { continue; }
+			//if (!GET_BIT(flags8, 3)) { continue; } // EMPTY, 
+			//if (!GET_BIT(flags8, 4)) { continue; } // 4_bDeadEnd?, 
+			//SET_BIT(n->numLinks_AndFlags8, 5, 0); // turn on all
+			//SET_BIT(n->numLinks_AndFlags8, 4, 1); //
+			//SET_BIT(n->numLinks_AndFlags8, 7, 0); //
+			//if (!GET_BIT(flags8, 7)) { continue; } //
+			//if (!GET_BIT(flags9, 6)) { continue; } // 0 always
+			//if (GET_BIT(flags9, 7)) { continue; } // 1 always
+			if (!GET_BIT(flags9, 4) && !GET_BIT(flags9, 5)) { continue; } // 1 always
+			//if (!n->width) { continue; } // 1 always?
+
+			//if (n->width) { continue; } //
+			//if (n->firstLink) { continue; } // 
+			printf("%d %d   0x%p   0x%p\n", i, (int)n->width, n, &n->width);
+			//printf("%d ", i);
+			//DUMP_BITS2(flags9);
+
+
+			float x = n->posX / 8;
+			float y = n->posY / 8;
+			//fprintf(js, "{\"active\":false,\"name\":\"n_%d\",\"x\":%.2f,\"y\":%.2f,\"color\":\"#ff0000\",\"radius\":3.0},\n", i, x, y);
+			if (!firstElement) { offset += sprintf(buffer + offset, ","); }
+			firstElement = false;
+			offset += sprintf(buffer + offset, "{\"active\":false,\"name\":\"n_%d\",\"x\":%.2f,\"y\":%.2f,\"color\":\"#ff0000\",\"radius\":3.0}", i, x, y);
+			++count;
+		}
+		offset += sprintf(buffer + offset, "],\"zones\":[]}],\"editMode\":\"info\",\"showLayerMenu\":false,\"showToolMenu\":true}");
+		copyToClipboard(buffer);
+		//FILE* js = fopen("C:\\vcstmp\\json.txt", "w");
+		//fprintf(js, "%s", buffer);
+		//fclose(js);
+		printf("res: %d/%d\n", count, ThePaths->m_numPathNodes);
+		free(buffer);
+	}
+
+	//memset(&EMUPOINTER<CPathNode*>(ThePaths->m_pathNodes)[0], 0, 10 * ThePaths->m_numCarPathNodes); // no roads
+	//memset(&EMUPOINTER<CPathNode*>(ThePaths->m_pathNodes)[ThePaths->m_numCarPathNodes], 0, 10 * ThePaths->m_numPathNodes); //
+	//DumpPathsToFile(ThePaths, "C:\\vcstmp\\paths.txt");
+
+
+	//printf("\n\n\nRaster%d: 0x%p\n", 504, EMUPOINTER<RwRaster*>(GetResourseFromChunk(chunk, 504)->raster));
+	//printf("Raster%d: 0x%p\n", 502, EMUPOINTER<RwRaster*>(GetResourseFromChunk(chunk, 502)->raster));
+	//printf("Raster%d: 0x%p\n", 1399, EMUPOINTER<RwRaster*>(GetResourseFromChunk(chunk, 1399)->raster));
+	//printf("Raster%d: 0x%p\n", 2033, EMUPOINTER<RwRaster*>(GetResourseFromChunk(chunk, 2033)->raster));
+	//printf("Raster%d: 0x%p\n", 559, EMUPOINTER<RwRaster*>(GetResourseFromChunk(chunk, 559)->raster));
+	//printf("Raster%d: 0x%p\n", 496, EMUPOINTER<RwRaster*>(GetResourseFromChunk(chunk, 496)->raster));
+	//printf("Raster%d: 0x%p\n", 83, EMUPOINTER<RwRaster*>(GetResourseFromChunk(chunk, 83)->raster));
+	//printf("Raster%d: 0x%p\n", 3664, EMUPOINTER<RwRaster*>(GetResourseFromChunk(chunk, 3664)->raster));
+	//printf("Raster%d: 0x%p\n", 874, EMUPOINTER<RwRaster*>(GetResourseFromChunk(chunk, 874)->raster));
+	//printf("Raster%d: 0x%p\n", 5532, EMUPOINTER<RwRaster*>(GetResourseFromChunk(chunk, 5532)->raster));
+	//printf("Raster%d: 0x%p\n", 2747, EMUPOINTER<RwRaster*>(GetResourseFromChunk(chunk, 2747)->raster));
+
+	//for (int32_t i = 0; i < CModelInfo_msNumModelInfos; i++)
+	//{
+	//	CColModel* model = GetModelInfo(i)->m_colModel;
+	//}
+
+	{
+		std::unordered_map<CColModel*, std::vector<int32_t>> colModelGroups;
+		for (int32_t i = 0; i < CModelInfo_msNumModelInfos; i++) {
+			CBaseModelInfo* modelInfo = GetModelInfo(i);
+			if (modelInfo && modelInfo->m_colModel)
+			{
+				GetModelInfoExt(i)->allcolls.push_back(modelInfo->m_colModel);
+				colModelGroups[EMUPOINTER<CColModel*>(modelInfo->m_colModel)].push_back(i);
+			}
+		}
+		//for (const auto& group : colModelGroups) {
+		//	if (group.second.size() <= 1) continue;  // Пропускаем уникальные
+		//	printf("COL 0x%p\n", group.first);
+		//	for (int32_t id : group.second) {
+		//		//std::cout << "  " << id << std::endl;
+		//		std::cout << "  " << GetModelInfoExt(id)->name << std::endl;
+		//	}
+		//	std::cout << "";  // Разделяем группы
+		//}
+		//for (int32_t i = 0; i < CModelInfo_msNumModelInfos; i++)
+		//{
+		//	ModelInfoExt* modelInfo = GetModelInfoExt(i);
+		//	if (modelInfo && modelInfo->allcolls.size() > 1)
+		//	{
+		//		bool pass = true;
+		//		CColModel* ps = modelInfo->allcolls[0];
+		//		for (size_t j = 1; j < modelInfo->allcolls.size(); j++)
+		//		{
+		//			if (ps != modelInfo->allcolls[j]) { pass = false; break; }
+		//		}
+		//		if (!pass)
+		//		{
+		//			for (size_t j = 0; j < modelInfo->allcolls.size(); j++)
+		//			{
+		//				printf("[%d] 0x%p, %s\n", i, modelInfo->allcolls[j], GetModelInfoExt(i)->name.c_str());
+		//			}
+		//		}
+		//	}
+		//}
+	}
+
+
+
+	//{
+		////struct Link
+		////{
+		////	int worldId; // & 7FFF    //3193
+		////	int iplId;
+		////	int modelId;
+		////} m1716{ 0x20c79, 0x17f8, 1716 };
+
+		//////==== Initial data for ModelInfo 1716 ====
+		//////	Building ID : 3193
+		//////	Sector : X = 9, Y = 16
+		//////	Sector ID : 252
+		//////	Instance ID : 3193
+		//////	Resource ID : 71
+		//////	====================================
+
+
+
+	//	//Resource* res = &EMUPOINTER<Resource*>(chunk->resourceTable)[71]; // 1716 dff
+	//	//Resource* res = GetResourseFromChunk(chunk, 71); // 1716 dff
+	//	Resource* res = GetResourseFromChunk(chunk, 3659); // dff
+	//	printf("1716 DFF(MDL): 0x%p\n", res);
+	//	sBuildingGeometry* geom = EMUPOINTER<sBuildingGeometry*>(res->geometry);
+	//	printf("geom: 0x%p\n", geom);
+
+	//	for (int i = 0; i < geom->numMeshes; i++)
+	//	{
+	//		sClippableBuildingMesh* mesh = (sClippableBuildingMesh*)((uint8_t*)geom + sizeof(sBuildingGeometry) + i * sizeof(sClippableBuildingMesh));
+
+	//		// Дамп информации о текстуре
+	//		printf("Mesh %d:\n", i);
+	//		printf("  Original Texture ID: %d\n", mesh->texID);
+	//		mesh->texID = 83; // anim barbershop
+	//		if (mesh->texID < chunk->numResources) {
+	//			//Resource* texRes = &chunk->resourceTable[mesh->texID];
+	//			Resource* texRes = GetResourseFromChunk(chunk, mesh->texID);
+	//			RwRaster* raster = EMUPOINTER<RwRaster*>(texRes->raster);
+	//			printf("  Raster pointer: %p\n", raster);
+	//		}
+	//		else {
+	//			printf("  Invalid texture ID!\n");
+	//		}
+	//		printf("  New Texture ID: %d\n", mesh->texID);
+
+	//	}
+	//}
+
+	//for (int32_t i = CTexListStore_ms_pTexListPool->m_nSize - 1; i >= 0; i--)
+	//{
+	//	if (CPools_GetSlotIsFree(CTexListStore_ms_pTexListPool, i)) { continue; }
+	//	TxdDef* t = (TxdDef*)CPools_GetSlot(CTexListStore_ms_pTexListPool, i, 28);
+	//	if (t)
+	//	{
+	//		RwTexDictionary* pTD = EMUPOINTER<RwTexDictionary*>(t->texDict);
+	//		if (pTD)
+	//		{
+	//			std::vector<RwTexture*> textures = GetRwTexturesFromTxd(pTD);
+	//			for (int i = 0; i < textures.size(); i++)
+	//			{
+	//				RwRaster* pRast = EMUPOINTER<RwRaster*>(textures[i]->raster);
+	//				if (!pRast) { continue; }
+	//				char* data = EMUPOINTER<char*>(pRast->data);
+	//				//pRast->unk1 = 0;
+	//				//pRast->unk2 = 0;
+	//				//pRast->flags = 0xFFFFFFFF;
+	//				//pRast->flags = 0x0;
+	//				pRast->data = null;
+	//				printf("rast: 0x%p   data: 0x%p\n", pRast, data);
+
+	//			}
+	//			printf("\n");
+	//			//printf("count %d \n", textures.size());
+	//			//printf("0x%p  0x%p \n", t, pTD);
+	//			//if(textures.size())
+	//			//	printf("tex0 0x%p  \n", textures[0]);
+	//		}
+	//	}
+	//}
+
+
+	//CSimpleModelInfo* p = (CSimpleModelInfo*)GetModelInfo(1716); // mainland172
+	////RpAtomic* pA = EMUPOINTER<RpAtomic*>(EMUPOINTER<RpAtomic**>(p->m_atomics_objects)[0]);
+	//printf("0x%p   atomic 0x%p\n", p, 0);
+
+	//CEntity* ent = null;
+	//for (int32_t i = CPools_ms_pBuildingPool->m_nSize - 1; i >= 0; i--)
+	//{
+	//	if (CPools_GetSlotIsFree(CPools_ms_pBuildingPool, i)) { continue; }
+	//	CEntity* e = (CEntity*)CPools_GetSlot(CPools_ms_pBuildingPool, i, 96);
+	//	if (e && e->m_modelIndex == 1716)
+	//	{
+	//		ent = e;
+	//		break;
+	//	}
+	//}
+	//if (ent)
+	//{
+	//	printf("0x%p   rwo 0x%p\n", ent, EMUPOINTER<RwObject*>(ent->m_rwObject));
+
+	//}
+
+	//for (int32_t i = 0; i < CModelInfo_msNumModelInfos; i++)
+	//{
+	//	CBaseModelInfo* mi = GetModelInfo(i);
+	//	if (mi && (mi->m_nInteriorGroupIndex > -1))
+	//	{
+	//		printf("%d %d\n", i, mi->m_nInteriorGroupIndex);
+	//	}
+	//}
+	//return false;
+
+	//for (int32_t i = 0; i < 32; i++)
+	//{
+	//	*SCRVAR(1823 + i) = -1;
+	//	DUMPSCRVAR(1823 + i);
+	//}
+
+	//{
+	//	CInteriorPool* pool = EMUPOINTER<CInteriorPool*>(InteriorManager->m_interiorPool);
+	//	printf("numgroups: %d\n", pool->m_numGroups);
+	//	//pool->m_numGroups = 0;
+	//	//InteriorManager->m_interiorPool = null; // нет enex
+	//	int max_enties = 0;
+
+	//	for (int32_t i = 0; i < pool->m_numGroups; i++)
+	//	{
+	//		CInteriorGroup* group = &pool->m_groups[i];
+	//		//group->m_count = 0; // влияет
+	//		//group->m_count = 1;
+	//		printf("group %d\n", i);
+	//		//if (i != 61) { continue; }
+
+	//		for (int32_t j = 0; j < group->m_count; j++)
+	//		{
+	//			if (max_enties < group->m_count) { max_enties = group->m_count; }
+	//			//group->m_pEntries = null; // не влияет лол
+	//			CInteriorInfo* info = EMUPOINTER<CInteriorInfo*>(&(group->m_pEntries[j]));
+	//			//memset(info, 0, sizeof(CInteriorInfo) *( group->m_count - 1));
+	//			//break;
+	//			//if (i != 61) { continue; }
+
+
+	//			//if (info)
+	//			{
+	//				//printf(
+	//				//	"Int [%d][%d]:\n"
+	//				//	"  Type: %d\n"
+	//				//	"  : %d, %d\n"
+	//				//	"  Field3: %.13s\n"
+	//				//	"  Coords: (%.2f, %.2f, %d, %d)\n"
+	//				//	"  Float20: %.2f\n"
+	//				//	"  AA_fields: %d, %d, %d\n\n",
+	//				//	i, j,
+	//				//	info->type_field_0,
+	//				//	info->field_1, info->field_2,
+	//				//	info->field_3,
+	//				//	info->ffield_10, info->ffield_14, info->z_field_18, info->z_field_1C,
+	//				//	info->ffield_20,
+	//				//	info->AA_field_24, info->AA_field_28, info->AA_field_2C
+	//				//);
+
+	//				//if(0) // checkup
+	//				//{
+	//				//	if (info->type_field_0 < 0 || info->type_field_0 > 42) { MboxSTD("!! 0"); } // 
+	//				//	if (info->field_1 < 0 || info->field_1 > 5) { MboxSTD("!! 1"); } // 0 1 2 3 4 5
+	//				//	if (info->field_2 != 97 && info->field_2 != 98) { MboxSTD("!! 2"); } // z_field_1C -1.57
+	//				//	//if (info->ffield_10 != 0.0f) { MboxSTD("!! 3"); } ffield_10 ffield_14  is x y, -6.4472 -0.15
+	//				//	//if (info->z_field_18 && info->z_field_18 != 0x40933333) { MboxSTD("!! 4"); } // wtf 0.0, 0xB851B717 0x40933333 0x40866666 hash??
+	//				//	if (info->z_field_1C) { MboxSTD("!! 5"); } // always 0
+	//				//	//if (info->ffield_20) { MboxSTD("!! 6"); } // 1.5, -3.14
+
+	//				//	// pads
+	//				//	if (info->field_3[0] != 0xAA) { MboxSTD("!! 7"); } // AAAAA
+	//				//	if (info->AA_field_24 != 0xAAAAAAAA) { MboxSTD("!! 8"); }
+	//				//	if (info->AA_field_28 != 0xAAAAAAAA) { MboxSTD("!! 9"); }
+	//				//	if (info->AA_field_2C != 0xAAAAAAAA) { MboxSTD("!! 10"); }
+	//				//	//printf("0x%p\n ", &info->AA_field_24);
+	//				//}
+
+
+	//				////------------
+	//				///info->m_nType = 0;
+	//				//info->m_nSubType = 0; // 0-1  не влияет на магаз и на empire
+	//				//info->m_chFilter = 0; // не влияет на магаз и на empire
+	//				////////// pad 13 AAAA
+	//				//info->m_vecOffset.x = 0.0f; // x?
+	//				//info->m_vecOffset.y = 0.0f;
+	//				//info->m_vecOffset.z = 0.0f;
+
+	//				////info->z_field_18 = 0xAAAAAAAA; // hash?
+	//				////// pad 0
+	//				////info->ffield_20 = DEGTORAD(0); // done
+
+	//				//// pad 4*3 AAAAAA
+	//				//info->AA_field_24 = 0;
+	//				//info->AA_field_28 = 0;
+	//				//info->AA_field_2C = 0;
+	//				//memset(info, 0, sizeof(CInteriorInfo));
+	//				////memset(info, 0, 96+1);
+	//				////--------------
+
+
+	//				setlocale(LC_NUMERIC, "C"); // 3.14
+	//				//printf("[g %d, e %d] %d|%d|%d|%f|%f|%f  |%f |%f[%d]\n",
+	//				//printf("0x%p [g %d, e %d] %d %d %d    %f %f[%d]\n",
+	//				//printf("%d,\t%hhu,\t%hhu,\t%hhu,\t%f,\t%f,\t%f,\t%f\n",
+	//				printf("%5d, %5hhu, %5hhu, %5hhu, %12.6f, %12.6f, %12.6f, %12.6f\n",
+	//					j,
+	//					(uint8_t)info->m_nType,
+	//					(uint8_t)info->m_nSubType,
+	//					(uint8_t)info->m_chFilter,
+	//					info->m_vecOffset.x,
+	//					info->m_vecOffset.y,
+	//					info->m_vecOffset.z,
+	//					info->m_fHeading
+	//				);
+	//			}
+	//		}
+	//		printf("\n"); // group pad
+	//	}
+	//	printf("max ent: %d\n", max_enties);
+
+	//}
 
 	//return true;
 	return false;
@@ -957,6 +2388,7 @@ bool tmp2 = false;
 bool tmp3 = false;
 bool tmp4 = false;
 bool can_update = false;
+bool quit = false;
 int itmp = 0;
 bool OnKey(int mode) // ret bool isallowhold
 {
@@ -966,6 +2398,7 @@ bool OnKey(int mode) // ret bool isallowhold
 	case 0:
 	{
 		if (HW()) { return true; }
+		//return false;
 		//CRenderer_ms_nNoOfVisibleEmpires = 0;
 		//return true; // allow hold
 
@@ -992,26 +2425,147 @@ bool OnKey(int mode) // ret bool isallowhold
 		//}
 		//return false;
 
-		for (int32_t i = 0; i < CModelInfo_msNumModelInfos; i++)
+		//PatchCustomSCM();
+		//ClearActiveList();
+
+		// weapon test
+		//{
+		//	CPlayerPed* pp = FindPlayerPed();
+		//	for (int i = 0; i < 20; i++) { // 10
+		//		printf("%d: 0x%X\n", i, pp->CPed.m_weapons[i].field_0);
+		//		pp->CPed.m_weapons[i].field_0 = 0x0;
+		//	}
+		//}
+
+
+
+		CPlayerPed* pp = FindPlayerPed();
+		//if (pp)
+		//{
+		//	pp->CPed.m_weapons[0].m_eWeaponType = 4;
+		//}
+
+
+
+
 		{
-			CBaseModelInfo* mi = GetModelInfo(i); 
-
-			//if (mi) { printf("%d %s\n", i, mi->m_name); continue; }
-			//else { continue; }
-
-			if (mi)
+			for (int32_t i = CPools_ms_pPedPool->m_nSize - 1; i >= 0; i--)
 			{
-				//printf("%d  0x%p type: %d\n", i, mi, mi->m_type);
-				//printf("%d  0x%p e_enex: %d\n", i, mi, mi->e_enex); // enex
-				//mi->e_enex = -1;
-				//mi->e_enex = 9; // 0
-
+				if (CPools_GetSlotIsFree(CPools_ms_pPedPool, i)) { continue; }
+				CPed* p = (CPed*)CPools_GetSlot(CPools_ms_pPedPool, i, 3360);
+				if (p) {
+					int32_t mindex = p->CPhysical.CEntity.m_modelIndex;
+					CBaseModelInfo* mi = GetModelInfo(mindex);
+					printf("ped[%d]: 0x%p, mi: 0x%p\n", p->CPhysical.CEntity.m_modelIndex, p, mi);
+					// test code
+					{
+						int8_t& b1D8 = *OFFSET(p, 0x1D8, int8_t*);
+						SWAP_BIT(b1D8, 3);
+						//bool IsDBY = b1D8 & BIT(3);
+						//b1D8 = IsDBY ? (b1D8 & (~BIT(3))) : (IsDBY | BIT(3));
+					}
+				}
 			}
 		}
 
 
+
+		static int max1 = 0;
+		static int max2 = 0;
+		//for (int32_t i = 0; i < CModelInfo_msNumModelInfos; i++)
+		//{
+		//	CBaseModelInfo* mi = GetModelInfo(i); 
+
+		//	//if (mi) { printf("%d %s\n", i, mi->m_name); continue; }
+		//	//else { continue; }
+		//	char zero[16] = { 0 };
+		//	if (mi)
+		//	{
+		//		//printf("%d  0x%p type: %d\n", i, mi, mi->m_type);
+		//		//printf("%d  0x%p e_enex: %d\n", i, mi, mi->e_enex); // enex
+		//		//mi->e_enex = -1;
+		//		//mi->e_enex = 9; // 0
+
+		//		if (mi->m_type == MITYPE_PED) {
+		//			CPedModelInfo* pmi = (CPedModelInfo*)mi;
+		//			if (pmi->m_nNumColorVariations > max1)
+		//				max1 = pmi->m_nNumColorVariations;
+		//			if (pmi->m_nNumScriptColorVariations > max2)
+		//				max2 = pmi->m_nNumScriptColorVariations;
+
+		//			//int find = 0; // check if we have 4+ mat ped models
+		//			//for (int i = 0; i < 6; i++) {
+		//			//	if (pmi->renderMaterials[i].material) {
+		//			//		find++;
+		//			//	}
+		//			//}
+		//			//if (find <= 4)
+		//			//	continue;
+
+		//			printf("??????[%d]pmi: 0x%p\n", i, pmi);
+		//			printf("??????[%d] %d\n", i, pmi->m_nNumColorVariations);
+		//			printf("??????[%d] %d\n\n", i, pmi->m_nNumScriptColorVariations);
+		//			//printf("???????[%d]???? 0x%p\n", i, pmi->m_anScriptColorVariationIndices);
+		//			memset(zero, 0, ARRAY_SIZE(zero));
+		//			//assert(!memcmp(zero, pmi->field_99, 3*9));
+		//			//for (int i = 0; i < 9; i++) {
+		//			//	pmi->field_99[i] = {0xFF, 0xFF, 0xFF};
+		//			//}
+		//				//pmi->field_99[0] = { 0xFF, 0xFF, 0xFF };
+		//				//pmi->field_99[8] = { 0xFF, 0xFF, 0xFF };
+		//				//pmi->field_99[9] = { 0xFF, 0xFF, 0xFF };
+		//			//for (int i = 0; i < 64; i++)
+		//			//{
+		//			//	pmi->m_anColorVariationIndices[i] = 240; // 240 - 0
+		//			//}
+		//			//memset(pmi->renderMaterials, 0, 8 * 6);
+		//		}
+		//		//if (mi->m_type == MITYPE_VEHICLE) {
+		//		//	CVehicleModelInfo* pmi = (CVehicleModelInfo*)mi;
+		//		//	if (pmi->m_nNumColorVariations > max1)
+		//		//		max1 = pmi->m_nNumColorVariations;
+		//		//	if (pmi->m_nNumScriptColorVariations > max2)
+		//		//		max2 = pmi->m_nNumScriptColorVariations;
+		//		//	printf("???????[%d]???? %d\n", i, pmi->m_nNumColorVariations);
+		//		//	printf("???????[%d]???? %d\n", i, pmi->m_nNumScriptColorVariations);
+		//		//	printf("???????[%d]???? 0x%p\n", i, pmi->m_anScriptColorVariationIndices);
+		//		//	//memset(zero, 0, ARRAY_SIZE(zero));
+		//		//	//assert(!memcmp(zero, pmi->field_99, 16));
+		//		//}
+
+		//	}
+		//}
+		//printf("########### %d\n", max1);
+		//printf("########### %d\n", max2);
+
+		//int ssid = 0;
+		//printf("enter streamedid (113 NO_SOUND): ");
+		//scanf("%d", &ssid);
+		//for (int i = 0; i < 57; i++) // dump cutscene audio assoc
+		//{
+		//	tMusicNameIdAssoc* assoc = &musicNameIdAssoc[i];
+		//	char* name = EMUPOINTER<char*>(assoc->szTrackName);
+		//	//if (name) { printf("%d 0x%p %s\t%d\n", i, assoc, name, assoc->iTrackId); }
+		//	//if (name && (!strcmp(name, "LOUA3"))) { printf("%s\t%d\n", name, assoc->iTrackId); }
+		//	if (name) { patch<int>(&(assoc->iTrackId), ssid); } // vp!
+		//}
+		//RESET_RECOMP_EE(); printf("ok\n"); return false;
+
+
+		//for (int i = 0; i < 113; i++) // streamed 113
+		//{
+		//	printf("pos %d / len %d\n", MusicManager->m_aTracks[i].m_nPosition, MusicManager->m_aTracks[i].m_nLength); // fixedpointticks8.8
+		//}
+
+		//for (int i = 0; i < 75; i++) // NUMRADARBLIPS
+		//{
+		//	char* ppos = (((char*)TheRadar) + 0x290) + (i * 48);
+		//	DUMPVEC((*(CVectorVU_align16*)ppos));
+		//}
+
+		//return false;
 		tmp3 = !tmp3;
-		////////////////////////////////////////////////////////can_update = !can_update;
+		//can_update = !can_update;
 		//printf("[SPAWNER]: Enter type mi: ");
 		//scanf("%hhu %hhu", &tmppedspawntype, &tmppedspawnmi);
 
@@ -1025,7 +2579,7 @@ bool OnKey(int mode) // ret bool isallowhold
 		if ((GetAsyncKeyState('U') & 0x8000)) { TeleportPlayer({ -932.3f, -1082.5f, 14.4f }); }
 
 		CBaseModelInfo* mi = GetModelInfo(7508); // (empires) 7508, 7436, 7520, 7443, 7436
-		if (mi) { printf("%d 0x%p\n", 7508, &mi->m_name); }
+		if (mi) { printf("%d 0x%p\n", 7508, &mi->m_nameHashKey); }
 
 		printf("gpModelIndices: 0x%p\n", gpModelIndices);
 
@@ -1068,57 +2622,67 @@ bool OnKey(int mode) // ret bool isallowhold
 		//FILE* file = fopen("C:\\Users\\Zver\\Desktop\\vehaudio.txt", "w");
 		//std::vector<std::string> names = FileReadAllLines("C:\\NAMES.txt");
 		//printf("names %d\n", names.size());
-		//int fmi = 170;
-		//for (int32_t i = 0; i < CModelInfo_msNumModelInfos; i++)
-		//{
-		//	CBaseModelInfo* mi = GetModelInfo(i); 
 
-		//	//if (mi) { printf("%d %s\n", i, mi->m_name); continue; }
-		//	//else { continue; }
+		int fmi = 170;
+		for (int32_t i = 0; i < CModelInfo_msNumModelInfos; i++)
+		{
+			CBaseModelInfo* mi = GetModelInfo(i); 
 
-		//	if (mi)
-		//	{
-		//		//printf("%d  0x%p type: %d\n", i, mi, mi->m_type);
-		//		switch (mi->m_type)
-		//		{
-		//		case MITYPE_VEHICLE:
-		//		{
-		//			CVehicleModelInfo* vmi = (CVehicleModelInfo*)mi;
-		//			//printf("%d  0x%p type: %d\n", i, mi, mi->m_type);
-		//			//printf("mi: %d\n", i);
-		//			//printf("%d, %d, %d, %d, %d, %d, %d, %d\n",
-		//			//printf("%d,\t%d,\t%d,\t%d,\t%d,\t%d,\t%d,\t%d\n",
-		//			//	i,
-		//			//	vmi->m_nAccelerationSampleIndex,
-		//			//	vmi->m_nBank,
-		//			//	vmi->m_nHornSample,
-		//			//	vmi->m_nHornFrequency,
-		//			//	vmi->m_nSirenOrAlarmSample,
-		//			//	vmi->m_nSirenOrAlarmFrequency,
-		//			//	vmi->m_bDoorType);
-		//			printf("%d %s\n", i, names[i - fmi].c_str());
-		//			//fprintf(file, "%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", i,
-		//			fprintf(file, "%s\t\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", names[i - fmi].c_str(),
-		//				vmi->m_nAccelerationSampleIndex,
-		//				vmi->m_nBank,
-		//				vmi->m_nHornSample,
-		//				vmi->m_nHornFrequency,
-		//				vmi->m_nSirenOrAlarmSample,
-		//				vmi->m_nSirenOrAlarmFrequency,
-		//				vmi->m_bDoorType);
+			//if (mi) { printf("%d %s\n", i, mi->m_name); continue; }
+			//else { continue; }
 
-		//			//vmi->m_nHornFrequency = 24000;
-		//			break;
-		//		}
-		//		case MITYPE_PED:
-		//		{
+			if (mi)
+			{
+				//printf("%d  0x%p type: %d\n", i, mi, mi->m_type);
+				switch (mi->m_type)
+				{
+				case MITYPE_VEHICLE:
+				{
+					CVehicleModelInfo* vmi = (CVehicleModelInfo*)mi;
+					//printf("%d  0x%p type: %d\n", i, mi, mi->m_type);
+					//printf("mi: %d   type : %d\n", i, vmi->m_vehicleType);
+					//printf("%d, %d, %d, %d, %d, %d, %d, %d\n",
+					//printf("%d,\t%d,\t%d,\t%d,\t%d,\t%d,\t%d,\t%d\n",
+					//	i,
+					//	vmi->m_nAccelerationSampleIndex,
+					//	vmi->m_nBank,
+					//	vmi->m_nHornSample,
+					//	vmi->m_nHornFrequency,
+					//	vmi->m_nSirenOrAlarmSample,
+					//	vmi->m_nSirenOrAlarmFrequency,
+					//	vmi->m_bDoorType);
+					//printf("%d %s\n", i, names[i - fmi].c_str());
+					//fprintf(file, "%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n", i,
+					//fprintf(file, "\t\t%d\t%hhu\t%d\t%d\t%d\t%d\t%hhu\n",
+					//	vmi->m_SampleData.m_nAccelerationSampleIndex,
+					//	vmi->m_SampleData.m_nBank,
+					//	vmi->m_SampleData.m_nHornSample,
+					//	vmi->m_SampleData.m_nHornFrequency,
+					//	vmi->m_SampleData.m_nSirenOrAlarmSample,
+					//	vmi->m_SampleData.m_nSirenOrAlarmFrequency,
+					//	vmi->m_SampleData.m_bDoorType);
 
-		//			break;
-		//		}
-		//		}
-		//	}
-		//}
+					if (vmi->m_vehicleType == 4 || vmi->m_vehicleType == 5) // heli || plane
+					{
+						printf("%d, %s, id %d, ws %f, wsr %f\n", i, vmi->m_gameName, vmi->m_wheelId_Or_m_planeLodId_union, vmi->m_wheelScale, vmi->m_wheelScaleRear);
+					}
+
+					//vmi->m_nHornFrequency = 24000;
+					break;
+				}
+				case MITYPE_PED:
+				{
+
+					break;
+				}
+				}
+			}
+		}
+		printf("\n\n\n");
 		//fclose(file);
+
+
+
 
 		//int cnt_enginesets = 25;
 		//for (size_t i = 0; i < cnt_enginesets; i++)
@@ -1126,6 +2690,50 @@ bool OnKey(int mode) // ret bool isallowhold
 		//	printf("%s, %s\n", ((std::string)magic_enum::enum_name((eSfxSample)(aEngineSounds[i].val1))).c_str(),
 		//		((std::string)magic_enum::enum_name((eSfxSample)(aEngineSounds[i].val2))).c_str());
 		//}
+
+		// dump tBounceData
+		for (int32_t i = 0; i < CModelInfo_msNumModelInfos; i++)
+		{
+			CBaseModelInfo* mi = GetModelInfo(i); 
+
+			//if (mi) { printf("%d %s\n", i, mi->m_name); continue; }
+			//else { continue; }
+
+			if (mi)
+			{
+				//printf("%d  0x%p type: %d\n", i, mi, mi->m_type);
+				switch (mi->m_type)
+				{
+				case MITYPE_VEHICLE:
+				{
+					CVehicleModelInfo* vmi = (CVehicleModelInfo*)mi;
+					char* tBounceData = EMUPOINTER<char*>(*(uint32_t*)(((char*)vmi) + (0x44)) );
+					float* fBoatVolumeDistribution = (float*) (tBounceData ? (tBounceData + 0x40) : null);
+					float* scaleMax = (float*) (tBounceData ? (tBounceData + 0x70) : null);
+					float* scaleMin = (float*) (tBounceData ? (tBounceData + 0x80) : null);
+					//printf("mi %d, 0x%p\n", i, vmi);
+					//printf("mi %d, 0x%p 0x%p\n", i, vmi, fBoatVolumeDistribution);
+					//if (fBoatVolumeDistribution) { printf("mi %d, %f %f %f %f %f %f %f %f %f\n", i,
+					//	fBoatVolumeDistribution[0], fBoatVolumeDistribution[1], fBoatVolumeDistribution[2],
+					//	fBoatVolumeDistribution[3], fBoatVolumeDistribution[4], fBoatVolumeDistribution[5],
+					//	fBoatVolumeDistribution[6], fBoatVolumeDistribution[7], fBoatVolumeDistribution[8]
+					//);
+					//if (fBoatVolumeDistribution) {
+					//	//printf("mi %d %s\n", i, (fBoatVolumeDistribution[8] == 0.6f ? "fBoatVolumeDistributionSpeed" : "fBoatVolumeDistribution"));
+					//	printf("mi %d  MAX %f %f %f    MIN %f %f %f\n", i, scaleMax[0], scaleMax[1], scaleMax[2],
+					//		scaleMin[0], scaleMin[1], scaleMin[2]);
+					//}
+
+					//printf("mi %d, 0x%p %s, t %d ws %f\n", i, vmi, vmi->m_gameName, vmi->m_vehicleType,  vmi->m_wheelScale);
+					break;
+				}
+
+				}
+			}
+		}
+
+		//EmpireTest(0);
+		//return false;
 
 
 		//dump_debug_string_array(0x4AB328, 71); // ped states
@@ -1136,6 +2744,12 @@ bool OnKey(int mode) // ret bool isallowhold
 		CPlayerPed* pPlayer = FindPlayerPed();
 		int playerhandle = CPools_GetIndex(CPools_ms_pPedPool, pPlayer, 3360); // pool handle
 		printf("player : 0x%p handle %d\n\n", pPlayer, playerhandle);
+
+		tSample* pSamples = EMUPOINTER<tSample*>(SampleManager->m_aSamples);
+		printf("SampleManager 0x%p\n", SampleManager);
+		printf("SampleManager m_aSamples 0x%p\n", pSamples);
+		printf("sfxgxt 0x%p\n", gAm_sfxgxt);
+
 
 		//for (int32_t i = CPools_ms_pPedPool->m_nSize - 1; i >= 0; i--)
 		//{
@@ -1157,7 +2771,13 @@ bool OnKey(int mode) // ret bool isallowhold
 		//DUMPSCRVAR(1576);
 		//printf("\n");
 
-
+		int val = 0;
+		printf("[~]: Enter val: ");
+		scanf("%d", &val);
+		//patch<char>(PCSX2POINTER(0x2EC38C), (char)val);
+		//RESET_RECOMP_EE();
+		can_update = !can_update;
+		return false;
 
 		// tester ped handles
 		int pedh = 0;
@@ -1173,12 +2793,6 @@ bool OnKey(int mode) // ret bool isallowhold
 			//if(!isFree) pTested->m_fHealth = 0.0f;
 		}
 		else { printf("!!!!!!not found\n"); }
-
-		tSample* pSamples = EMUPOINTER<tSample*>(SampleManager->m_aSamples);
-		printf("SampleManager 0x%p\n", SampleManager);
-		printf("SampleManager m_aSamples 0x%p\n", pSamples);
-		printf("sfxgxt 0x%p\n", gAm_sfxgxt);
-
 
 
 
@@ -1199,24 +2813,24 @@ bool OnKey(int mode) // ret bool isallowhold
 
 		return false;
 		//---------------------------------------------------------------------------------------------------------------------------------------
-		printf("\n");
-		const char* desc[] = { "carIds", "boatIds", "jetskiIds", "trainIds", "heliIds", "planeIds", "bikeIds", "ferryIds", "bmxIds", "quadIds" };
-		for (int i = 0; i < ARRAY_SIZE(desc); i++)
-		{
-			//printf("%s------\n", desc[i]);
-			printf("RwObjectNameIdAssocation %s[] = {\n", desc[i]);
-			RwObjectNameIdAssocation* pIdAssoc = (EMUPOINTER<RwObjectNameIdAssocation*>(CVehicleModelInfo_ms_vehicleDescs[i]));
-			while(pIdAssoc && (*(uint32_t*)pIdAssoc))
-			{
-				//printf("\t%s\n", EMUPOINTER<char*>(pIdAssoc->name));
-				printf("    { \"%s\", %d, 0x%x },\n", EMUPOINTER<char*>((char*)pIdAssoc->name), pIdAssoc->hierId, pIdAssoc->flags);
-				++pIdAssoc;
-			}
-			++pIdAssoc;
-			//printf("\n");
-			printf("    { nil, 0, 0 }\n");
-			printf("};\n\n");
-		}
+		//printf("\n");
+		//const char* desc[] = { "carIds", "boatIds", "jetskiIds", "trainIds", "heliIds", "planeIds", "bikeIds", "ferryIds", "bmxIds", "quadIds" };
+		//for (int i = 0; i < ARRAY_SIZE(desc); i++)
+		//{
+		//	//printf("%s------\n", desc[i]);
+		//	printf("RwObjectNameIdAssocation %s[] = {\n", desc[i]);
+		//	RwObjectNameIdAssocation* pIdAssoc = (EMUPOINTER<RwObjectNameIdAssocation*>(CVehicleModelInfo_ms_vehicleDescs[i]));
+		//	while(pIdAssoc && (*(uint32_t*)pIdAssoc))
+		//	{
+		//		//printf("\t%s\n", EMUPOINTER<char*>(pIdAssoc->name));
+		//		printf("    { \"%s\", %d, 0x%x },\n", EMUPOINTER<char*>((char*)pIdAssoc->name), pIdAssoc->hierId, pIdAssoc->flags);
+		//		++pIdAssoc;
+		//	}
+		//	++pIdAssoc;
+		//	//printf("\n");
+		//	printf("    { nil, 0, 0 }\n");
+		//	printf("};\n\n");
+		//}
 
 		if (FindPlayerVehicle())
 		{
@@ -1239,7 +2853,7 @@ bool OnKey(int mode) // ret bool isallowhold
 			//SWAP_BIT(pPlayer->CPed.CPhysical.CEntity.CE_flags_K, 3); // :/ not rendernotcontrol
 		}
 
-		EmpireTest(0);
+		//EmpireTest(0); // move upper
 
 		//int i = (CPools_ms_pPedPool->m_nSize - 1);
 		//while (i--) {
@@ -1340,26 +2954,92 @@ bool OnKey(int mode) // ret bool isallowhold
 
 		if (pPed)
 		{
-			printf("====================VFTABLE====================\n");
-			printf("VFTABLE pPed: 0x%p\n", pPed->CPhysical.CEntity.vftable);
-			if (pVehicle) { printf("VFTABLE pVehicle: 0x%p\n", pVehicle->CPhysical.CEntity.vftable); }
+			//printf("====================VFTABLE====================\n");
+			//printf("VFTABLE pPed: 0x%p\n", pPed->CPhysical.CEntity.vftable);
+			//if (pVehicle) { printf("VFTABLE pVehicle: 0x%p\n", pVehicle->CPhysical.CEntity.vftable); }
+			//printf("===============================================\n\n");
+
+			printf("===============================================\n");
+			printf("pPed: 0x%p  mi: %d\n", pPed, pPed->CPhysical.CEntity.m_modelIndex);
+			if (pVehicle) { printf("pVehicle: 0x%p  mi: %d\n", pVehicle, pVehicle->CPhysical.CEntity.m_modelIndex); }
+			if (pVehicle) { printf("pVehicle nodes: 0x%p\n", ((CAutomobile*)pVehicle)->m_aCarNodes); }
 			printf("===============================================\n\n");
 			//DUMPVEC("ped pos:", pPed->CPhysical.CEntity.CPlaceable.m_matrix.p);
 		}
 
-		printf("pinfpPED: 0x%p\n", pPed);
-		printf("pinfpPEDVEHICLE: 0x%p\n", pVehicle);
-		//printf("empireinst: 0x%p\n", (PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48FF48)))); // ?
-		printf("EntryExitManager: 0x%p\n", EntryExitManager);
+		//printf("pinfpPED: 0x%p\n", pPed);
+		//printf("pinfpPEDVEHICLE: 0x%p\n", pVehicle);
+		printf("gpModelIndices: 0x%p\n", gpModelIndices);
+		printf("CModelInfo::ms_modelInfoPtrs: 0x%p\n", CModelInfo_ms_modelInfoPtrs);
+		printf("ms_modelInfoPtrs[250]: 0x%p\n", EMUPOINTER<char*>(CModelInfo_ms_modelInfoPtrs[250]));
+		printf("ms_modelInfoPtrs[214]: 0x%p\n", EMUPOINTER<char*>(CModelInfo_ms_modelInfoPtrs[214]));
+		printf("ms_modelInfoPtrs[278]: 0x%p\n", EMUPOINTER<char*>(CModelInfo_ms_modelInfoPtrs[278]));
+		printf("ms_modelInfoPtrs[233]: 0x%p\n", EMUPOINTER<char*>(CModelInfo_ms_modelInfoPtrs[233]));
+		printf("CPopulation::ms_pPedGroups: 0x%p\n", CPopulation_ms_pPedGroups);
+		//printf("empireinst: 0x%p\n", (PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48FF48)))); // interhyeta
+		printf("cWorldStream: 0x%p\n", cWorldStream);
+		printf("MusicManager: 0x%p\n", MusicManager);
+		printf("AudioManager: 0x%p\n", AudioManager);
+		printf("SampleManager: 0x%p\n", SampleManager);
+		printf("gPhoneInfo: 0x%p\n", gPhoneInfo);
+		printf("MusicManager->m_nFrontendTrack: %d\n", MusicManager->m_nFrontendTrack);
+		printf("&MusicManager->m_nFrontendTrack: 0x%p\n", &MusicManager->m_nFrontendTrack);
+		CW_B();
+		printf("ThePaths: 0x%p\n", ThePaths);
+		printf("ThePaths nodes: 0x%p %d\n", EMUPOINTER<char*>(ThePaths->m_pathNodes), ThePaths->m_numPathNodes);
+		printf("ThePaths carl: 0x%p %d\n", EMUPOINTER<char*>(ThePaths->m_carPathLinks), ThePaths->m_numCarPathLinks); //? links?
+		printf("ThePaths carpc: 0x%p %d\n", EMUPOINTER<char*>(ThePaths->m_carPathConnections), ThePaths->m_numConnections); //? links?
+		printf("ThePaths dist: 0x%p\n", EMUPOINTER<char*>(ThePaths->m_distances));
+		printf("ThePaths conn: 0x%p\n", EMUPOINTER<char*>(ThePaths->m_connections));
+		CW_G();
+		printf("TheDollarParticleFX: 0x%p\n", TheDollarParticleFX);
+		printf("CObjectData_ms_aObjectInfo: 0x%p\n", CObjectData_ms_aObjectInfo);
+		//CW_B();
+		//printf("m_currentWeapon: %d\n", pPed->m_currentWeapon);
+		//printf("weaptr[0]: 0x%p\n", pPed->m_weapons);
+		//printf("weaptr[1]: 0x%p\n", &pPed->m_weapons[1]);
+		//CW_G();
+		printf("TheRadar: 0x%p\n", TheRadar);
+		printf("FrontEndMenuManager: 0x%p\n", FrontEndMenuManager);
+		printf("FrontEndMenuManagerSettings/Prefs: 0x%p\n", FrontEndMenuManagerSettings);
+		printf("TheAnimManager: 0x%p\n", TheAnimManager);
 		printf("gpSkidTex: 0x%p\n", gpSkidTex);
 		printf("currentTexDict: 0x%p\n", currentTexDict);
 		printf("CFont::Details: 0x%p\n", CFont_Details);
+		printf("CTheScripts_ScriptSphereArray: 0x%p\n", CTheScripts_ScriptSphereArray);
+		printf("C3dMarkers::m_pRslElementGroupArray: 0x%p\n", C3dMarkers_m_pRslElementGroupArray);
+		printf("C3dMarkers_m_aMarkerArray: 0x%p\n", C3dMarkers_m_aMarkerArray);
+		CW_B();
+		printf("EmpireHud: 0x%p\n", EmpireHud);
 		printf("EmpireMgr: 0x%p\n", EmpireMgr);
-		printf("EmpireMgr->m_pEmpires: 0x%p\n", EMUPOINTER<void*>(EmpireMgr->m_pEmpiresInfos));
+		printf("EmpireMgr->m_pEmpires: 0x%p\n", EMUPOINTER<CEmpireBuildingInfo*>(EmpireMgr->m_pEmpiresInfosStart));
+		printf("EmpireMgr->m_pEmpires[0]->empire: 0x%p\n", EMUPOINTER<char*>(EMUPOINTER<CEmpireBuildingInfo*>(EmpireMgr->m_pEmpiresInfosStart)->
+			m_pActualEmpireBuilding));
 		//printf("EmpireMgr->pointer_field_14: 0x%p\n", EMUPOINTER<void*>(EmpireMgr->pointer_field_14));
 		//printf("EmpireMgr->pointer_field_1C: 0x%p\n", EMUPOINTER<void*>(EmpireMgr->pointer_field_1C));
 		//printf("EmpireMgr+0x10: 0x%p\n", EmpireMgr+0x10);
 		//printf("EmpireMgr+0x144: 0x%p\n", EmpireMgr+0x144);
+		for (int32_t i = 0; i < 16; i++)
+		{
+			script_sphere_struct* sp = &CTheScripts_ScriptSphereArray[i];
+			if (sp->m_bInUse && sp->m_Type == 7) // MARKERTYPE_ENTERCONE
+				printf("ENEX7[%d]: 0x%p, pos: 0x%p\n", i, sp, &sp->m_vecCenter);
+		}
+		CW_R();
+		CInteriorPool* pool = EMUPOINTER<CInteriorPool*>(InteriorManager->m_interiorPool);
+		CInteriorInfo* info = EMUPOINTER<CInteriorInfo*>(pool->m_groups[0].m_pEntries);
+		CInteriorInfo* info61 = EMUPOINTER<CInteriorInfo*>(pool->m_groups[61].m_pEntries);
+		printf("InteriorManager: 0x%p\n", InteriorManager);
+		printf("InteriorManager->m_interiorPool: 0x%p\n", pool);
+		printf("InteriorManager m_numGroups: %d\n", pool->m_numGroups);
+		printf("InteriorManager Groups: 0x%p\n", pool->m_groups);
+		printf("InteriorManager Groups[0] num: %d\n", pool->m_groups[0].m_count);
+		printf("InteriorManager Groups[0] Entry: 0x%p\n", info);
+		printf("InteriorManager Groups[61] num: %d\n", pool->m_groups[61].m_count);
+		printf("InteriorManager Groups[61] Entry: 0x%p\n", info61);
+		CW_G();
+		printf("CGame::currArea:  %d   0x%p\n", CGame_currArea, &CGame_currArea);
+		printf("CGame::currLevel: %d   0x%p\n", CGame_currLevel, &CGame_currLevel);
 
 		printf("vehp: 0x%p\n", pVehicle?((uintptr_t)pVehicle+0x160):null);
 		printf("gpStreaming: 0x%p\n", gpStreaming);
@@ -1389,12 +3069,20 @@ bool OnKey(int mode) // ret bool isallowhold
 		printf("pvalid: 0x%p\n", &pPed->m_collPoly.valid);
 		printf("wanted: %d\n", ((CPlayerPed*)pPed)->m_pWanted.m_nWantedLevel);
 
-		CRunningScript* scr = CTheScripts_pActiveScripts;
-		printf("CTheScripts_ScriptSpace: 0x%p\n", CTheScripts_ScriptSpace);
-		printf("CTheScripts_pMissionScript: 0x%p\n", CTheScripts_pMissionScript);
-		printf("s: %s IP: %d TIMERA %d\n", scr->m_abScriptName, scr->m_nIp, scr->m_anLocalVariables[TIMERA]);
-		printf("CTheScripts_MainScriptSize: %d\n", CTheScripts_MainScriptSize);
-		printf("largest: %d\n", CTheScripts_LargestMissionScriptSize);
+		CRunningScript* scr = CTheScripts_ActiveScripts;
+		printf("CTheScripts::ScriptSpace: 0x%p\n", CTheScripts_ScriptSpace);
+		printf("CTheScripts::ScriptsArray: 0x%p\n", CTheScripts_ScriptsArray);
+		printf("CTheScripts::pActiveScripts: 0x%p\n", CTheScripts_pActiveScripts);
+		printf("CTheScripts::pIdleScripts: 0x%p\n", CTheScripts_pIdleScripts);
+		printf("CTheScripts::ActiveScripts: 0x%p\n", CTheScripts_ActiveScripts);
+		printf("CTheScripts::IdleScripts: 0x%p\n", CTheScripts_IdleScripts);
+		printf("CTheScripts::pMissionScript: 0x%p\n", CTheScripts_pMissionScript);
+		//scr->m_nWakeTime = 9999999; // disable active
+		printf("SCRIPT_NAME: %s IP: %d TIMERA %d\n", scr->m_abScriptName, scr->m_nIp, scr->m_anLocalVariables[TIMERA]);
+		int16_t op = *((int16_t*)SCRBYTEVAR(scr->m_nIp)) & 0x7FFF;
+		printf("OP[%d](%s): ip: %d %s\n", op, scr->m_abScriptName, scr->m_nIp, op < coms.size() ? coms[op].c_str() : "");
+		printf("CTheScripts::MainScriptSize: %d\n", CTheScripts_MainScriptSize);
+		printf("CTheScripts::LargestMissionScriptSize: %d\n", CTheScripts_LargestMissionScriptSize);
 		//if (command < coms.size())
 		//sprintf(tmp, "n: %s, MIP %d OP %s:0x%04X Cmp %d Not %d", m_abScriptName, oldip - mzhkstartip, coms[command].c_str(), command, m_bCondResult, m_bNotFlag);
 		break;
@@ -1414,22 +3102,474 @@ bool OnKey(int mode) // ret bool isallowhold
 		testhpp();
 		break;
 	}
+	case 4:
+	{
+		PatchCustomSCM();
+		break;
+	}
+	}
+	return false;
+}
+
+void PrintPedsAnimsData(CPed* ped) // quat
+{
+#define RpAtomic_fromClump(ptr) ( (RpAtomic*) (((uint8_t*)ptr) - 0x1C) ) // RslElementGroupForAllElements + inElementGroupLink__inClump: link ptr - 0x1C = pAtomic*
+
+	char buf[256];
+
+	RpClump* clump = EMUPOINTER<RpClump*>(ped->CPhysical.CEntity.m_urwObject.m_rpClump);
+	if (!clump)
+		return;
+
+	// clump.list.start(next) -> atomic link -> last? -> clump.list
+	RpHAnimHierarchy* pHier = nil;
+	RwLLLink* head = &clump->atomicList.link; // наш линк откуда мы нашли голову листа, елемент листа последний некст указывает на вот это поле
+	debug("head : 0x%p\n", head); // field clump
+	RpAtomic a;
+	assert(((uint8_t*)&a) == ((uint8_t*)&a.inElementGroupLink - 0x1C) ); // stru test
+
+	int i = 0;
+	//for (RwLinkList* link = EMUPOINTER<RwLinkList*>(clump->atomicList.link.next); link; link = EMUPOINTER<RwLinkList*>(link->link.next)) // wrong looping
+	for (RwLLLink* link = EMUPOINTER<RwLLLink*>(head->next); link != head; link = EMUPOINTER<RwLLLink*>(link->next)) // FORLIST
+	{
+		debug("link : 0x%p  0x%p\n", link, head->next);
+
+		RpAtomic* atomic = RpAtomic_fromClump(link); // FORLIST
+		debug("ATOMIC!!! [%d] : 0x%p   lnk 0x%p\n", i++, atomic, link);
+		//debug("rc : 0x%p\n", atomic->renderCallBack);
+		pHier = EMUPOINTER<RpHAnimHierarchy*>(atomic->pAtomicHAnimHierarchyPlugin);
+	}
+	if (!pHier)
+		return;
+
+	debug("pHier : 0x%p numNodes: %d\n", pHier, pHier->numNodes);
+
+	CAnimBlendClumpData* pClumpext = EMUPOINTER<CAnimBlendClumpData*>(clump->pClumpAnimDataPlugin);
+	debug("pClumpext 0x%p \n", pClumpext);
+	AnimBlendFrameData* frames = EMUPOINTER<AnimBlendFrameData*>(pClumpext->frames);
+	debug("frames 0x%p\n", frames);
+	RpHAnimStdInterpFrame* kf = EMUPOINTER<RpHAnimStdInterpFrame*>(frames->uFrameData.hanimFrame);
+	debug("hanimFrame kf 0x%p \n", kf);
+	int idx = 6;
+	debug("[!!!!quat]: %f %f %f %f\n", kf[idx].quad.imag.x, kf[idx].quad.imag.y, kf[idx].quad.imag.z, kf[idx].quad.real);
+	//kf[idx].quad.imag.x = 0.0f;
+	//kf[idx].quad.imag.y = 0.0f;
+	//kf[idx].quad.imag.z = 0.0f;
+	//kf[idx].quad.real = 0.0f;
+	CTimer_ms_fTimeScale = 0.2f;
+
+	//for (int i = 0; i < pHier->numNodes; i++)
+	{
+		//RpHAnimStdInterpFrame* kf = (RpHAnimStdInterpFrame*)rpHANIMHIERARCHYGETINTERPFRAME(hier, i);
+		//sprintf(buf, "%6.3f %6.3f %6.3f  %6.3f  %6.3f %6.3f %6.3f  %d %s %d",
+		//	kf->q.imag.x, kf->q.imag.y, kf->q.imag.z, kf->q.real,
+		//	kf->t.x, kf->t.y, kf->t.z,
+		//	HIERNODEID(hier, i),
+		//	ConvertBoneTag2BoneName(HIERNODEID(hier, i)), i);
+		//CDebug::PrintAt(buf, 10, 1 + i * 2);
+
+		//RwMatrix* m = &RpHAnimHierarchyGetMatrixArray(hier)[i];
+		//sprintf(buf, "%6.3f %6.3f %6.3f %6.3f",
+		//	m->right.x, m->up.x, m->at.x, m->pos.x);
+		//CDebug::PrintAt(buf, 80, 1 + i * 3 + 0);
+		//sprintf(buf, "%6.3f %6.3f %6.3f %6.3f",
+		//	m->right.y, m->up.y, m->at.y, m->pos.y);
+		//CDebug::PrintAt(buf, 80, 1 + i * 3 + 1);
+		//sprintf(buf, "%6.3f %6.3f %6.3f %6.3f",
+		//	m->right.z, m->up.z, m->at.z, m->pos.z);
+		//CDebug::PrintAt(buf, 80, 1 + i * 3 + 2);
 	}
 }
 
+void PrintPedsAnims(CPed* ped)
+{
+#define CAnimBlendAssociation_FromLink(ptr) ( (CAnimBlendAssociation*) (((uint8_t*)ptr) - 0) ) // lnk is first field
+
+	if (!ped)
+		return;
+	PrintPedsAnimsData(ped); return;
+
+	static const char* animFlagsNames[] = {
+		"RUNNING",
+		"REPEAT",
+		"DELFADEDOUT",
+		"FDOUTWHNDONE",
+		"PARTIAL",
+		"MOVEMENT",
+		"TRANSL",
+		"X_TRANS",
+		"WALK",
+		"IDLE",
+		"NOWALK",
+		"BLOCK",
+		"FRONTAL",
+		"DRIVING",
+		"4000",
+		"MIRROR",
+		"10000",
+		"20000",
+		"SRPT",
+		"80000",
+		"JAW",
+	};
+
+	//CAnimBlendClumpData* clumpData = *RPANIMBLENDCLUMPDATA(pClump);
+	//for (CAnimBlendLink* link = clumpData->link.next; link; link = link->next)
+	//{
+	//	CAnimBlendAssociation* assoc = CAnimBlendAssociation::FromLink(link);
+	//}
+	//static CAnimBlendAssociation* FromLink(CAnimBlendLink * l)
+	//{
+	//	return (CAnimBlendAssociation*)((uint8*)l - offsetof(CAnimBlendAssociation, link));
+	//}
+	if((CPed*)FindPlayerPed() == ped)
+		printf("PLAYER \n");
+
+	RpClump* clump = EMUPOINTER<RpClump*>(ped->CPhysical.CEntity.m_urwObject.m_rpClump);
+	if (!clump)
+		return;
+
+	CAnimBlendClumpData* pClumpext = EMUPOINTER<CAnimBlendClumpData*>(clump->pClumpAnimDataPlugin);
+	debug("clump 0x%p ", clump);
+	printf("mi [%d] clump 0x%p pClumpext 0x%p NF %d\n", ped->CPhysical.CEntity.m_modelIndex, clump, pClumpext, pClumpext->numFrames);
+	int i = 0;
+	for (CAnimBlendLink* link = EMUPOINTER<CAnimBlendLink*>(pClumpext->link.next); link; link = EMUPOINTER<CAnimBlendLink*>(link->next))
+	{
+		CAnimBlendAssociation* assoc = CAnimBlendAssociation_FromLink(link);
+		if (!assoc) { ++i; continue; }
+		//printf("0x%p\n", assoc);
+		//printf("[%d] grp %d,  anim %d \n", i, assoc->groupId, assoc->animId);
+		const char* grpname = EMUPOINTER<CAnimManagerInst*>(TheAnimManager->mspInst)->m_aAnimAssocDefinitions[assoc->groupId].pName;
+		//printf("assoc->m_pAnimBlendHierarchy 0x%p\n", assoc->m_pAnimBlendHierarchy);
+		const char* animname = "UNKNOWN";
+		CAnimBlendTree* hier = EMUPOINTER<CAnimBlendTree*>(assoc->m_pAnimBlendHierarchy);
+		if (hier && hier->name && hier->name[0] != '\0')
+			animname = hier->name;
+		else {
+			AnimAssocDefinition* def = &(EMUPOINTER<CAnimManagerInst*>(TheAnimManager->mspInst))->m_aAnimAssocDefinitions[assoc->groupId];
+			if (def) {
+				for (int idx = def->firstAnim; idx < def->firstAnim + def->numAnims; ++idx) {
+					AnimDescriptor* d = &(EMUPOINTER<CAnimManagerInst*>(TheAnimManager->mspInst))->m_aAnimDescriptors[idx];
+					if (d && d->id == assoc->animId) {
+						animname = d->name;
+						break;
+					}
+				}
+			}
+		}
+		char flagsBuf[256] = { 0 };
+		size_t left = sizeof(flagsBuf);
+		int32_t first = 1;
+		for (int32_t b = 0; b < (int32_t)(sizeof(animFlagsNames) / sizeof(animFlagsNames[0])); ++b) {
+			uint32_t mask = BIT(b);
+			if (assoc->m_bitsFlags & mask) {
+				if (!first) { strncat(flagsBuf, " ", left - 1); left = sizeof(flagsBuf) - strlen(flagsBuf); }
+				strncat(flagsBuf, animFlagsNames[b], left - 1); left = sizeof(flagsBuf) - strlen(flagsBuf);
+				first = 0;
+			}
+		}
+		if (flagsBuf[0] == '\0') strcpy(flagsBuf, "NONE");
+
+		printf("assoc 0x%p %d: A:%.2f D:%.2f grp: %s[%d] anm: %s[%d] flgs [%s]\n", assoc, i, assoc->m_fBlendAmount, assoc->m_fBlendDelta, grpname,
+			assoc->groupId, animname, assoc->animId, flagsBuf);
+		//assoc->m_bitsFlag__flags = 0;
+		//assoc->m_bitsFlag__flags |= ASSOC_FADEOUTWHENDONE;
+		++i;
+	}
+	//if (GetAsyncKeyState('S') & 0x8000) { // del 1st anim
+	//	CAnimBlendLink* link = EMUPOINTER<CAnimBlendLink*>(clump->ClumpAnimDataPlugin.link.next);
+	//	link = EMUPOINTER<CAnimBlendLink*>(link->next); // next
+	//	clump->ClumpAnimDataPlugin.link.next = link; // CAnimBlendAssociation_ToLink
+	//	Sleep(1000);
+	//}
+	if (GetAsyncKeyState('A') & 0x8000) {
+		//clump->pClumpAnimDataPlugin->link.next = nil;
+		CTimer_ms_fTimeScale = 0.1f;
+	}
+	printf("\n");
+	//clump->ClumpAnimDataPlugin.link.next = null;
+
+
+	//int nf = clump->ClumpAnimDataPlugin.numFrames;
+	//printf("----------------0x%p----------%d\n", clump, nf);
+
+
+		//	CPed* pPed = (CPed*)this;
+		//	CAnimBlendClumpData* clumpData = *RPANIMBLENDCLUMPDATA(pPed->GetClump());
+		//	for (CAnimBlendLink* link = clumpData->link.next; link; link = link->next)
+		//	{
+		//		CAnimBlendAssociation* assoc = CAnimBlendAssociation::FromLink(link);
+
+		//		CAnimManager::AnimAssocDefinition* def = TheAnimManager->GetAnimDefinition((AssocGroupId)assoc->groupId);
+		//		const char* animname = "UNKNOWN";
+		//		if (assoc->hierarchy && assoc->hierarchy->name && assoc->hierarchy->name[0] != '\0')
+		//			animname = assoc->hierarchy->name;
+		//		else {
+		//			CAnimManager::AnimAssocDefinition* def = TheAnimManager->GetAnimDefinition((AssocGroupId)assoc->groupId);
+		//			if (def) {
+		//				for (int idx = def->firstAnim; idx < def->firstAnim + def->numAnims; ++idx) {
+		//					CAnimManager::AnimDescriptor* d = TheAnimManager->GetAnimDescriptor(idx);
+		//					if (d && d->id == assoc->animId) {
+		//						animname = d->name;
+		//						break;
+		//					}
+		//				}
+		//			}
+		//		}
+		//		const char* grpname = TheAnimManager->GetAnimGroupName((AssocGroupId)assoc->groupId);
+		//		char flagsBuf[256] = { 0 };
+		//		size_t left = sizeof(flagsBuf);
+		//		int32 first = 1;
+		//		for (int32 b = 0; b < (int32)(sizeof(animFlagsNames) / sizeof(animFlagsNames[0])); ++b) {
+		//			uint32_t mask = BIT(b);
+		//			if (assoc->flags & mask) {
+		//				if (!first) { strncat(flagsBuf, " ", left - 1); left = sizeof(flagsBuf) - strlen(flagsBuf); }
+		//				strncat(flagsBuf, animFlagsNames[b], left - 1); left = sizeof(flagsBuf) - strlen(flagsBuf);
+		//				first = 0;
+		//			}
+		//		}
+		//		if (flagsBuf[0] == '\0') strcpy(flagsBuf, "NONE");
+		//		sprintf(buf, "%d: A:%.2f D:%.2f grp: %s[%d] anm: %s [%d] flgs [%s]\n", i, assoc->blendAmount, assoc->blendDelta, grpname, assoc->groupId, animname, assoc->animId, flagsBuf);
+		//		AsciiToUnicode(buf, wbuf);
+		//		CVector p = GetPosition();
+		//		SetPosition(p + CVector(0, 0, 0.5f)); // tmp funny lazy hack
+		//		PrintDebugString(this, wbuf, i++);
+		//		SetPosition(p);
+		//	}
+		//}
+}
+
+
+
+
+CVehicle* pVlast = null;
 void UpdNonSyncStuff()
 {
+	*CClock_ms_nGameClockHours = 0;
+	if ((GetAsyncKeyState('U') & 0x8000)) { can_update ^= true; Sleep(1000); }
 	if (!can_update) { return; }
-	if (!FindPlayerPed()) { return; }
+	if (!(GetAsyncKeyState(VK_CONTROL) & 0x8000)) system("cls");
+
+	//TestingPools();
+	printf("UpdNonSyncStuff() \n");
+
+	//{
+	//	char* CTheScripts_IntroTextLines = EMUPOINTER<char*>(0x0050D010);
+	//	char* CTheScripts_NumberOfIntroTextLinesThisFrame = EMUPOINTER<char*>(0x004CD3F8);
+	//	memset(CTheScripts_IntroTextLines, 0, 0x0050DD30 - 0x0050D010);
+	//	memset(CTheScripts_NumberOfIntroTextLinesThisFrame, 0, 2);
+	//}
+
+	//printf("mp 0x%p\n", cWorldStream);
+	//printf("mp 0x%p\n", ((char*)cWorldStream) + 0x248);
+	//printf("mp 0x%p\n", *  (uint32_t*)   (((char*)cWorldStream) + 0x248)    );
+	//printf("mp 0x%p\n", EMUPOINTER<char*>(*(uint32_t*)(((char*)cWorldStream) + 0x248)));
+
+
 	CVector pos = FindPlayerPos();
+	CVehicle* veh = FindPlayerVehicle();
 	//return; //-------------------------------------
+	CPlayerPed* pPlayer = FindPlayerPed();
+	PrintPedsAnims((CPed*)pPlayer);
+	return;
+
+	// log pool
+	if(0)
+	{
+		for (int32_t i = CPools_ms_pVehiclePool->m_nSize - 1; i >= 0; i--)
+		{
+			if (CPools_GetSlotIsFree(CPools_ms_pVehiclePool, i)) { continue; }
+			CVehicle* e = (CVehicle*)CPools_GetSlot(CPools_ms_pVehiclePool, i, 2240);
+			if (e)
+			{
+				int idx = e->CPhysical.CEntity.m_modelIndex;
+				CBaseModelInfo* mi = GetModelInfo(idx);
+				if (e->m_vehicleType == 0)
+					printf("[CAR %d %s]: 0x%p [modelinfo 0x%p] [han: 0x%p]\n", idx, GetModelInfoExt(idx)->name.c_str(), e, mi, ((CVehicleModelInfo*)mi)->m_pHandlingData);
+				if (e->m_vehicleType == 1 || e->m_vehicleType == 2)
+					printf("[BOAT/JETSKI %d %s]: 0x%p [modelinfo 0x%p] [han: 0x%p]\n", idx, GetModelInfoExt(idx)->name.c_str(), e, mi, ((CVehicleModelInfo*)mi)->m_pHandlingBoat);
+				if (e->m_vehicleType == 6)
+					printf("[BIKE %d %s]: 0x%p [modelinfo 0x%p] [han: 0x%p]\n", idx, GetModelInfoExt(idx)->name.c_str(), e, mi, ((CVehicleModelInfo*)mi)->m_pHandlingBike);
+				if (e->m_vehicleType == 8)
+					printf("[BMX %d %s]: 0x%p [modelinfo 0x%p] [han: 0x%p]\n", idx, GetModelInfoExt(idx)->name.c_str(), e, mi, ((CVehicleModelInfo*)mi)->m_pHandlingBike);
+				if (e->m_vehicleType == 9)
+					printf("[QUAD %d $s]: 0x%p [modelinfo 0x%p] [han: 0x%p]\n", idx, GetModelInfoExt(idx)->name.c_str(), e, mi, ((CVehicleModelInfo*)mi)->m_pHandlingData);
+			}
+		}
+	}
+
+
+	if (veh)
+	{
+		float* plane = (float*)(((char*)veh) + 0x820);
+		//printf("[0] %f, [1] %f, [2] %f, [3] %f, [4] %f\n", plane[0], plane[1], plane[2], plane[3], plane[4]);
+
+		{
+			float magnitude = sqrtf(
+				((veh->CPhysical.m_vecMoveSpeed.x * veh->CPhysical.m_vecMoveSpeed.x)
+					+ (veh->CPhysical.m_vecMoveSpeed.y * veh->CPhysical.m_vecMoveSpeed.y))
+				+ (veh->CPhysical.m_vecMoveSpeed.z * veh->CPhysical.m_vecMoveSpeed.z));
+			if (magnitude > 1.0f) { magnitude = 1.0f; }
+			printf("magnitude: %f\n", magnitude); // skorost
+		}
+		if (veh->m_vehicleType == 8)
+			printf("m_bIsFreewheeling: %d 0x%p\n", *OFFSET(veh, 0x6E0, bool*), OFFSET(veh, 0x6E0, bool*));
+
+		//CRGBA* c = OFFSET(veh, 0x224, CRGBA*);
+		//int8_t m_nActiveColorVariation = *OFFSET(veh, 0x380, int8_t*);
+		//int8_t m_nActiveScriptColorVariation = *OFFSET(veh, 0x381, int8_t*);
+		//printf("def[%d %d %d %d], def %d scr %d\n", c[0].red, c[0].green, c[0].blue, c[0].alpha, m_nActiveColorVariation, m_nActiveScriptColorVariation);
+		//printf("def[%d %d %d %d], def %d scr %d\n", c[1].red, c[1].green, c[1].blue, c[1].alpha, m_nActiveColorVariation, m_nActiveScriptColorVariation);
+		////c[0] = { 0, 0, 0, 0 };
+		////c[1] = { 0, 0, 0, 0 };
+	}
+
+	CPlayerPed* pp = FindPlayerPed();
+	if (pp)
+	{
+		printf("%f 0x%p\n", *OFFSET(pp, 0xCB0, float*), OFFSET(pp, 0xCB0, float*));
+		printf("%f 0x%p\n\n", *OFFSET(pp, 0xCB4, float*), OFFSET(pp, 0xCB4, float*));
+		CRunningScript* scr = CTheScripts_ActiveScripts;
+		printf("SCRIPT_NAME: %s IP: %d TIMERA %d\n", scr->m_abScriptName, scr->m_nIp, scr->m_anLocalVariables[TIMERA]);
+	}
+
+
+
+	// find needed flags to debug
+	if(0)
+	{
+		for (int32_t i = CPools_ms_pPedPool->m_nSize - 1; i >= 0; i--)
+		{
+			if (CPools_GetSlotIsFree(CPools_ms_pPedPool, i)) { continue; }
+			CPed* p = (CPed*)CPools_GetSlot(CPools_ms_pPedPool, i, 3360);
+			if (p)
+			{
+				//printf("pool [%d] 0x%p\n", i, p);
+				PrintPedsAnims(p);
+				//if ((*(((uint8_t*)p) + 0x1CD)) & BIT(7)) // test 6bGetUpAnimStarted  7bFleeAfterExitingCar bit
+				//if ((*(((uint8_t*)p) + 0x1D9)) & BIT(5)) // 4bDoBloodyFootprints 5
+				//if(*OFFSET(p, 0x1CD, uint8_t*) & BIT(7))
+				//if(*OFFSET(p, 0x1D8, uint8_t*) & BIT(3))
+				//{
+				//	printf("FIND!!!!!! 0x%p\n", p);
+				//}
+				//printf("FIND!!!!!! %f  0x%p\n", *OFFSET(p, 0x8B0, float*), OFFSET(p, 0x8B0, float*));
+			}
+		}
+	}
+
+	return;//----------------------------------------------------------
+
+
+
+
+	if (!FindPlayerPed()) { return; }
+	CEmpireBuildingInfo* pFirstInfo = EMUPOINTER<CEmpireBuildingInfo*>(EmpireMgr->m_pEmpiresInfosStart);
+	for (size_t i = 0; i < 30; i++)
+	{
+		if (pFirstInfo)
+		{
+			CPhysical* pB = EMUPOINTER<CPhysical*>(pFirstInfo->m_pActualEmpireBuilding);
+			if (pB)
+			{
+				CW_R();
+				//printf("0x%p  %d\n", pFirstInfo, pFirstInfo->m_nBuildingState);
+				//printf("%d ", pFirstInfo->m_nBuildingState);
+				//printf("%d ", pFirstInfo->m_nScaleLevel);
+				//printf("pB 0x%p \n", pB);
+				//printf("%d \n", GET_BIT(pB->field_EF, 6));
+				CW_G();
+				break;
+			}
+		}
+		pFirstInfo++;
+	}
+
+
 	bool neednewline = false;
+	CVehicle* pVehicle = FindPlayerVehicle();
+	int i = 0;
+	//if (pVehicle && pVehicle->pPassengers[i])
+	//{
+	//	CPed* ped = EMUPOINTER<CPed*>(pVehicle->pPassengers[i]);
+	//	//pVehicle->pPassengers[1]->m_fHealth = 0.0f;
+	//	printf("pedstate: %d, obj: %d\n", ped->m_nPedState, ped->m_objective);
+	//	printf("co: 0x%p, po: 0x%p\n", ped->m_carInObjective, ped->m_pedInObjective);
+	//	//printf("mi %d\n", ped->CPhysical.CEntity.m_modelIndex);
+	//	printf("te: 0x%p\n", ped->m_threatEntity);
+	//	printf("pte: 0x%p\n", &ped->m_threatEntity);
+	//	printf("leader: 0x%p\n", ped->m_leader);
+	//	printf("tf: %d\n", *(uint32_t*)&ped->m_fearFlags1);
+	//	return;
+	//}
+
+	if (pVehicle) { pVlast = pVehicle; }
+	if (pVlast) { printf("health: %f\n", pVlast->m_fHealth); }
+
+	//PrintCurrDir(); // pcsx2
+
+	//for (int i = 0; i < 75; i++) // NUMRADARBLIPS
+	//{
+	//	CVectorVU_align16* ppos = (CVectorVU_align16*)((((char*)TheRadar) + 0x290) + (i * 48));
+	//	//uint8_t type = *(uint8_t*)((((char*)TheRadar) + 0x2A9) + (i * 48));
+	//	//uint8_t type = *(uint8_t*)(&(TheRadar->ms_RadarTrace[0].m_eRadarSprite) + (i * 48));
+	//	if (ppos->x == 0.0f) { continue; }
+	//	//DUMPVEC(*ppos);
+	//	//printf("%d  ", type);
+	//	printf("%d  ", TheRadar->ms_RadarTrace[i].m_eRadarSprite);
+	//}
+	//printf("TheRadar->field_1AE0 %f\n", TheRadar->field_1AE0);
+	//printf("TheRadar->field_1AE4 %f\n", TheRadar->field_1AE4);
+	//DUMPVEC(FindPlayerMenuTarget());
+
 	//printf("desc 0x%p\n", EMUPOINTER<tSample*>(SampleManager->n_pSampleDesc_stuff));
 	//printf("sfxgxt 0x%p\n", gAm_sfxgxt);
-	if(!(GetAsyncKeyState(VK_CONTROL) & 0x8000)) system("cls");
-	printf("player: 0x%p\n", FindPlayerPed());
-	DUMPPOS(pos);
+	//CVehicle* pV = FindPlayerVehicle();
+	//if (pV)
+	//{
+	//	float magnitude = sqrtf(
+	//		((pV->CPhysical.m_vecMoveSpeed.x * pV->CPhysical.m_vecMoveSpeed.x)
+	//			+ (pV->CPhysical.m_vecMoveSpeed.y * pV->CPhysical.m_vecMoveSpeed.y))
+	//		+ (pV->CPhysical.m_vecMoveSpeed.z * pV->CPhysical.m_vecMoveSpeed.z));
+	//	if (magnitude > 1.0f) { magnitude = 1.0f; }
+	//	printf("magnitude: %f\n", magnitude);
+	//}
+	//printf("player: 0x%p\n", FindPlayerPed());
+	//printf("VPROP field_425: %d\n", FindPlayerVehicle() ? *(((char*)FindPlayerVehicle()) + 0x425) : null); // boat propelerinwater counter
+	//printf("JUD field_450: %f\n", FindPlayerVehicle() ? *(float*)(((char*)FindPlayerVehicle()) + 0x450) : null); //
+	printf("JLR field_454: %f\n", FindPlayerVehicle() ? *(float*)(((char*)FindPlayerVehicle()) + 0x454) : null); //
+	//printf("A field_47C: %f\n", FindPlayerVehicle() ? *(float*)(((char*)FindPlayerVehicle()) + 0x47C) : null); //
+	//printf("B field_480: %f\n", FindPlayerVehicle() ? *(float*)(((char*)FindPlayerVehicle()) + 0x480) : null); //
+	//printf("LR field_484: %f\n", FindPlayerVehicle() ? *(float*)(((char*)FindPlayerVehicle()) + 0x484) : null); //
+	//return;
+	//printf("V forks: %d\n", FindPlayerVehicle() ? *(((char*)FindPlayerVehicle()) + 0x7F0) : null); // m_bIsMovingFrokliftForks 
+	printf("CutsceneMgr: 0x%p\n", CutsceneMgr);
+	printf("Cutscene name: %s\n", CutsceneMgr->ms_cutsceneName);
+	printf("cWorldStream: 0x%p\n", cWorldStream);
+	//printf("cWorldStream->pSwapData: 0x%p\n", PCSX2POINTER(*(uintptr_t*)(cWorldStream+0x1C)));
+	//printf("cWorldStream->SwapEntries: 0x%p\n", PCSX2POINTER(*(uintptr_t*)(PCSX2POINTER(*(uintptr_t*)(cWorldStream+0x1C))+0x2B4)) );
+	sLevelChunk* pWorldData = EMUPOINTER<sLevelChunk*>(cWorldStream->m_pWorldDataLevelChunk);
+	CGroupedBuilding* m_pSwapBuildingGroups = EMUPOINTER<CGroupedBuilding*>(pWorldData ? pWorldData->swapInfos : null);
+	printf("cWorldStream->pWorldData: 0x%p\n", pWorldData);
+	printf("cWorldStream->m_pSwapBuildingGroups: 0x%p\n", m_pSwapBuildingGroups);
+	CRunningScript* scr = CTheScripts_ActiveScripts;
+	int16_t op = *((int16_t*)SCRBYTEVAR(scr->m_nIp)) & 0x7FFF;
+	printf("OP[%d](%s): ip: %d %s\n", op, scr->m_abScriptName, scr->m_nIp, op < coms.size() ? coms[op].c_str() : "");
+	printf("MusicManager: 0x%p\n", MusicManager);
+	printf("MusicManager m_aTracks[0]: 0x%p\n", &(MusicManager->m_aTracks[0]));
+	printf("MusicManager m_nMusicMode: %d\n", MusicManager->m_nMusicMode);
+	//printf("MusicManager _field_608: %d\n", MusicManager->musicstreamer_filepos_sub189150_field_608); // 0?
+	printf("MusicManager 60c: %d\n", MusicManager->_189198_field_60C); // 0?
+	//for (int i = 0; i < 15; i++) // streamed 113
+	//{
+	//	printf("%s [%d] pos %d / len %d\n", MusicManager->m_nPlayingTrack == i ? "-> " : "", i, MusicManager->m_aTracks[i].m_nPosition, MusicManager->m_aTracks[i].m_nLength);
+	//	MusicManager->m_aTracks[i].m_nLastPosCheckTimer = 0;
+	//}
+
+	DUMPVEC(pos);
 	printf("CGame::currArea: %d\n", CGame_currArea);
+	printf("CGame::currLevel: %d\n", CGame_currLevel);
+	//printf("TheCamera.ActiveCam: %hhu\n", *OFFSET(TheCamera, 0x50, uint8_t*));
 	printf("CWorld::ms_aSectors: 0x%p\n", CWorld_ms_aSectors);
 	CSector* s = GetSectorByPos(pos.x, pos.y);
 	if (s)
@@ -1443,8 +3583,8 @@ void UpdNonSyncStuff()
 		//CPtrList list = s->m_pedOverlapList; // type 3
 		//CPtrList list = s->m_objectList; // type 4
 		//CPtrList list = s->m_objectOverlapList; // type 4
-		CPtrList list = s->empire; // type 5 empire
-		//CPtrList list = s->empireover; // type 5? empire over
+		//CPtrList list = s->empire; // type 5 empire
+		CPtrList list = s->empireover; // type 5? empire over
 		//CPtrList list = s->m_dummyList; // type 6  (mi 578)
 		//CPtrList list = s->m_dummyOverlapList; // type 6 (mi 574)
 
@@ -1459,16 +3599,17 @@ void UpdNonSyncStuff()
 			while (first)
 			{
 				CEntity* pEntity = EMUPOINTER<CEntity*>(first->item);
-				CBaseModelInfo* mi = GetModelInfo(pEntity->m_modelIndex);
-				printf("modelindex: %d\n", pEntity->m_modelIndex); // empire 0  mi 7436 type 5  status 4
-				printf("entity enex id: %d\n", mi ? mi->e_enex : -1);
-				printf("entity mi: 0x%p\n", mi);
+				short mi = pEntity->m_modelIndex;
+				if (mi != 1716) { first = EMUPOINTER<CPtrNode*>(first->next); continue; }
+				printf("modelindex: %hu\n", mi); // empire 0  mi 7436 type 5  status 4
+				//printf("entity enex id: %d\n", mi ? mi->e_enex : -1);
+				printf("entity mi: 0x%p\n", GetModelInfo(mi));
 				printf("entity type: %d\n", GetEntityType(pEntity)); // (empires) 7508, 7436, 7520, 7443, 7436
 				printf("entity status: %d\n", GetEntityStatus(pEntity));
-				DUMPPOS(pEntity->CPlaceable.m_pMat.pos);
+				DUMPVEC(pEntity->CPlaceable.m_pMat.pos);
 
 				// RW RSL test
-				/*RwObject* rwo = EMUPOINTER<RwObject*>(pEntity->m_rwObject);
+				RwObject* rwo = EMUPOINTER<RwObject*>(pEntity->m_urwObject.m_rwObject);
 				if (rwo)
 				{
 					//printf("rwobj type id: %d %s\n", rwo->type, rwo->type == rpATOMIC ? "atomic" : "clump");
@@ -1488,7 +3629,7 @@ void UpdNonSyncStuff()
 							//EMUPOINTER<RpMaterial**>(geo->matList.materials)[i] = null;
 							//prp->texture = null;
 							//prp->color = { 255,0,0,255 };
-							if (prp && prp->unk2) { printf("----------------------------\n0x%p\n\n", prp->unk2); }
+							if (prp && prp->unk2) { printf("----------------------------\n0x%p\n\n", (void*)prp->unk2); }
 						}
 						//FORLIST(lnk, clump->atomics)
 						//{
@@ -1499,6 +3640,7 @@ void UpdNonSyncStuff()
 					case rpCLUMP:
 					{
 						RpClump* rwc = (RpClump*)rwo;
+						printf("CLUMP!!!!!!!!!!: 0x%p\n", rwc);
 
 						break;
 					}
@@ -1509,7 +3651,7 @@ void UpdNonSyncStuff()
 					}
 					}
 
-				}*/
+				}
 
 				//MboxSTD("find");
 				//if ((GetAsyncKeyState('U') & 0x8000)) { TeleportEntity(pEntity, FindPlayerPos()); break; }
@@ -1576,44 +3718,207 @@ void UpdNonSyncStuff()
 	//for (size_t i = 0; i < 6; i++) {gAm_sfxgxt->_0_field_60[i] = 1; } //
 }
 
+int32_t DetectVersion()
+{
+	bool shift = (GetAsyncKeyState(VK_SHIFT) & 0x8000);
+
+	//printf("%d\n", *EMUPOINTER<int*>(0x2EAAF8));
+	//if (*EMUPOINTER<int*>(0x2EAAF8) == 0x24020001)
+	return shift; // vcs
+	//return 1; // lcs
+	return 0; // vcs
+}
 
 //int __fastcall sub_7DC460(void* ecx, void* edx) { int res = ((int(__thiscall*)(void*))IDA2PCSX2160(0x7DC460))(ecx); OnLoadState(); return res; }
-std::vector<std::string> coms;
+int ver = 0;
 void PluginInit()
 {
+	setlocale(LC_NUMERIC, "C");
 	InitConsole();
-	coms = FileReadAllLines("coms.txt");
-	printf("[COMS] %d\n", coms.size());
-	InitPatches();
-	//PatchTest();
-	//patch<uint32_t>(IDA2PCSX2160(0x47A804 + 1), CalcOffset(IDA2PCSX2160(0x47A804), (uintptr_t)sub_7DC460)); // 1.6.0
-	printf("MaZaHaKa PCSX2 Plugin Initialized!!\n");
+	ver = DetectVersion();
+	std::string szver = "";
+	if (ver == 0)
+	{
+		szver = "vcs";
+		ModelInfoExt::Init("Plugins\\_VCS_\\models.txt");
+		coms = FileReadAllLines("Plugins\\_VCS_\\coms.txt");
+		printf("[COMS] %d\n", coms.size());
+		InitPatches();
+		//PatchTest();
+		//patch<uint32_t>(IDA2PCSX2160(0x47A804 + 1), CalcOffset(IDA2PCSX2160(0x47A804), (uintptr_t)sub_7DC460)); // 1.6.0
+	}
+	else if (ver == 1)
+	{
+		szver = "lcs";
+
+	}
+	printf("MaZaHaKa PCSX2 Plugin Initialized!! (%s)\n", szver.c_str());
 }
 
 bool gbKeyHold = false;
-void PluginLoop()
+struct CVectorLCS { float x, y, z; };
+struct sLevelSwapLCS
 {
-	bool key = (GetAsyncKeyState('R') & 0x8000);
-	bool key2 = (GetAsyncKeyState('G') & 0x8000);
-	bool key3 = (GetAsyncKeyState('B') & 0x8000);
+	char timeOff;
+	char timeOn;
+	__int16 id;
+};
+
+struct sLevelChunkLCS
+{
+	void* resourceTable;
+	char sectorRows[376];
+	int numResources;
+	CVectorLCS positions[32];
+	int numLevelSwaps;
+	sLevelSwapLCS* levelSwaps;
+	int numDynamics;
+	void* dynamics;
+	int numInteriors;
+	void* interiors;
+	int numRadarSections;
+	void* radarSections;
+};
+struct __declspec(align(1)) cWorldStreamLCS
+{
+	INSTANCE field_0;
+	int field_C;
+	int m_nLevelid;
+	sLevelChunkLCS* m_pWorldDataLevelChunk;
+	char field_18[44];
+	int field_44;
+	int field_48;
+	char field_4C[40];
+	int field_74;
+	char field_78[180];
+	int field_12C;
+	char field_130[228];
+	int m_aSwapStates[20];
+	char field_264[777];
+};
+#define CWorld_PlayersLCS ((void*)IDATRANSLATE(0x408E40))
+#define CWorld_PlayerInFocusLCS ((*(uint8_t*)IDATRANSLATE(0x3D9BC8)))
+#define cWorldStreamLcs ((cWorldStreamLCS*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x3CEF78)))
+CPlayerPed* FindPlayerPedLCS() { return EMUPOINTER<CPlayerPed*>(((CPlayerInfo*)CWorld_PlayersLCS)[CWorld_PlayerInFocusLCS].m_pPed); }
+void PluginLoopNew()
+{
+
+
+	bool r = (GetAsyncKeyState('R') & 0x8000);
+	bool g = (GetAsyncKeyState('G') & 0x8000);
+	bool b = (GetAsyncKeyState('B') & 0x8000);
 	bool p = (GetAsyncKeyState('P') & 0x8000);
 	bool o = (GetAsyncKeyState('O') & 0x8000);
 	bool d = (GetAsyncKeyState('D') & 0x8000);
 	bool t = (GetAsyncKeyState('T') & 0x8000);
+	bool i = (GetAsyncKeyState('I') & 0x8000);
+	static bool upd = false;
+
+	if (r && !gbKeyHold)
+	{
+		{
+			sLevelChunkLCS* lvl = EMUPOINTER<sLevelChunkLCS*>(cWorldStreamLcs->m_pWorldDataLevelChunk);
+			memset(EMUPOINTER<char*>(lvl->levelSwaps), 0, sizeof(sLevelSwapLCS) * lvl->numLevelSwaps);
+			lvl->numLevelSwaps = 0;
+			lvl->numDynamics = 0;
+			lvl->numInteriors = 0; // ломает интеры
+			lvl->numRadarSections = 0;
+			///lvl->numLevelSwaps = 0;
+			cWorldStreamLcs->m_aSwapStates[12] = 1;
+			for (size_t i = 0; i < 33; i++)
+				cWorldStreamLcs->m_aSwapStates[i] = 1;
+		}
+
+		gbKeyHold = true;
+	}
+	else if (t && !gbKeyHold)
+	{
+		CVector pos = { 273.065f, -314.644f, 33.313f*1.2 };
+		//pos = { 295.441f, -308.178f, 32.768f*1.2 };
+
+		pos = { 294.150f, -307.459f, 21.082f*1.2 };
+		//pos = { 265.483f, -295.163f, 22.655f*1.2 }; // правый край центра
+		pos = { 251.483f, -295.163f, 22.655f*1.2 }; // прям центр дороги
+		SetCVector4VU(&FindPlayerPedLCS()->CPed.CPhysical.CEntity.CPlaceable.m_pMat.pos, &pos);
+	}
+	else if (g && !gbKeyHold)
+	{
+		{
+			// X40 Y46
+			sLevelChunkLCS* lvl = EMUPOINTER<sLevelChunkLCS*>(cWorldStreamLcs->m_pWorldDataLevelChunk);
+			uint32_t* sectors = (uint32_t*)lvl->sectorRows; // pChunk+offset t(8b)
+			uint32_t* sector0chunk = EMUPOINTER<uint32_t*>(sectors[0 * 2]); // Y0 X0
+			uint32_t* sector1chunk = EMUPOINTER<uint32_t*>(sectors[1 * 2]); // Y0 X1
+			//uint32_t* sector46chunk = EMUPOINTER<uint32_t*>(sectors[46 * 2]); // Y1 X0
+			printf("cWorldStreamLcs 0x%p\n", cWorldStreamLcs);
+			printf("LevelChunk 0x%p\n", lvl);
+			printf("LevelChunkSectors 0x%p\n", ((char*)lvl)+4);
+			printf("test 0x%p\n", lvl+4);
+			printf("sizeof(sChunkHeader) 0x20\n"); // 32
+			printf("sectorchunk[Y0X0] 0x%p\n", sector0chunk);
+			printf("sectorchunk[Y0X39] 0x%p\n", sector0chunk + (32 * 39));
+			printf("sectorchunk[Y0X40] 0x%p\n", sector0chunk + (32 * 40)); // same y1x0
+			printf("sectorchunk[Y1X0] 0x%p\n", sector1chunk); // 0 + 40header
+			//printf("sectorchunk[Y46] 0x%p\n", sector46chunk);
+			printf("numLevelSwaps %d\n", lvl->numLevelSwaps);
+			printf("numInteriors %d\n", lvl->numInteriors);
+
+			printf("\n");
+		}
+
+		gbKeyHold = true;
+	}
+	else if (i && !gbKeyHold)
+	{
+		upd ^= 1;
+		gbKeyHold = true;
+	}
+	else if (!r && !t && !g && !i) { gbKeyHold = false; }
+
+	if (upd)
+	{
+		CVuVector p = FindPlayerPedLCS()->CPed.CPhysical.CEntity.CPlaceable.m_pMat.pos;
+		printf("%f %f %f\n", p.x, p.y, p.z);
+	}
+
+}
+
+void PluginLoop()
+{
+	if (!WaitElf(true)) { return; }
+
+	if (ver)
+	{
+		PluginLoopNew();
+		return;
+	}
+
+
+	bool enter = (GetAsyncKeyState(VK_RETURN) & 0x8000);
+	if (enter) { return; } // f3 load hold fast anticrash (todo pcsx2 load flag)
+	bool r = (GetAsyncKeyState('R') & 0x8000);
+	bool g = (GetAsyncKeyState('G') & 0x8000);
+	bool b = (GetAsyncKeyState('B') & 0x8000);
+	bool p = (GetAsyncKeyState('P') & 0x8000);
+	bool o = (GetAsyncKeyState('O') & 0x8000);
+	bool d = (GetAsyncKeyState('D') & 0x8000);
+	bool t = (GetAsyncKeyState('T') & 0x8000);
+	bool i = (GetAsyncKeyState('I') & 0x8000);
+	//if (i) { quit = true; return; }
 	bool shift = (GetAsyncKeyState(VK_SHIFT) & 0x8000);
 	//bool f7 = (GetAsyncKeyState(VK_F7) & 0x8000); // f not work
 	//bool f8 = (GetAsyncKeyState(VK_F8) & 0x8000); // screenshot
-	if (key && !gbKeyHold)
+	if (r && !gbKeyHold)
 	{
 		bool allowhold = OnKey(0); // glass
 		if (!allowhold) { gbKeyHold = true; }
 	}
-	else if (key2 && !gbKeyHold)
+	else if (g && !gbKeyHold)
 	{
 		bool allowhold = OnKey(1);
 		if (!allowhold) { gbKeyHold = true; }
 	}
-	else if (key3 && !gbKeyHold)
+	else if (b && !gbKeyHold)
 	{
 		bool allowhold = OnKey(2);
 		if (!allowhold) { gbKeyHold = true; }
@@ -1625,15 +3930,20 @@ void PluginLoop()
 	}
 	else if (o && !gbKeyHold)
 	{
+		bool allowhold = OnKey(4);
+		if (!allowhold) { gbKeyHold = true; }
+	}
+	else if (o && !gbKeyHold)
+	{
 		PatchTest();
 		gbKeyHold = true;
 	}
-	else if (!key && !key2 && !key3 && !o && !d) { gbKeyHold = false; }
+	else if (!r && !g && !b && !o && !d) { gbKeyHold = false; }
 
-	//GeneratorTeleporterTick();
+	TeleporterTester();
 	if (tmp3) { EmpireTest(1); }
 	UpdNonSyncStuff();
-	patch<uint32_t>(SCRVAR(5547), 0); // PHI_A2 float
+	//if(CTheScripts_MainScriptSize) { patch<uint32_t>(SCRVAR(5547), 0); } // PHI_A2 float
 	//OnKey(1);
 	//Patch(); // quick load reload space
 	CPad_bHasPlayerCheated = false;
@@ -1701,13 +4011,15 @@ void PluginLoop()
 		SetCarSpawnerID(mi);
 	}
 
-	if (t && shift) // teleport
+	if (t /*&& shift*/) // teleport
 	{
 		CVector pos;
-		printf("Enter tp (x y z): ");
-		//std::cin.ignore();
-		scanf("%f %f %f", &pos.x, &pos.y, &pos.z);
-		TeleportPlayer(pos);
+		//printf("Enter tp (x y z): ");
+		////std::cin.ignore();
+		//scanf("%f %f %f", &pos.x, &pos.y, &pos.z);
+		//TeleportPlayer(pos);
+		pos = FindPlayerMenuTarget();
+		if (pos.x != 0.0f && pos.y != 0.0f) { TeleportPlayer(pos); }
 	}
 
 	//ProcessPrekol(tmp2);
@@ -1756,13 +4068,11 @@ void PluginLoop()
 
 }
 
-void inline WaitElf() { while (!(is_valid_pointer((void*)P_PCSX2_BASE) && ((uint32_t*)P_PCSX2_BASE)[0])) { Sleep(1); } }
-
 DWORD CALLBACK ThreadEntry(LPVOID)
 {
 	WaitElf();
 	PluginInit();
-	while (1)
+	while (!quit)
 	{
 		PluginLoop();
 		Sleep(1);
