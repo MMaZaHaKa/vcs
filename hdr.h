@@ -2494,12 +2494,23 @@ struct __declspec(align(1)) tCCutscenemgrGlobals
 	int field_2310;
 	char field_2314[7777];
 };
+
+/* 936 */
+struct KeyFrame
+{
+	__int16 x;
+	__int16 y;
+	__int16 z;
+	__int16 w;
+	__int16 dt;
+};
+
 /* 742 */
-struct CAnimBlendSequence
+struct CAnimBlendSequence // анимка кости (12 0xC)
 {
 	__int16 flag;
 	__int16 numFrames;
-	int keyFrames;
+	KeyFrame* keyFrames;
 	__int16 boneTag;
 	__int16 unk;
 };
@@ -2531,7 +2542,7 @@ struct CAnimBlendAssocGroup
 /* 937 */
 struct CAnimBlendTree
 {
-	CAnimBlendSequence* blendSequences;
+	CAnimBlendSequence* blendSequences; // кости с кадрами
 	char name[24];
 	__int16 numSequences;
 	char loadSpecial;
@@ -2541,7 +2552,7 @@ struct CAnimBlendTree
 };
 
 /* 536 */
-struct CAnimBlendAssociation
+struct CAnimBlendAssociation // шуруем анимку
 {
 	CAnimBlendLink link;
 	int m_bitsFlags;
@@ -2549,8 +2560,8 @@ struct CAnimBlendAssociation
 	float m_fBlendAmount;
 	int m_syncId;
 	int m_iNumAnimBlendNodes;
-	CAnimBlendNode* m_pAnimBlendNodes;
-	CAnimBlendTree* m_pAnimBlendHierarchy;
+	CAnimBlendNode* m_pAnimBlendNodes; // плеер пачки фоток, перелистывает
+	CAnimBlendTree* m_pAnimBlendHierarchy; // сами анимации
 	float m_fBlendDelta;
 	float m_fCurrentTime;
 	float m_fSpeed;

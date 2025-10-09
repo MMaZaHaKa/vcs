@@ -881,9 +881,6 @@ void InitPatches()
 		//MemoryPatcher(IDATRANSLATE(0x00104D3C), 0, 4), // nop
 		//MemoryPatcher(IDATRANSLATE(0x003F41F8), 0, 0x003F4224 - 0x003F41F8), // nop
 
-		//MemoryPatcher(IDATRANSLATE(0x003BAB44), 0, 4), // nop peds gen
-		//MemoryPatcher(IDATRANSLATE(0x003BAC88), 0, 4), // nop cars gen
-
 		//MemoryPatcher(IDATRANSLATE(0x26BD34), 0, 4), // nop test menu draw empires
 		//MemoryPatcher(IDATRANSLATE(0x35D208), 0, 8), // empire bool
 		//MemoryPatcher(IDATRANSLATE(0x0035D16C), 0, 4), // empire ren1 (primary)
@@ -904,7 +901,10 @@ void InitPatches()
 		//MemoryPatcher(IDATRANSLATE(0x1DD4EC), 0, 4), // bike anim test nop
 		//MemoryPatcher(IDATRANSLATE(0x002F7540), 0, 4), // vu0 nop
 		//MemoryPatcher(IDATRANSLATE(0x002F7448), 0, 4), // vu0 nop
-		MemoryPatcher(IDATRANSLATE(0x3BAAC0), 0, 4), // nop CTheScripts::Process() //--------------------------------------------------------------
+
+		MemoryPatcher(IDATRANSLATE(0x003BAB44), 0, 4), // nop peds gen
+		MemoryPatcher(IDATRANSLATE(0x003BAC88), 0, 4), // nop cars gen
+		//MemoryPatcher(IDATRANSLATE(0x3BAAC0), 0, 4), // nop CTheScripts::Process() //--------------------------------------------------------------
 		//MemoryPatcher(IDATRANSLATE(0x21E9D0), 0, 4), // nop CGame::Process() //--------------------------------------------------------------
 		//MemoryPatcher(IDATRANSLATE(0x0021EE38), 0, 4), // nop Idle() //--------------------------------------------------------------
 		//MemoryPatcher(IDATRANSLATE(0x0021E978), 0, 0x0021ED5C - 0x0021E978), // nop Idle() //--------------------------------------------------------------
@@ -935,6 +935,16 @@ void InitPatches()
 		//MemoryPatcher(IDATRANSLATE(0x003F5018), 0, 0x003F5058 - 0x003F5018), // 
 		//MemoryPatcher(IDATRANSLATE(0x31C6CC), 0, 4), // hud lift cam
 		//MemoryPatcher(IDATRANSLATE(0x11AD44), 0, 4), // water nose
+		//MemoryPatcher(IDATRANSLATE(0x0018EB88), 0, 0x0018EC34 - 0x0018EB88), // anm
+		//MemoryPatcher(IDATRANSLATE(0x00280894), 0, 0x00280934 - 0x00280894), // anm jaw
+		//MemoryPatcher(IDATRANSLATE(0x0028084C), 0xFF, 1), //
+
+		//MemoryPatcher(IDATRANSLATE(0x003C5120), 0, 4), // upd anim
+		//MemoryPatcher(IDATRANSLATE(0x003C51A0), 0, 4), // upd anim
+		//MemoryPatcher(IDATRANSLATE(0x00154DC4), 0, 4), // anim node set
+		//MemoryPatcher(IDATRANSLATE(0x00215988), 0, 4), // anim add cped
+		//MemoryPatcher(IDATRANSLATE(0x00215908), 0, 4), // anim blend cped
+		MemoryPatcher(IDATRANSLATE(0x0018E8F0), 0, 4), // nop find jaw
 	};
 }
 void inline SetPatchesState(bool state) { for (size_t i = 0; i < patches.size(); i++) { state ? patches[i].ApplyPatch() : patches[i].RemovePatch(); } }
@@ -1805,10 +1815,13 @@ void dump77()
 	}
 }
 
+void LogAnimOnce();
 bool HW()
 {
 	setlocale(LC_NUMERIC, "C");
 
+	LogAnimOnce();
+	return true;
 	///dump77(); return true;
 
 	//gpWaterTex = gpWaterEnvTex;
@@ -2393,12 +2406,27 @@ int itmp = 0;
 bool OnKey(int mode) // ret bool isallowhold
 {
 	if (!IsCurrentProcessWindowIsFocused()) { return false; }
+	int32_t escalator_dtzLD = *EMUPOINTER<int32_t*>(0x004CD2EC);
+	if (!escalator_dtzLD)
+		return false; // no dtz load  003325C4
+
+	if(mode == 2) {
+		tmp = !tmp;
+		SetPatchesState(tmp);
+		RESET_RECOMP_EE(); // update pcsx2 cached mips
+		return false;
+	}
+
+	if (HW()) { return true; }
+	return false;// tmp here
+
 	switch (mode)
 	{
 	case 0:
 	{
 		if (HW()) { return true; }
-		//return false;
+		return false; // only in R
+
 		//CRenderer_ms_nNoOfVisibleEmpires = 0;
 		//return true; // allow hold
 
@@ -3087,16 +3115,16 @@ bool OnKey(int mode) // ret bool isallowhold
 		//sprintf(tmp, "n: %s, MIP %d OP %s:0x%04X Cmp %d Not %d", m_abScriptName, oldip - mzhkstartip, coms[command].c_str(), command, m_bCondResult, m_bNotFlag);
 		break;
 	}
-	case 2: // dbg
-	{
-		tmp = !tmp;
-		SetPatchesState(tmp);
-		//if (tmp) { patches[ePATCH1].ApplyPatch(); }
-		//else { patches[ePATCH1].RemovePatch(); }
-		//printf("d: %d\n", 0);
-		RESET_RECOMP_EE(); // update pcsx2 cached mips
-		break;
-	}
+	//case 2: // dbg // mv in up
+	//{
+	//	tmp = !tmp;
+	//	SetPatchesState(tmp);
+	//	//if (tmp) { patches[ePATCH1].ApplyPatch(); }
+	//	//else { patches[ePATCH1].RemovePatch(); }
+	//	//printf("d: %d\n", 0);
+	//	RESET_RECOMP_EE(); // update pcsx2 cached mips
+	//	break;
+	//}
 	case 3:
 	{
 		testhpp();
@@ -3111,20 +3139,347 @@ bool OnKey(int mode) // ret bool isallowhold
 	return false;
 }
 
+CAnimBlendTree* GetAnimByName(const char* name, int32_t* idx = nil)
+{
+	CAnimManagerInst* mgr = EMUPOINTER<CAnimManagerInst*>(TheAnimManager->mspInst);
+	CAnimBlendTree* anims = EMUPOINTER<CAnimBlendTree*>(mgr->m_aAnimations); // массив
+
+	for (int i = 0; i < mgr->m_numAnimations; i++)
+	{
+		//printf("%s\n", anims[i].name);
+		if (!strcmp(name, anims[i].name)) {
+			if (idx)
+				*idx = i;
+			return &anims[i];
+		}
+	}
+	return nil;
+}
+CAnimBlendSequence* GetAnimKost(CAnimBlendTree* arganims, int boneID)
+{
+	CAnimBlendSequence* kosti = EMUPOINTER<CAnimBlendSequence*>(arganims->blendSequences); // массив костей
+	for (int kostidx = 0; kostidx < arganims->numSequences; kostidx++)
+		if (kosti[kostidx].boneTag == boneID)
+			return kosti;
+	return nil;
+}
+CAnimBlendSequence* GetAnimKost(int animidx, int boneID)
+{
+	CAnimManagerInst* mgr = EMUPOINTER<CAnimManagerInst*>(TheAnimManager->mspInst);
+	CAnimBlendTree* anims = EMUPOINTER<CAnimBlendTree*>(mgr->m_aAnimations); // массив всех анимок
+	CAnimBlendTree* arganims = &anims[animidx];
+	return GetAnimKost(arganims, boneID);
+}
+CAnimBlendAssocGroup* GetAnimationGroup(int group)
+{
+	CAnimManagerInst* mgr = EMUPOINTER<CAnimManagerInst*>(TheAnimManager->mspInst);
+	CAnimBlendAssocGroup* pGrp = &EMUPOINTER<CAnimBlendAssocGroup*>(mgr->m_aAnimAssocGroups)[group]; // 368
+	return pGrp;
+}
+CAnimBlendAssociation* GetAnimation(int group, int animID) // 30, 2  [grp 30 firstAnimId 368]
+{
+	CAnimManagerInst* mgr = EMUPOINTER<CAnimManagerInst*>(TheAnimManager->mspInst);
+	CAnimBlendAssocGroup* pGrp = &EMUPOINTER<CAnimBlendAssocGroup*>(mgr->m_aAnimAssocGroups)[group]; // 368
+	CAnimBlendAssociation* assoc = EMUPOINTER<CAnimBlendAssociation*>(pGrp->m_aAssociationArray);
+	printf("GetAnimation(group %d,anim %d): grp 0x%p fi %d descrid %d, descridx %d\n", group, animID, pGrp, pGrp->firstAnimId,
+		mgr->m_aAnimDescriptors[pGrp->firstAnimId].id, animID - mgr->m_aAnimDescriptors[pGrp->firstAnimId].id);
+	return &assoc[animID - mgr->m_aAnimDescriptors[pGrp->firstAnimId].id];
+}
+
+void TestAnims()
+{
+	CAnimManagerInst* mgr = EMUPOINTER<CAnimManagerInst*>(TheAnimManager->mspInst);
+	CAnimBlendTree* anims = EMUPOINTER<CAnimBlendTree*>(mgr->m_aAnimations); // массив всех анимок
+	int32_t idx = 0;
+	CAnimBlendTree* jaw_still = GetAnimByName("jaw_still", &idx);
+	CAnimBlendSequence* jaw_stillkosti = EMUPOINTER<CAnimBlendSequence*>(jaw_still->blendSequences); // массив костей
+
+	for (int animidx = 0; animidx < mgr->m_numAnimations; animidx++)
+	{
+		//if (!strcmp(anims[animidx].name, "jaw_still")) // skip owner
+		//	continue;
+
+		CAnimBlendSequence* kosti = EMUPOINTER<CAnimBlendSequence*>(anims[animidx].blendSequences); // массив костей
+		if (jaw_stillkosti == kosti)
+			printf("!!!!!!!!!!!!!!!!!!!!!!!! %d use jaw_still KF!!!!  js id %d", animidx, idx);
+		//for (int kostidx = 0; kostidx < anims[animidx].numSequences; kostidx++)
+		//{
+		//	KeyFrame* fotkikosti = EMUPOINTER<KeyFrame*>(kosti[kostidx].keyFrames); // массив таймингов кости
+		//	for (int fotkiidx = 0; fotkiidx < kosti[kostidx].numFrames; fotkiidx++)
+		//	{
+		//		KeyFrame* fotka = &fotkikosti[fotkiidx];
+		//	}
+		//}
+	}
+}
+
+void ForAllAnims()
+{
+	CAnimManagerInst* mgr = EMUPOINTER<CAnimManagerInst*>(TheAnimManager->mspInst);
+	CAnimBlendTree* anims = EMUPOINTER<CAnimBlendTree*>(mgr->m_aAnimations); // массив всех анимок
+	for (int animidx = 0; animidx < mgr->m_numAnimations; animidx++)
+	{
+		//if (!GetAnimKost(animidx, 6)) // skip anims with non jaw
+		//	continue;
+
+		//if (strcmp(anims[animidx].name, "run_player") && strcmp(anims[animidx].name, "WALK_player"))
+		//	continue;
+		if (strcmp(anims[animidx].name, "jaw_still"))
+			continue;
+
+		printf("%s -------------------------------------\n", anims[animidx].name);
+
+		CAnimBlendSequence* kosti = EMUPOINTER<CAnimBlendSequence*>(anims[animidx].blendSequences); // массив костей
+		for (int kostidx = 0; kostidx < anims[animidx].numSequences; kostidx++)
+		{
+			printf("\t bone %d,   frames %d \n", kosti[kostidx].boneTag, kosti[kostidx].numFrames);
+			if (kosti[kostidx].boneTag != 6) // logical boneID
+				continue;
+
+			//if (kosti[kostidx].boneTag < 1) // binary brute
+			//	continue;
+
+			//kosti[kostidx].numFrames = 0;
+			//kosti[kostidx].keyFrames = nil;
+
+			KeyFrame* fotkikosti = EMUPOINTER<KeyFrame*>(kosti[kostidx].keyFrames); // массив таймингов кости
+			for (int fotkiidx = 0; fotkiidx < kosti[kostidx].numFrames; fotkiidx++)
+			{
+				KeyFrame* fotka = &fotkikosti[fotkiidx];
+				//printf("\t\t frame %d \n");
+
+			}
+		}
+		printf("\n\n"); // end anim pack
+	}
+}
+
+void LogAnimOnce() // once
+{
+	ForAllAnims(); // some log
+	//TestAnims();
+
+	{ // hier log
+
+		CAnimManagerInst* mgr = EMUPOINTER<CAnimManagerInst*>(TheAnimManager->mspInst);
+		printf("mgr: 0x%p, grps 0x%p 0x%p\n", mgr, EMUPOINTER<CAnimBlendAssocGroup*>(mgr->m_aAnimAssocGroups), &EMUPOINTER<CAnimBlendAssocGroup*>(mgr->m_aAnimAssocGroups)[30]);
+		CAnimBlendTree* anims = EMUPOINTER<CAnimBlendTree*>(mgr->m_aAnimations); // массив
+		CAnimBlendTree* IDLE_stance = GetAnimByName("IDLE_stance");
+		CAnimBlendTree* WALK_start = GetAnimByName("WALK_start");
+		CAnimBlendTree* run_player = GetAnimByName("run_player"); // no 6
+		CAnimBlendTree* WALK_player = GetAnimByName("WALK_player"); // no 6
+
+		CAnimBlendTree* jaw_still = GetAnimByName("jaw_still");
+		//CAnimBlendTree* jaw_test = GetAnimByName("jaw_test");
+		if (!IDLE_stance)
+			return;
+		//printf("!!!!findres: 0x%p\n", IDLE_stance);
+		//printf("!!!!WALK_start: 0x%p\n", WALK_start);
+		//printf("!!!!run_player: 0x%p\n", run_player);
+		//printf("!!!!WALK_player: 0x%p\n", WALK_player);
+		printf("!!!!anim jaw_still: 0x%p   num seq %d\n", jaw_still, jaw_still->numSequences); // numSequences
+		//printf("!!!!jaw_test: 0x%p\n", jaw_test);
+		//anm->unk = 0;
+		CAnimBlendSequence* IDLE_stancekosti = EMUPOINTER<CAnimBlendSequence*>(IDLE_stance->blendSequences); // массив костей
+		CAnimBlendSequence* WALK_startkosti = EMUPOINTER<CAnimBlendSequence*>(WALK_start->blendSequences); // массив костей
+		CAnimBlendSequence* run_playerkosti = EMUPOINTER<CAnimBlendSequence*>(run_player->blendSequences); // массив костей
+		CAnimBlendSequence* jaw_stillkosti = EMUPOINTER<CAnimBlendSequence*>(jaw_still->blendSequences); // массив костей
+		//CAnimBlendSequence* jaw_testkosti = EMUPOINTER<CAnimBlendSequence*>(jaw_test->blendSequences); // массив костей
+		printf("!!!!jaw_stillkosti: 0x%p %d  pstptr 0x%p\n", jaw_stillkosti, jaw_stillkosti->numFrames, jaw_still->blendSequences); // 003325C4   LD
+		//printf("!!!!jaw_testkosti: 0x%p  %d\n", jaw_testkosti, jaw_testkosti->keyFrames);
+		//kosti[6].numFrames = 0;
+		//WALK_startkosti[6].numFrames = 0;
+		//for (int kostidx = 0; kostidx < IDLE_stance->numSequences; kostidx++)
+		//{
+		//	IDLE_stancekosti[kostidx].numFrames = 0;
+		//}
+		//for (int kostidx = 0; kostidx < jaw_still->numSequences; kostidx++)
+		//{
+		//	jaw_stillkosti[kostidx].numFrames = 0;
+		//}
+
+		//memset(jaw_stillkosti, 0, sizeof(CAnimBlendSequence) * jaw_still->numSequences); // при ходьбе ломается челюсть
+		//memset(jaw_still, 0, sizeof(CAnimBlendTree)); // не влияет
+		//Sleep(1000 * 2);
+		//return;
+
+		{ // WALK_player
+			// revcs firstAnimId 2
+			// vcs firstAnimId 368  (grp 30)
+			//CAnimBlendTree* jaw_still = GetAnimByName("jaw_still");
+			//CAnimBlendSequence* jaw_stillkosti = EMUPOINTER<CAnimBlendSequence*>(jaw_still->blendSequences); // массив костей
+
+			int g = 30;
+			int a = 2;
+			CAnimBlendAssocGroup* grp = GetAnimationGroup(g);
+			CAnimBlendAssociation* assoc = GetAnimation(g, a);
+			printf("base assoc 0x%p   grp 0x%p\n", assoc, grp);
+			CAnimBlendNode* nodes = EMUPOINTER<CAnimBlendNode*>(assoc->m_pAnimBlendNodes);
+			for (int i = 0; i < assoc->m_iNumAnimBlendNodes; i++)
+			{
+				// стёр все kf анимки челюсти сломались, в листе partial jaw_still не было я понял не хардкод поворот 6й кости
+				// бинарным поиском стирания kf нашёл что в movement челюсть фикситься из kf jaw_still. в idle есть своя 6я кость
+				// bp чтение kf jawstill вытащил стек кто читает - CAnimBlendNode m_pSequence, начал перебирать все seq анимок и нашёл тот же указатель на
+				// jaw_still
+				//стираю CAnimBlendTree(там где "jaw_still") всё работает
+				//стираю кости(1) CAnimBlendSequence ломаеться  sizeof 0xC
+				//при загрузке первое чтение кости в 00280FCC  CAnimBlendNode::FindKeyFrame  в  if (Sequence->numFrames <= 0i64)
+				//from CAnimBlendAssociation::SetCurrentTime from CAnimBlendAssociation::Start from CAnimManager::AddAnimationAndSync
+				//from CAnimManager::BlendAnimation from CPed::BlendAnimation from CPed::SetInTheAir
+				CAnimBlendSequence* s = EMUPOINTER<CAnimBlendSequence*>(nodes[i].m_pSequence); // массив костей
+				CAnimBlendSequence* ms = EMUPOINTER<CAnimBlendSequence*>(nodes[i].m_pMirroredSequence); // массив костей
+				if (s == jaw_stillkosti || ms == jaw_stillkosti) // read jaw still bp stack
+					printf("!!!!!FIND Sequence jaw_still in WALK_player idx %d\n", i); // exists kf from jaw still into WALK_player base assoc nodes
+			}
+			//CAnimBlendAssocGroup* pGrp = &EMUPOINTER<CAnimBlendAssocGroup*>(mgr->m_aAnimAssocGroups)[g]; // 368
+			//printf("FI %d\n", pGrp->firstAnimId);
+
+			for (int i = 0; i < mgr->m_numAnimations; i++)
+			{
+				CAnimBlendSequence* s = EMUPOINTER<CAnimBlendSequence*>(anims[i].blendSequences); // массив костей
+				for (int j = 0; j < anims[i].numSequences; j++)
+				{
+					if (&(s[j]) == jaw_stillkosti) // chechk anims // only owner jaw_still
+						printf("!!!!!FIND Sequence jaw_still idx %d  %d\n", i, j); // exists kf from jaw still into WALK_player base assoc nodes
+				}
+			}
+		}
+
+
+
+		{
+			//for (int i = 0; i < 200; i++) { // AnimAssocDefinition
+			//	printf("AnimAssocDefinition pName: %s, pBlockName %s\n", mgr->m_aAnimAssocDefinitions[i].pName, mgr->m_aAnimAssocDefinitions[i].pBlockName);
+			//}
+			//for (int i = 0; i < 990; i++) { // AnimDescriptor
+			//	printf("AnimDescriptor name: %s, id %d\n", mgr->m_aAnimDescriptors[i].name, mgr->m_aAnimDescriptors[i].id);
+			//}
+			//CAnimBlendTree* tree = EMUPOINTER<CAnimBlendTree*>(mgr->m_aAnimations); // массив костей
+			//for (int i = 0; i < mgr->m_numAnimations; i++) { // AnimDescriptor
+			//	printf("CAnimBlendTree name: %s, numseq %d\n", tree[i].name, tree[i].numSequences);
+			//}
+			//CAnimBlock* blocks = EMUPOINTER<CAnimBlock*>(mgr->m_aAnimBlocks); // массив костей
+			//for (int i = 0; i < mgr->m_numAnimBlocks; i++) { // AnimDescriptor
+			//	printf("CAnimBlock name: %s, numanims %d\n", blocks[i].m_name, blocks[i].m_numAnims);
+			//}
+		}
+
+		CPlayerPed* pp = FindPlayerPed();
+		if(pp)
+		{ // try link ------------------------------------------  003325C4
+
+			RpClump* clump = EMUPOINTER<RpClump*>(pp->CPed.CPhysical.CEntity.m_urwObject.m_rpClump);
+			if (!clump)
+				return;
+			CAnimBlendClumpData* pClumpext = EMUPOINTER<CAnimBlendClumpData*>(clump->pClumpAnimDataPlugin);
+			AnimBlendFrameData* frames = EMUPOINTER<AnimBlendFrameData*>(pClumpext->frames);
+			for (int i = 0; i < pClumpext->numFrames; i++)
+			{
+				int nid = frames[i].nodeID;
+				//printf("%d  H 0x%p\n", nid, frames[i].uFrameData.hanimFrame);
+				if (nid == 6) {
+					frames[i].uFrameData.hanimFrame = nil;
+					frames[i].nodeID = 0;
+				}
+				
+			}
+			printf("\n\n");
+		}
+
+
+		for (int animidx = 0; animidx < mgr->m_numAnimations / 2; animidx++)
+		{
+			//if (!GetAnimKost(animidx, 6)) // skip anims with non jaw
+			//	continue;
+
+			CAnimBlendSequence* kosti = EMUPOINTER<CAnimBlendSequence*>(anims[animidx].blendSequences); // массив костей
+			for (int kostidx = 0; kostidx < anims[animidx].numSequences; kostidx++)
+			{
+				if (kosti[kostidx].boneTag != 6) // logical boneID
+					continue;
+
+				//kosti[kostidx].numFrames = 0;
+			}
+		}
+
+
+
+		for (int i = 0; i < IDLE_stance->numSequences; i++)
+		{
+			KeyFrame* fotki = EMUPOINTER<KeyFrame*>(IDLE_stancekosti[i].keyFrames); // массив таймингов кости
+			//IDLE_stancekosti[i].numFrames = 0;
+
+
+
+			//printf("%d ", kosti[i].boneTag);
+			//if (kosti[i].boneTag == 6)
+			//	kosti[i].boneTag = 5;
+			//kosti[i].numFrames = 0;
+		}
+
+		//for (int i = 0; i < mgr->m_numAnimations; i++)
+		//{
+		//	//printf("%s\n", anims[i].name);
+
+		//}
+
+
+		//CAnimBlendTree* hier = EMUPOINTER<CAnimBlendTree*>(assoc->m_pAnimBlendHierarchy); // вся инфа о анимке из ifp
+		//AnimAssocDefinition* def = &(EMUPOINTER<CAnimManagerInst*>(TheAnimManager->mspInst))->m_aAnimAssocDefinitions[assoc->groupId];
+		//AnimDescriptor* desc = nil;
+		//if (def) {
+		//	for (int idx = def->firstAnim; idx < def->firstAnim + def->numAnims; ++idx) {
+		//		AnimDescriptor* d = &(EMUPOINTER<CAnimManagerInst*>(TheAnimManager->mspInst))->m_aAnimDescriptors[idx];
+		//		if (d && d->id == assoc->animId) {
+		//			desc = d;
+		//			break;
+		//		}
+		//	}
+		//}
+		//printf("%s %d\n", hier->name, hier->unk);
+
+
+
+		//	bool jaw = false;
+		//	char boneBuff[256] = { 0 };
+		//	int offset = 0;
+
+		//	for (int i = 0; i < hier->numSequences; i++)
+		//	{
+		//		int boneTag = hier->blendSequences[i].boneTag;
+
+		//		if (i == 0) {
+		//			offset += sprintf(boneBuff + offset, "%d", boneTag);
+		//		}
+		//		else {
+		//			offset += sprintf(boneBuff + offset, ", %d", boneTag);
+		//		}
+
+		//		if (!jaw)
+		//			jaw = boneTag == 6;
+		//	}
+		//	//printf("Bone IDs [%d]: %s\n", hier->numSequences, boneBuff);
+		//	//if (!jaw)
+		//		//printf("!jaw\n");
+	}
+}
+
 void PrintPedsAnimsData(CPed* ped) // quat
 {
 #define RpAtomic_fromClump(ptr) ( (RpAtomic*) (((uint8_t*)ptr) - 0x1C) ) // RslElementGroupForAllElements + inElementGroupLink__inClump: link ptr - 0x1C = pAtomic*
 
 	char buf[256];
 
+	CAnimManagerInst* mgr = EMUPOINTER<CAnimManagerInst*>(TheAnimManager->mspInst);
 	RpClump* clump = EMUPOINTER<RpClump*>(ped->CPhysical.CEntity.m_urwObject.m_rpClump);
 	if (!clump)
 		return;
 
+
 	// clump.list.start(next) -> atomic link -> last? -> clump.list
 	RpHAnimHierarchy* pHier = nil;
 	RwLLLink* head = &clump->atomicList.link; // наш линк откуда мы нашли голову листа, елемент листа последний некст указывает на вот это поле
-	debug("head : 0x%p\n", head); // field clump
+	//debug("head : 0x%p\n", head); // field clump
 	RpAtomic a;
 	assert(((uint8_t*)&a) == ((uint8_t*)&a.inElementGroupLink - 0x1C) ); // stru test
 
@@ -3141,8 +3496,8 @@ void PrintPedsAnimsData(CPed* ped) // quat
 	}
 	if (!pHier)
 		return;
-
 	debug("pHier : 0x%p numNodes: %d\n", pHier, pHier->numNodes);
+
 
 	CAnimBlendClumpData* pClumpext = EMUPOINTER<CAnimBlendClumpData*>(clump->pClumpAnimDataPlugin);
 	debug("pClumpext 0x%p \n", pClumpext);
@@ -3151,12 +3506,16 @@ void PrintPedsAnimsData(CPed* ped) // quat
 	RpHAnimStdInterpFrame* kf = EMUPOINTER<RpHAnimStdInterpFrame*>(frames->uFrameData.hanimFrame);
 	debug("hanimFrame kf 0x%p \n", kf);
 	int idx = 6;
-	debug("[!!!!quat]: %f %f %f %f\n", kf[idx].quad.imag.x, kf[idx].quad.imag.y, kf[idx].quad.imag.z, kf[idx].quad.real);
-	//kf[idx].quad.imag.x = 0.0f;
-	//kf[idx].quad.imag.y = 0.0f;
-	//kf[idx].quad.imag.z = 0.0f;
-	//kf[idx].quad.real = 0.0f;
-	CTimer_ms_fTimeScale = 0.2f;
+	//debug("[quat bone:%d]: %f %f %f %f\n", idx, kf[idx].quad.imag.x, kf[idx].quad.imag.y, kf[idx].quad.imag.z, kf[idx].quad.real);
+
+	if(0)
+	{
+		kf[idx].quad.imag.x = 0.0f;
+		kf[idx].quad.imag.y = 0.0f;
+		kf[idx].quad.imag.z = 0.0f;
+		kf[idx].quad.real = 0.0f;
+	}
+	//CTimer_ms_fTimeScale = 0.2f;
 
 	//for (int i = 0; i < pHier->numNodes; i++)
 	{
@@ -3187,7 +3546,8 @@ void PrintPedsAnims(CPed* ped)
 
 	if (!ped)
 		return;
-	PrintPedsAnimsData(ped); return;
+	PrintPedsAnimsData(ped);
+	//return;
 
 	static const char* animFlagsNames[] = {
 		"RUNNING",
@@ -3225,9 +3585,16 @@ void PrintPedsAnims(CPed* ped)
 	if((CPed*)FindPlayerPed() == ped)
 		printf("PLAYER \n");
 
+	CAnimManagerInst* mgr = EMUPOINTER<CAnimManagerInst*>(TheAnimManager->mspInst);
 	RpClump* clump = EMUPOINTER<RpClump*>(ped->CPhysical.CEntity.m_urwObject.m_rpClump);
 	if (!clump)
 		return;
+
+	printf("m_numAnimAssocDefinitions %d\n", mgr->m_numAnimAssocDefinitions);
+	printf("m_numAnimDescriptors %d\n", mgr->m_numAnimDescriptors);
+	printf("m_numAnimationIds %d\n", mgr->m_numAnimationIds);
+	printf("m_numAnimations %d\n", mgr->m_numAnimations);
+	printf("m_numAnimBlocks %d\n", mgr->m_numAnimBlocks);
 
 	CAnimBlendClumpData* pClumpext = EMUPOINTER<CAnimBlendClumpData*>(clump->pClumpAnimDataPlugin);
 	debug("clump 0x%p ", clump);
@@ -3239,17 +3606,20 @@ void PrintPedsAnims(CPed* ped)
 		if (!assoc) { ++i; continue; }
 		//printf("0x%p\n", assoc);
 		//printf("[%d] grp %d,  anim %d \n", i, assoc->groupId, assoc->animId);
-		const char* grpname = EMUPOINTER<CAnimManagerInst*>(TheAnimManager->mspInst)->m_aAnimAssocDefinitions[assoc->groupId].pName;
+		const char* grpname = mgr->m_aAnimAssocDefinitions[assoc->groupId].pName;
 		//printf("assoc->m_pAnimBlendHierarchy 0x%p\n", assoc->m_pAnimBlendHierarchy);
+
+		// extract anium name
 		const char* animname = "UNKNOWN";
 		CAnimBlendTree* hier = EMUPOINTER<CAnimBlendTree*>(assoc->m_pAnimBlendHierarchy);
-		if (hier && hier->name && hier->name[0] != '\0')
+		if (hier && hier->name && hier->name[0] != '\0') {
 			animname = hier->name;
+		}
 		else {
-			AnimAssocDefinition* def = &(EMUPOINTER<CAnimManagerInst*>(TheAnimManager->mspInst))->m_aAnimAssocDefinitions[assoc->groupId];
+			AnimAssocDefinition* def = &mgr->m_aAnimAssocDefinitions[assoc->groupId];
 			if (def) {
 				for (int idx = def->firstAnim; idx < def->firstAnim + def->numAnims; ++idx) {
-					AnimDescriptor* d = &(EMUPOINTER<CAnimManagerInst*>(TheAnimManager->mspInst))->m_aAnimDescriptors[idx];
+					AnimDescriptor* d = &mgr->m_aAnimDescriptors[idx];
 					if (d && d->id == assoc->animId) {
 						animname = d->name;
 						break;
@@ -3257,6 +3627,8 @@ void PrintPedsAnims(CPed* ped)
 				}
 			}
 		}
+
+		// extract anim szflags
 		char flagsBuf[256] = { 0 };
 		size_t left = sizeof(flagsBuf);
 		int32_t first = 1;
@@ -3270,10 +3642,97 @@ void PrintPedsAnims(CPed* ped)
 		}
 		if (flagsBuf[0] == '\0') strcpy(flagsBuf, "NONE");
 
+
+		CAnimBlendTree* fhier = EMUPOINTER<CAnimBlendTree*>(assoc->m_pAnimBlendHierarchy); // вся инфа о анимке из ifp
+		bool hasjawBoneID = !!GetAnimKost(fhier, 6);
+
 		printf("assoc 0x%p %d: A:%.2f D:%.2f grp: %s[%d] anm: %s[%d] flgs [%s]\n", assoc, i, assoc->m_fBlendAmount, assoc->m_fBlendDelta, grpname,
 			assoc->groupId, animname, assoc->animId, flagsBuf);
+		printf("hasjawBoneID %d\n\n", hasjawBoneID);
 		//assoc->m_bitsFlag__flags = 0;
 		//assoc->m_bitsFlag__flags |= ASSOC_FADEOUTWHENDONE;
+
+		// for all running anims
+		{ // hier log
+			//CAnimBlendTree* hier = EMUPOINTER<CAnimBlendTree*>(assoc->m_pAnimBlendHierarchy); // вся инфа о анимке из ifp
+			//AnimAssocDefinition* def = &(EMUPOINTER<CAnimManagerInst*>(TheAnimManager->mspInst))->m_aAnimAssocDefinitions[assoc->groupId];
+			//AnimDescriptor* desc = nil;
+			//if (def) {
+			//	for (int idx = def->firstAnim; idx < def->firstAnim + def->numAnims; ++idx) {
+			//		AnimDescriptor* d = &(EMUPOINTER<CAnimManagerInst*>(TheAnimManager->mspInst))->m_aAnimDescriptors[idx];
+			//		if (d && d->id == assoc->animId) {
+			//			desc = d;
+			//			break;
+			//		}
+			//	}
+			//}
+			//printf("%s %d\n", hier->name, hier->unk);
+
+
+			CAnimBlendNode* nodes = EMUPOINTER<CAnimBlendNode*>(assoc->m_pAnimBlendNodes);
+			CAnimBlendTree* jaw_still = GetAnimByName("jaw_still");
+			CAnimBlendSequence* jaw_stillkosti = EMUPOINTER<CAnimBlendSequence*>(jaw_still->blendSequences); // массив костей
+			printf("%d\n", TheAnimManager->mspInst);
+
+			for (size_t i = 0; i < assoc->m_iNumAnimBlendNodes; i++)
+			{
+				//if (EMUPOINTER<CAnimBlendSequence*>(nodes[i].m_pSequence) == jaw_stillkosti || EMUPOINTER<CAnimBlendSequence*>(nodes[i].m_pMirroredSequence) == jaw_stillkosti)
+				//	printf("!!!!!!!!!!!!!!! FIND IN RUNNING ANIM SEQ FROM in grp: %s[%d] anm: %s[%d] jaw_still!!!!!!\n\n", grpname,
+				//		assoc->groupId, animname, assoc->animId); // hehe find
+
+
+			}
+
+			//{ // WALK_player
+			//	// revcs firstAnimId 2
+			//	// vcs firstAnimId 368  (grp 30)
+			//	CAnimBlendTree* jaw_still = GetAnimByName("jaw_still");
+			//	CAnimBlendSequence* jaw_stillkosti = EMUPOINTER<CAnimBlendSequence*>(jaw_still->blendSequences); // массив костей
+
+			//	int g = 30;
+			//	int a = 2;
+			//	CAnimBlendAssocGroup* grp = GetAnimationGroup(g);
+			//	CAnimBlendAssociation* assoc = GetAnimation(g, a);
+			//	printf("base assoc 0x%p   grp 0x%p\n", assoc, grp);
+			//	CAnimBlendNode* nodes = EMUPOINTER<CAnimBlendNode*>(assoc->m_pAnimBlendNodes);
+			//	for (int i = 0; i < assoc->m_iNumAnimBlendNodes; i++)
+			//	{
+			//		CAnimBlendSequence* s = EMUPOINTER<CAnimBlendSequence*>(nodes[i].m_pSequence); // массив костей
+			//		CAnimBlendSequence* ms = EMUPOINTER<CAnimBlendSequence*>(nodes[i].m_pMirroredSequence); // массив костей
+			//		if (s == jaw_stillkosti || ms == jaw_stillkosti)
+			//			printf("!!!!!FIND WALK_player\n"); // exists
+			//	}
+			//	//CAnimBlendAssocGroup* pGrp = &EMUPOINTER<CAnimBlendAssocGroup*>(mgr->m_aAnimAssocGroups)[g]; // 368
+			//	//printf("FI %d\n", pGrp->firstAnimId);
+			//}
+			
+
+
+
+		//	bool jaw = false;
+		//	char boneBuff[256] = { 0 };
+		//	int offset = 0;
+
+		//	for (int i = 0; i < hier->numSequences; i++)
+		//	{
+		//		int boneTag = hier->blendSequences[i].boneTag;
+
+		//		if (i == 0) {
+		//			offset += sprintf(boneBuff + offset, "%d", boneTag);
+		//		}
+		//		else {
+		//			offset += sprintf(boneBuff + offset, ", %d", boneTag);
+		//		}
+
+		//		if (!jaw)
+		//			jaw = boneTag == 6;
+		//	}
+		//	//printf("Bone IDs [%d]: %s\n", hier->numSequences, boneBuff);
+		//	//if (!jaw)
+		//		//printf("!jaw\n");
+		}
+
+
 		++i;
 	}
 	//if (GetAsyncKeyState('S') & 0x8000) { // del 1st anim
@@ -3371,7 +3830,6 @@ void UpdNonSyncStuff()
 	//return; //-------------------------------------
 	CPlayerPed* pPlayer = FindPlayerPed();
 	PrintPedsAnims((CPed*)pPlayer);
-	return;
 
 	// log pool
 	if(0)
