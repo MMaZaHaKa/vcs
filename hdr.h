@@ -1642,15 +1642,54 @@ struct RpMaterialList
 	int space;
 };
 
+/* 1050 */
+struct sPs2Geometry
+{
+	float bound[4];
+	int size;
+	int flags;
+	__int16 numVerts;
+	__int16 dmaOffset;
+	__int16 boundBox[6];
+	float scale[3];
+	float pos[3];
+};
+
+/* 1051 */
+struct sPs2GeometryMesh
+{
+	float bound[4];
+	float uvScale[2];
+	int unknown;
+	int dmaPacket;
+	__int16 numTriangles;
+	__int16 matID;
+	__int16 min[3];
+	__int16 max[3];
+};
+
 /* 644 */
 struct RpGeometry
 {
 	RwObject object;
 	__int16 refCount;
-	__int16 field_A;
+	__int16 pad1;
 	RpMaterialList matList;
-	int field_18;
+	int pSkinPlg;
+	int* pad2;
+	sPs2Geometry sPs2Geometry;
+	sPs2GeometryMesh sPs2GeometryMesh;
 };
+
+///* 644 */
+//struct RpGeometry
+//{
+//	RwObject object;
+//	__int16 refCount;
+//	__int16 field_A;
+//	RpMaterialList matList;
+//	int field_18;
+//};
 
 /* 798 */
 struct Model // .mdl
