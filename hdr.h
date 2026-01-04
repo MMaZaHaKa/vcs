@@ -131,7 +131,7 @@ struct CVuVector
 	float x;
 	float y;
 	float z;
-	int pad;
+	float w;
 };
 
 /* 200 */
@@ -208,11 +208,11 @@ struct CPed;
 struct CPedIK
 {
 	CPed* m_ped;
-	LimbOrientation field_4;
+	LimbOrientation m_headOrient;
 	LimbOrientation m_torsoOrient;
-	LimbOrientation field_14;
-	LimbOrientation field_1C;
-	LimbOrientation ____field_24;
+	LimbOrientation m_upperArmOrient;
+	LimbOrientation m_lowerArmOrient;
+	LimbOrientation unkLO;
 	int m_flags;
 };
 
@@ -460,7 +460,7 @@ struct CPed
 	int field_1B0;
 	char field_1B4[12];
 	int field_1C0;
-	char field_1C4[4];
+	float m_fFallHeight;
 	char _CP_flags_E;
 	char CP_flags_F;
 	char CP_flags_G;
@@ -1405,7 +1405,25 @@ struct CPedModelInfo
 	int field_F4;
 	int field_F8;
 };
-
+struct CRope
+{
+	int m_nRopeType;
+	int m_bActive;
+	int m_bWasRegistered;
+	int unk_field_C;
+	int m_ID;
+	int m_nTimeToBeKeptAliveTill;
+	char field_18[8];
+	CVuVector m_pos[32];
+	CVuVector m_speed[32];
+	CVehicle* m_pOwnerVehicle;
+	CEntity* m_pWinchHookObject; // CObject*
+	CPhysical* m_pWinchCarriedObject;
+	int m_WinchDisabled;
+	float m_fWinchHeight;
+	char field_434[11];
+	char field_43F;
+};
 
 
 
@@ -2330,6 +2348,17 @@ struct CInteriorManager
 	INSTANCE INSTANCE;
 	CInteriorPool* m_interiorPool;
 };
+
+/* 1000 */
+struct CMuzzleFlash
+{
+	CVuVector m_vecPosition;
+	CVuVector m_vecDirection;
+	int8_t m_nType;
+	char pad_field_21[14];
+	char pad_field_2F;
+};
+
 
 
 

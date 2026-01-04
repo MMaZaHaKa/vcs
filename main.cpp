@@ -20,6 +20,51 @@
 #define null NULL
 #define nil NULL
 
+#define rwVENDORID_ROCKSTAR 0x0253F2
+
+#define Max(a, b) ((a) > (b) ? (a) : (b))
+#define Min(a, b) ((a) < (b) ? (a) : (b))
+
+// Use this to add const that wasn't there in the original code
+#define Const const
+
+typedef uint8_t uint8;
+typedef int8_t int8;
+typedef uint16_t uint16;
+typedef uint16 float16;
+typedef int16_t int16;
+#ifndef __MWERKS__
+typedef uint32_t uint32;
+typedef int32_t int32;
+#else
+typedef unsigned int uint32;
+typedef int int32;
+#endif
+typedef uintptr_t uintptr;
+typedef intptr_t intptr;
+typedef uint64_t uint64;
+typedef int64_t int64;
+// hardcode ucs-2
+typedef char16_t wchar;
+
+typedef uint8 bool8;
+typedef uint16 bool16;
+typedef uint32 bool32;
+
+#if defined(_MSC_VER) || defined(__MWERKS__)
+typedef uint8 u8;
+typedef uint16 u16;
+typedef uint32 u32;
+typedef uint64 u64;
+typedef int8 i8;
+typedef int16 i16;
+typedef int32 i32;
+typedef int64 i64;
+#endif
+
+typedef uintptr_t uintptr;
+
+
 void SetColor(WORD wAttributes)
 {
 	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -51,21 +96,21 @@ void MboxSTD(std::string msg, std::string title = "") { MessageBoxA(HWND_DESKTOP
 //static inline uintptr_t EEMainMemoryEnd = 0/*0x21ffffff*/;
 
 struct MemoryRegion { void* baseAddress; SIZE_T size; };
-std::vector<MemoryRegion> inline FindRegions(SIZE_T targetSize, DWORD targetType = 0, DWORD targetProtect = 0, DWORD targetState = MEM_COMMIT) {
+std::vector<MemoryRegion> inline FindRegions(SIZE_T targetSize = 0, DWORD targetType = 0, DWORD targetProtect = 0, DWORD targetState = MEM_COMMIT) {
 	std::vector<MemoryRegion> regions;
 	MEMORY_BASIC_INFORMATION mbi;
 	uintptr_t address = 0;
 	while (VirtualQuery((LPCVOID)address, &mbi, sizeof(mbi)) != 0) {
-		if (mbi.RegionSize == targetSize) {
-			if (targetType != 0 && mbi.Type != targetType) { address += mbi.RegionSize; continue; }
-			if (targetProtect != 0 && mbi.Protect != targetProtect) { address += mbi.RegionSize; continue; }
-			if (targetState != 0 && mbi.State != targetState) { address += mbi.RegionSize; continue; }
-			regions.push_back({ mbi.BaseAddress, mbi.RegionSize });
-		}
+		if (targetSize != 0 && mbi.RegionSize != targetSize) { address += mbi.RegionSize; continue; }
+		if (targetType != 0 && mbi.Type != targetType) { address += mbi.RegionSize; continue; }
+		if (targetProtect != 0 && mbi.Protect != targetProtect) { address += mbi.RegionSize; continue; }
+		if (targetState != 0 && mbi.State != targetState) { address += mbi.RegionSize; continue; }
+		regions.push_back({ mbi.BaseAddress, mbi.RegionSize });
 		address += mbi.RegionSize;
 	}
 	return regions;
 }
+
 void* SearchPointerByPattern(void* ptrStart, int block_size, std::string pattern)
 {
 #define INRANGE(x, a, b) (x >= a && x <= b)
@@ -173,6 +218,8 @@ template <typename T, typename R = uint32_t> R inline _stackcast(T v) { return *
     (((uint32_t) (x) & 0xff000000) >> 24) \
 ) // PS2 SDK
 #define OFFSET(base, off, type) ((type)&(((uint8_t*)base)[off]) )
+#define TEST_OFFSET(obj, field, offset) assert(((uint8_t*)&obj) == (((uint8_t*)&field) - offset))
+#define TEST_POFFSET(pobj, pfield, offset) assert(((uint8_t*)pobj) == (((uint8_t*)pfield) - offset))
 // PDP-10 like byte functions
 #define MASK(p, s) (((1 << (s)) - 1) << (p))
 inline uint32_t dpb(uint32_t b, uint32_t p, uint32_t s, uint32_t w) { uint32_t m = MASK(p, s); return (w & ~m) | ((b << p) & m); } // Deposit Bit Field
@@ -231,6 +278,8 @@ template<typename T> T inline EMUPOINTER(uintptr_t p) { return EMUPOINTER<T>((vo
 #else
 #define MYDLL_API __declspec(dllimport)
 #endif
+inline bool BTN(int c) { return (GetAsyncKeyState(c) & 0x8000); }
+
 
 extern "C" void MYDLL_API Loader_Dummy() {} // creating export table. cff explorer-> import adder
 
@@ -462,7 +511,7 @@ void PrintCurrDir()
 // Empire
 #define EmpireHud ((CEmpireHud*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48F370)))
 #define EmpireMgr ((CEmpireMgr*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48F050)))
-#define InteriorManager ((CInteriorManager*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48FF48)))
+#define InteriorManager ((CInteriorManager*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48FF48))) // cInteriorPlacement
 #define CObjectData_ms_aObjectInfo ((char*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x488054)))
 
 #define C3dMarkers_m_aMarkerArray ((C3dMarker*)IDATRANSLATE(0x4E01D0)) // 32
@@ -477,11 +526,13 @@ void PrintCurrDir()
 
 #define CPopulation_ms_pPedGroups ((char*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x488014)))
 #define cWorldStream ((cWorldStream*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48F4F8)))
+#define CRopes_aRopes ((CRope*)IDATRANSLATE(0x505C00)) // 8
 
 #define gpSkidTex ((char*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48A5B0)))
 #define currentTexDict ((void*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x4887B8)))
 #define musicNameIdAssoc ((tMusicNameIdAssoc*)IDATRANSLATE(0x48A788))
 #define gPhoneInfo ((char*)IDATRANSLATE(0x51F710))
+#define CMuzzleFlashes_aMuzzleFlashes ((CMuzzleFlash*)IDATRANSLATE(0x004DE650)) // 8
 #define ThePaths ((CPathFind*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x487490)))
 
 #define CutsceneMgr ((CCutsceneMgr*)PCSX2POINTER(*(uintptr_t**)IDATRANSLATE(0x48F820)))
@@ -552,9 +603,12 @@ bool& gbGlassCheat = *(bool*)IDATRANSLATE(0x489EB4);
 bool& CSpecialFX_bLiftCam = *(bool*)IDATRANSLATE(0x481CD8);
 bool& CPad_bHasPlayerCheated = *(bool*)IDATRANSLATE(0x487A54);
 float& CTimer_ms_fTimeScale = *(float*)IDATRANSLATE(0x4CD168);
+uint32_t& CTimer_m_snTimeInMilliseconds = *(uint32_t*)IDATRANSLATE(0x4CD104);
 int& CGame_currArea = *(int*)IDATRANSLATE(0x489F7C);
 int& CGame_currLevel = *(int*)IDATRANSLATE(0x4CD118);
+int& globalRenderFlags = *(int*)IDATRANSLATE(0x4882A0);
 int& CRenderer_ms_nNoOfVisibleEmpires = *(int*)IDATRANSLATE(0x4CD5A0);
+int8_t& CMuzzleFlashes_NumMuzzleFlashes = *(int8_t*)IDATRANSLATE(0x00481CC0);
 //int& CWorld_ms_aSectors[50][50] = *(int*)IDATRANSLATE();
 RwObjectNameIdAssocation** CVehicleModelInfo_ms_vehicleDescs = (RwObjectNameIdAssocation**)IDATRANSLATE(0x489E38); // size 10
 #elif defined(SLES_54622) 
@@ -904,7 +958,7 @@ void InitPatches()
 
 		MemoryPatcher(IDATRANSLATE(0x003BAB44), 0, 4), // nop peds gen
 		MemoryPatcher(IDATRANSLATE(0x003BAC88), 0, 4), // nop cars gen
-		//MemoryPatcher(IDATRANSLATE(0x3BAAC0), 0, 4), // nop CTheScripts::Process() //--------------------------------------------------------------
+		MemoryPatcher(IDATRANSLATE(0x3BAAC0), 0, 4), // nop CTheScripts::Process() //--------------------------------------------------------------
 		//MemoryPatcher(IDATRANSLATE(0x21E9D0), 0, 4), // nop CGame::Process() //--------------------------------------------------------------
 		//MemoryPatcher(IDATRANSLATE(0x0021EE38), 0, 4), // nop Idle() //--------------------------------------------------------------
 		//MemoryPatcher(IDATRANSLATE(0x0021E978), 0, 0x0021ED5C - 0x0021E978), // nop Idle() //--------------------------------------------------------------
@@ -944,7 +998,16 @@ void InitPatches()
 		//MemoryPatcher(IDATRANSLATE(0x00154DC4), 0, 4), // anim node set
 		//MemoryPatcher(IDATRANSLATE(0x00215988), 0, 4), // anim add cped
 		//MemoryPatcher(IDATRANSLATE(0x00215908), 0, 4), // anim blend cped
-		MemoryPatcher(IDATRANSLATE(0x0018E8F0), 0, 4), // nop find jaw
+		//MemoryPatcher(IDATRANSLATE(0x0018E8F0), 0, 4), // nop find jaw
+		//MemoryPatcher(IDATRANSLATE(0x003BAC04), 0, 4), // nop rope upd
+
+		//MemoryPatcher(IDATRANSLATE(0x00109420), 0, 4), // nop cWS Render pass 0
+		//MemoryPatcher(IDATRANSLATE(0x00109460), 0, 4), // nop cWS Render pass 1
+		//MemoryPatcher(IDATRANSLATE(0x0021F11C), 0, 4), // nop cWS Render pass 2
+
+		//MemoryPatcher(IDATRANSLATE(0x0039F098), 0, 4), // nop render 3.0
+		//MemoryPatcher(IDATRANSLATE(0x002260E8), 0, 0x00226140 - 0x002260E8), // nop rope -z
+		//MemoryPatcher(IDATRANSLATE(0x0013A224), 0, 4), // nop rope cutomobile process controll shit
 	};
 }
 void inline SetPatchesState(bool state) { for (size_t i = 0; i < patches.size(); i++) { state ? patches[i].ApplyPatch() : patches[i].RemovePatch(); } }
@@ -1421,6 +1484,106 @@ void EmpireTest(int mode)
 	printf("\n\n");
 }
 
+CPed* GetRandomPedFromPool(bool canplayer = false)
+{
+	int32_t sz = CPools_ms_pPedPool->m_nSize;
+	CPed* playa = (CPed*)FindPlayerPed();
+	if (sz <= 0) {
+		printf("Ped pool is empty!\n");
+		return nil;
+	}
+	//if (!playa && !canplayer) {
+	//	printf("Player ped not found but canplayer=false!\n");
+	//	return nil;
+	//}
+
+	int attempts = 0;
+	const int MAX_ATTEMPTS = 50;
+
+	while (true) {
+		attempts++;
+
+		// Генерируем случайный стартовый индекс от 1 до размера пула
+		int32_t startIdx = (rand() % sz) + 1;
+
+		// Проходим по пулу, начиная со случайного индекса
+		for (int32_t i = startIdx; i < sz; i++) {
+			if (CPools_GetSlotIsFree(CPools_ms_pPedPool, i)) { continue; }
+			CPed* e = (CPed*)CPools_GetSlot(CPools_ms_pPedPool, i, 3360);
+			if (e && (canplayer || playa != e)) {
+				return e;
+			}
+		}
+
+		// Если не нашли с текущего индекса, проверяем начало
+		for (int32_t i = 0; i < startIdx; i++) {
+			if (CPools_GetSlotIsFree(CPools_ms_pPedPool, i)) { continue; }
+			CPed* e = (CPed*)CPools_GetSlot(CPools_ms_pPedPool, i, 3360);
+			if (e && (canplayer || playa != e)) {
+				return e;
+			}
+		}
+
+		// Если достигли максимального количества попыток
+		if (attempts >= MAX_ATTEMPTS) {
+			printf("Failed to find random ped after %d attempts!\n", attempts);
+			return nil;
+		}
+	}
+	return nil;
+}
+
+CVehicle* GetRandomVehicleFromPool(bool canplayer = false)
+{
+	int32_t sz = CPools_ms_pVehiclePool->m_nSize;
+	CVehicle* pV = FindPlayerVehicle();
+
+	if (sz <= 0) {
+		printf("Vehicle pool is empty!\n");
+		return nil;
+	}
+	//if (!pV && !canplayer) {
+	//	printf("Player ped not found but canplayer=false!\n");
+	//	return nil;
+	//}
+
+	int attempts = 0;
+	const int MAX_ATTEMPTS = 50;
+
+	while (true) {
+		attempts++;
+
+		// Генерируем случайный стартовый индекс от 0 до размера пула-1
+		int32_t startIdx = rand() % sz;
+
+		// Проходим по пулу, начиная со случайного индекса
+		for (int32_t i = startIdx; i < sz; i++) {
+			if (CPools_GetSlotIsFree(CPools_ms_pVehiclePool, i)) { continue; }
+			CVehicle* e = (CVehicle*)CPools_GetSlot(CPools_ms_pVehiclePool, i, 2240);
+			if (e && (canplayer || pV != e)) {
+				return e;
+			}
+		}
+
+		// Если не нашли с текущего индекса, проверяем начало
+		for (int32_t i = 0; i < startIdx; i++) {
+			if (CPools_GetSlotIsFree(CPools_ms_pVehiclePool, i)) { continue; }
+			CVehicle* e = (CVehicle*)CPools_GetSlot(CPools_ms_pVehiclePool, i, 2240);
+			if (e && (canplayer || pV != e)) {
+				return e;
+			}
+		}
+
+		// Если достигли максимального количества попыток
+		if (attempts >= MAX_ATTEMPTS) {
+			printf("Failed to find random vehicle after %d attempts!\n", attempts);
+			return nil;
+		}
+	}
+
+	return nil;
+}
+
 void TestingPools()
 {
 	struct tId { int id, poolid; };
@@ -1699,17 +1862,17 @@ Resource* GetResourseFromChunk(sLevelChunk* pChunk, int index) // pChunk normali
 //
 
 
-RwRaster*& gpWaterRaster = *(RwRaster**)IDATRANSLATE(0x4874C8);
-RwTexture*& gpWaterTex = *(RwTexture**)IDATRANSLATE(0x4874CC);
-RwRaster*& gpWaterEnvRaster = *(RwRaster**)IDATRANSLATE(0x4874D8);
-RwTexture*& gpWaterEnvTex = *(RwTexture**)IDATRANSLATE(0x4874DC);
+RwRaster*& gpWaterRaster     = *(RwRaster**)IDATRANSLATE(0x4874C8);
+RwTexture*& gpWaterTex       = *(RwTexture**)IDATRANSLATE(0x4874CC);
+RwRaster*& gpWaterEnvRaster  = *(RwRaster**)IDATRANSLATE(0x4874D8);
+RwTexture*& gpWaterEnvTex    = *(RwTexture**)IDATRANSLATE(0x4874DC);
 RwRaster*& gpWaterWakeRaster = *(RwRaster**)IDATRANSLATE(0x4874E0);
-RwTexture*& gpWaterWakeTex = *(RwTexture**)IDATRANSLATE(0x4874E4);
-RwRaster*& gpBoatwakeRaster = *(RwRaster**)IDATRANSLATE(0x4874E8);
-RwTexture*& gpBoatwakeTex = *(RwTexture**)IDATRANSLATE(0x4874EC);
-RwRaster*& gpSandRaster = *(RwRaster**)IDATRANSLATE(0x4874D0);
-RwTexture*& gpSandTex = *(RwTexture**)IDATRANSLATE(0x4874D4);
-RwTexture** gpCoronaTexture = (RwTexture**)IDATRANSLATE(0x487758);
+RwTexture*& gpWaterWakeTex   = *(RwTexture**)IDATRANSLATE(0x4874E4);
+RwRaster*& gpBoatwakeRaster  = *(RwRaster**)IDATRANSLATE(0x4874E8);
+RwTexture*& gpBoatwakeTex    = *(RwTexture**)IDATRANSLATE(0x4874EC);
+RwRaster*& gpSandRaster      = *(RwRaster**)IDATRANSLATE(0x4874D0);
+RwTexture*& gpSandTex        = *(RwTexture**)IDATRANSLATE(0x4874D4);
+RwTexture** gpCoronaTexture  = (RwTexture**)IDATRANSLATE(0x487758);
 RwTexture* tmptex;
 RwRaster* tmpras;
 
@@ -1731,15 +1894,15 @@ void DumptWeaponFilenames()
 }
 struct tRopeFactor
 {
-	int32_t val1;
-	float val2;
+	int32 type;
+	float lengthfactor;
 };
 void DumpRopesHueta()
 {
 	tRopeFactor* pR = EMUPOINTER<tRopeFactor*>(0x00486EA0);
 	printf("{");
 	for (int i = 0; i < 5; i++){
-		printf("%d, %f, ", pR[i].val1, pR[i].val2);
+		printf("%d, %f, ", pR[i].type, pR[i].lengthfactor);
 	}
 	printf("}");
 }
@@ -1760,10 +1923,10 @@ void ik()
 	switch (mode)
 	{
 		case 2:
-			ik->field_4.pitch = v;
+			ik->m_headOrient.pitch = v;
 			break;
 		case 3:
-			ik->field_4.yaw = v;
+			ik->m_headOrient.yaw = v;
 			break;
 
 		case 4:
@@ -1774,28 +1937,52 @@ void ik()
 			break;
 
 		case 6:
-			ik->field_14.pitch = v;
+			ik->m_lowerArmOrient.pitch = v;
 			break;
 		case 7:
-			ik->field_14.yaw = v;
+			ik->m_lowerArmOrient.yaw = v;
 			break;
 
 		case 8:
-			ik->field_1C.pitch = v;
+			ik->m_headOrient.pitch = v;
 			break;
 		case 9:
-			ik->field_1C.yaw = v;
+			ik->m_headOrient.yaw = v;
 			break;
 
 		case 10:
-			ik->____field_24.pitch = v;
+			ik->unkLO.pitch = v;
 			break;
 		case 11:
-			ik->____field_24.yaw = v;
+			ik->unkLO.yaw = v;
 			break;
 	}
 
 }
+
+void IK()
+{
+	CPlayerPed* pp = FindPlayerPed();
+	if (!pp) return;
+	pp->CPed.m_ik__m_pedIK.m_flags = 0xFFFFFFFF;
+
+	//pp->CPed.m_ik__m_pedIK.m_headOrient.pitch = 3.14f / 2;
+	//pp->CPed.m_ik__m_pedIK.m_headOrient.yaw = 3.14f / 2;
+
+	//pp->CPed.m_ik__m_pedIK.m_torsoOrient.pitch = 3.14f / 2;
+	//pp->CPed.m_ik__m_pedIK.m_torsoOrient.yaw = 3.14f / 2;
+
+	//pp->CPed.m_ik__m_pedIK.m_upperArmOrient.pitch = 3.14f / 2;
+	//pp->CPed.m_ik__m_pedIK.m_upperArmOrient.yaw = 3.14f / 2;
+
+	//pp->CPed.m_ik__m_pedIK.m_lowerArmOrient.pitch = 3.14f / 2;
+	//pp->CPed.m_ik__m_pedIK.m_lowerArmOrient.yaw = 3.14f / 2;
+
+	pp->CPed.m_ik__m_pedIK.unkLO.pitch = 3.14f / 2;
+	pp->CPed.m_ik__m_pedIK.unkLO.yaw = 3.14f / 2;
+
+}
+
 
 void dump77()
 {
@@ -1815,12 +2002,141 @@ void dump77()
 	}
 }
 
+void Ropes()
+{
+	tRopeFactor* pR = EMUPOINTER<tRopeFactor*>(0x00486EA0);
+	//pR[2].lengthfactor = 30.0f; // z40 
+
+	for (int32_t i = CPools_ms_pVehiclePool->m_nSize - 1; i >= 0; i--)
+	{
+		if (CPools_GetSlotIsFree(CPools_ms_pVehiclePool, i)) { continue; }
+		CVehicle* v = (CVehicle*)CPools_GetSlot(CPools_ms_pVehiclePool, i, 2240);
+		if (v)
+		{
+			TEST_OFFSET(v->CPhysical.CEntity, v->CPhysical.CEntity.CE_flags_K, 0x4E);
+			//v->CPhysical.CEntity.CE_flags_K
+			SET_BIT(v->CPhysical.CEntity.CE_flags_K, 5, 1); // 
+		}
+	}
+
+	for (int32 i = 0; i < 8; i++)
+	{
+		CRope* rope = &CRopes_aRopes[i];
+		//if (!rope->m_bActive) continue;
+		printf("rope[%d]: ac: %d reg: %d  m_nTimeToBeKeptAliveTill %d  0x%p\n", i, rope->m_bActive, rope->m_bWasRegistered, rope->m_nTimeToBeKeptAliveTill, rope);
+		if (!rope->m_bActive)
+			continue;
+
+		bool btn = GetAsyncKeyState('J') & 0x8000;
+		if (btn) {
+			rope->m_bActive = false;
+		}
+
+		//CEntity* WinchHookObject = EMUPOINTER<CEntity*>(rope->m_pWinchHookObject); // магнит
+		//CEntity* OwnerVehicle = EMUPOINTER<CEntity*>(rope->m_pOwnerVehicle); // вертик
+		//if (WinchHookObject)
+		//	printf("WinchHookObject: %f %f %f\n", ((CMatrix*)WinchHookObject)->pos.x, ((CMatrix*)WinchHookObject)->pos.y, ((CMatrix*)WinchHookObject)->pos.z);
+		//if (OwnerVehicle)
+		//	printf("OwnerVehicle: %f %f %f\n", ((CMatrix*)OwnerVehicle)->pos.x, ((CMatrix*)OwnerVehicle)->pos.y, ((CMatrix*)OwnerVehicle)->pos.z);
+
+		//for (int32 j = 0; j < 32; j++)
+		//{
+		//	printf("lnk %d: %f %f %f\n", j, rope->m_pos[j].x, rope->m_pos[j].y, rope->m_pos[j].z);
+		//}
+	}
+}
+
+void mlotest()
+{
+	CSimpleModelInfo* miwithatomics = nil;
+	for (int32_t i = 0; i < CModelInfo_msNumModelInfos; i++) {
+		CBaseModelInfo* modelInfo = GetModelInfo(i);
+		if (modelInfo && modelInfo->m_type == MITYPE_SIMPLE && ((CSimpleModelInfo*)modelInfo)->m_atomics_objects)
+		{
+			miwithatomics = ((CSimpleModelInfo*)modelInfo);
+			break;
+		}
+	}
+	if (!miwithatomics)
+		return;
+
+	for (int32_t i = 0; i < CModelInfo_msNumModelInfos; i++) {
+		CBaseModelInfo* modelInfo = GetModelInfo(i);
+		if (modelInfo && modelInfo->m_type == MITYPE_SIMPLE)
+		{
+			CSimpleModelInfo* mi = (CSimpleModelInfo*)modelInfo;
+			RpAtomic** at = EMUPOINTER<RpAtomic**>(mi->m_atomics_objects);
+			//if(mi->m_numAtomics)
+			//	printf("mi %d: simple m_numAtomics %d at  0x%p, 1st 0xp\n", i, mi->m_numAtomics, mi->m_atomics_objects/*, EMUPOINTER<RpAtomic*>(at[0])*/);
+			//GetModelInfoExt(i)->allcolls.push_back(modelInfo->m_colModel);
+			//if (!at)
+			{
+				mi->m_atomics_objects = miwithatomics->m_atomics_objects; // ps2 ptr
+				mi->m_numAtomics = miwithatomics->m_numAtomics;
+
+				//mi->m_atomics_objects = (RwObject**)0x1234567;
+				//mi->m_numAtomics = 7777;
+				printf("%d patched\n", i);
+			}
+		}
+	}
+}
+
+void Muzzle()
+{
+	for (int i = 0; i < CMuzzleFlashes_NumMuzzleFlashes; i++) // 8
+	{
+		//CMuzzleFlashes_aMuzzleFlashes[];
+	}
+}
+
+void TestRoll()
+{
+	CPlayerPed* pp = FindPlayerPed();
+	if (!pp) return;
+}
+
+void TestMI()
+{
+
+	int fmi = 170;
+	for (int32_t i = 0; i < CModelInfo_msNumModelInfos; i++)
+	{
+		CBaseModelInfo* mi = GetModelInfo(i);
+
+		//if (mi) { printf("%d %s\n", i, mi->m_name); continue; }
+		//else { continue; }
+
+		if (mi)
+		{
+			//printf("%d  0x%p type: %d\n", i, mi, mi->m_type);
+			switch (mi->m_type)
+			{
+				case MITYPE_VEHICLE:
+				{
+					CVehicleModelInfo* vmi = (CVehicleModelInfo*)mi;
+					printf("%d flags: %X  ex&0x40? %d\n", i, vmi->flags_field_27C, vmi->flags_field_27C & 0x40);
+					break;
+				}
+			}
+		}
+	}
+}
+
 void LogAnimOnce();
 bool HW()
 {
 	setlocale(LC_NUMERIC, "C");
 
-	LogAnimOnce();
+	//LogAnimOnce(); //---------------------------------------------
+
+	//IK();
+	//TestRoll(); 
+	TestMI();
+	//mlotest();
+	//Ropes();
+	//Muzzle();
+
 	return true;
 	///dump77(); return true;
 
@@ -2417,8 +2733,11 @@ bool OnKey(int mode) // ret bool isallowhold
 		return false;
 	}
 
-	if (HW()) { return true; }
-	return false;// tmp here
+	//if(0)
+	{
+		if (HW()) { return true; }
+		return false;// tmp here
+	}
 
 	switch (mode)
 	{
@@ -2667,6 +2986,8 @@ bool OnKey(int mode) // ret bool isallowhold
 				case MITYPE_VEHICLE:
 				{
 					CVehicleModelInfo* vmi = (CVehicleModelInfo*)mi;
+					printf("%d flags: %X  ex&0x40? %d\n", i, vmi->flags_field_27C, vmi->flags_field_27C & 0x40);
+
 					//printf("%d  0x%p type: %d\n", i, mi, mi->m_type);
 					//printf("mi: %d   type : %d\n", i, vmi->m_vehicleType);
 					//printf("%d, %d, %d, %d, %d, %d, %d, %d\n",
@@ -2692,7 +3013,7 @@ bool OnKey(int mode) // ret bool isallowhold
 
 					if (vmi->m_vehicleType == 4 || vmi->m_vehicleType == 5) // heli || plane
 					{
-						printf("%d, %s, id %d, ws %f, wsr %f\n", i, vmi->m_gameName, vmi->m_wheelId_Or_m_planeLodId_union, vmi->m_wheelScale, vmi->m_wheelScaleRear);
+						//printf("%d, %s, id %d, ws %f, wsr %f\n", i, vmi->m_gameName, vmi->m_wheelId_Or_m_planeLodId_union, vmi->m_wheelScale, vmi->m_wheelScaleRear);
 					}
 
 					//vmi->m_nHornFrequency = 24000;
@@ -3186,6 +3507,7 @@ CAnimBlendAssociation* GetAnimation(int group, int animID) // 30, 2  [grp 30 fir
 	return &assoc[animID - mgr->m_aAnimDescriptors[pGrp->firstAnimId].id];
 }
 
+//---------------------------------------------
 void TestAnims()
 {
 	CAnimManagerInst* mgr = EMUPOINTER<CAnimManagerInst*>(TheAnimManager->mspInst);
@@ -3213,8 +3535,34 @@ void TestAnims()
 	}
 }
 
+void DumpAnimFlags()
+{
+	FILE* file = fopen("C://anim_flags.txt", "w");
+	if (file == NULL) {
+		printf("fak DumpAnimFlags\n");
+		return;
+	}
+
+	CAnimManagerInst* mgr = EMUPOINTER<CAnimManagerInst*>(TheAnimManager->mspInst);
+	AnimDescriptor* desc = mgr->m_aAnimDescriptors; // массив всех анимок
+	fprintf(file, "m_numAnimDescriptors %d\n", mgr->m_numAnimDescriptors);
+	for (int animidx = 0; animidx < mgr->m_numAnimDescriptors; animidx++)
+	{
+		//printf("%d\n", desc[animidx].defaultFlags);
+		///fprintf(file, "%d\n", desc[animidx].defaultFlags);
+		printf("%s %d\n", desc[animidx].name, desc[animidx].defaultFlags);
+		fprintf(file, "%s %d\n", desc[animidx].name, desc[animidx].defaultFlags);
+	}
+
+	fclose(file);
+	printf("zaebis!\n");
+}
+
+
 void ForAllAnims()
 {
+	//DumpAnimFlags(); return;
+
 	CAnimManagerInst* mgr = EMUPOINTER<CAnimManagerInst*>(TheAnimManager->mspInst);
 	CAnimBlendTree* anims = EMUPOINTER<CAnimBlendTree*>(mgr->m_aAnimations); // массив всех анимок
 	for (int animidx = 0; animidx < mgr->m_numAnimations; animidx++)
@@ -3805,12 +4153,14 @@ CVehicle* pVlast = null;
 void UpdNonSyncStuff()
 {
 	*CClock_ms_nGameClockHours = 0;
+	if ((GetAsyncKeyState('Q') & 0x8000)) { CTimer_ms_fTimeScale = CTimer_ms_fTimeScale == 1.0f ? 0.0f : 1.0f; Sleep(1000); }
 	if ((GetAsyncKeyState('U') & 0x8000)) { can_update ^= true; Sleep(1000); }
 	if (!can_update) { return; }
 	if (!(GetAsyncKeyState(VK_CONTROL) & 0x8000)) system("cls");
 
 	//TestingPools();
 	printf("UpdNonSyncStuff() \n");
+	//globalRenderFlags = 0;
 
 	//{
 	//	char* CTheScripts_IntroTextLines = EMUPOINTER<char*>(0x0050D010);
@@ -3829,7 +4179,9 @@ void UpdNonSyncStuff()
 	CVehicle* veh = FindPlayerVehicle();
 	//return; //-------------------------------------
 	CPlayerPed* pPlayer = FindPlayerPed();
-	PrintPedsAnims((CPed*)pPlayer);
+	//PrintPedsAnims((CPed*)pPlayer);
+	Ropes();
+
 
 	// log pool
 	if(0)
@@ -3886,7 +4238,9 @@ void UpdNonSyncStuff()
 	if (pp)
 	{
 		printf("%f 0x%p\n", *OFFSET(pp, 0xCB0, float*), OFFSET(pp, 0xCB0, float*));
-		printf("%f 0x%p\n\n", *OFFSET(pp, 0xCB4, float*), OFFSET(pp, 0xCB4, float*));
+		printf("%f 0x%p\n", *OFFSET(pp, 0xCB4, float*), OFFSET(pp, 0xCB4, float*));
+		printf("m_fFallHeight %f \n\n", pp->CPed.m_fFallHeight);
+		pp->CPed.m_fFallHeight = 11.0f;
 		CRunningScript* scr = CTheScripts_ActiveScripts;
 		printf("SCRIPT_NAME: %s IP: %d TIMERA %d\n", scr->m_abScriptName, scr->m_nIp, scr->m_anLocalVariables[TIMERA]);
 	}
