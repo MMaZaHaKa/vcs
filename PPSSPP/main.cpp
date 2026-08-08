@@ -34,6 +34,59 @@ void copyToClipboard(const char* text)
 }
 void MboxSTD(std::string msg, std::string title = "") { MessageBoxA(HWND_DESKTOP, msg.c_str(), title.c_str(), MB_SYSTEMMODAL | MB_ICONWARNING); }
 
+#include <signal.h>
+const int re3_buffsize = 1024;
+static char re3_buff[re3_buffsize];
+void re3_assert(const char* expr, const char* filename, unsigned int lineno, const char* func)
+{
+	int nCode;
+
+	strcpy_s(re3_buff, re3_buffsize, "Assertion failed!");
+	strcat_s(re3_buff, re3_buffsize, "\n");
+
+	strcat_s(re3_buff, re3_buffsize, "File: ");
+	strcat_s(re3_buff, re3_buffsize, filename);
+	strcat_s(re3_buff, re3_buffsize, "\n");
+
+	strcat_s(re3_buff, re3_buffsize, "Line: ");
+	_itoa_s(lineno, re3_buff + strlen(re3_buff), re3_buffsize - strlen(re3_buff), 10);
+	strcat_s(re3_buff, re3_buffsize, "\n");
+
+	strcat_s(re3_buff, re3_buffsize, "Function: ");
+	strcat_s(re3_buff, re3_buffsize, func);
+	strcat_s(re3_buff, re3_buffsize, "\n");
+
+	strcat_s(re3_buff, re3_buffsize, "Expression: ");
+	strcat_s(re3_buff, re3_buffsize, expr);
+	strcat_s(re3_buff, re3_buffsize, "\n");
+
+	strcat_s(re3_buff, re3_buffsize, "\n");
+	strcat_s(re3_buff, re3_buffsize, "(Press Retry to debug the application)");
+
+
+	nCode = ::MessageBoxA(nil, re3_buff, "REVCS Assertion Failed!",
+		MB_ABORTRETRYIGNORE | MB_ICONHAND | MB_SETFOREGROUND | MB_TASKMODAL);
+
+	if (nCode == IDABORT)
+	{
+		raise(22/*SIGABRT*/);
+		_exit(3);
+	}
+
+	if (nCode == IDRETRY)
+	{
+		__debugbreak();
+		return;
+	}
+
+	if (nCode == IDIGNORE)
+		return;
+
+	abort();
+}
+#define myassert(_Expression) (void)((!!(_Expression)) || (re3_assert(#_Expression, __FILE__, __LINE__, __FUNCTION__), 0))
+
+
 #define CW_R() SetColor(FOREGROUND_RED)                               // Красный
 #define CW_G() SetColor(FOREGROUND_GREEN)                             // Зеленый
 #define CW_B() SetColor(FOREGROUND_BLUE)                              // Синий
@@ -137,6 +190,9 @@ template <typename T, typename R = uint32_t> R inline _stackcast(T v) { return *
     (((uint32_t) (x) & 0x00ff0000) >>  8) | \
     (((uint32_t) (x) & 0xff000000) >> 24) \
 ) // PS2 SDK
+#define OFFSET(base, off, type) ((type)&(((uint8_t*)base)[off]) )
+#define TEST_OFFSET(obj, field, offset) assert(((uint8_t*)&obj) == (((uint8_t*)&field) - offset))
+#define TEST_POFFSET(pobj, pfield, offset) assert(((uint8_t*)pobj) == (((uint8_t*)pfield) - offset))
 // PDP-10 like byte functions
 #define MASK(p, s) (((1 << (s)) - 1) << (p))
 inline uint32_t dpb(uint32_t b, uint32_t p, uint32_t s, uint32_t w) { uint32_t m = MASK(p, s); return (w & ~m) | ((b << p) & m); } // Deposit Bit Field
@@ -145,6 +201,10 @@ inline uint32_t ldb(uint32_t p, uint32_t s, uint32_t w) { return w >> p & (1 << 
 #define getBits( x ) (INRANGE((x&(~0x20)),'A','F') ? ((x&(~0x20)) - 'A' + 0xa) : (INRANGE(x,'0','9') ? x - '0' : 0))
 #define getByte( x ) (getBits(x[0]) << 4 | getBits(x[1]))
 //template<typename T> T inline EMUPOINTER(void* p) { return (T)(p ? PCSX2POINTER(p) : null); } // need?
+#define VU2V(v) (*(CVector*)(&v))
+#define V2VU(v) (*(CVuVector*)(&v))
+#define debug(f, ...) printf(f, ##__VA_ARGS__)
+uint32_t align(uint32_t o, uint32_t n) { return o+n-1 & ~(n-1); }
 
 
 #define RWRGBAINT(r, g, b, a) ((uint32)((((a)&0xff)<<24)|(((b)&0xff)<<16)|(((g)&0xff)<<8)|((r)&0xff)))
@@ -248,6 +308,27 @@ HANDLE InitConsole() // with proto
 	return hConsole;
 }
 
+void SetConsoleColor(int32_t mode)
+{
+	HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (mode == 0)
+		SetConsoleTextAttribute(hConsole, FOREGROUND_RED);
+	else if (mode == 1)
+		SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN);
+	else if (mode == 2)
+		SetConsoleTextAttribute(hConsole, FOREGROUND_BLUE);
+	else if (mode == 3)
+		SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN);
+	else if (mode == 4)
+		SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_BLUE);
+	else if (mode == 5)
+		SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_BLUE);
+	else if (mode == 6)
+		SetConsoleTextAttribute(hConsole, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+	else if (mode == 7)
+		SetConsoleTextAttribute(hConsole, 0);
+}
+
 std::vector<std::string> FileReadAllLines(std::string filePath)
 {
 
@@ -309,6 +390,93 @@ void PrintCurrDir()
 	printf("Current directory: %s\n", buffer);
 }
 
+std::string ClearStr(std::string input, std::string charsToRemove) {
+	std::string result = input;
+	result.erase(std::remove_if(result.begin(), result.end(),
+		[&charsToRemove](char c) { return charsToRemove.find(c) != std::string::npos; }),
+		result.end());
+	return result;
+}
+
+static inline bool is_printable_ascii(uint8_t c) {
+	return c >= 0x20 && c <= 0x7e;
+}
+
+void DataToHexString(int indent, uintptr_t startAddr, const uint8_t* data, size_t size, std::string* output) {
+	if (!output) return;
+	output->clear();
+	if (!data || size == 0) return;
+
+	// reserve approximate size: address + 3 chars per byte + ascii columns and newlines
+	//output->reserve((size / 16 + 1) * (indent + 10 + 16 * 3 + 1 + 16));
+
+	int addr_width = static_cast<int>(sizeof(uintptr_t) * 2);
+	output->reserve((size / 16 + 1) * (indent + addr_width + 2 + 16 * 3 + 1 + 16));
+
+	char buf[64];
+
+	for (size_t i = 0; i < size; ++i) {
+		if (i && (i % 16 == 0)) {
+			// print ASCII for previous 16 bytes
+			output->push_back(' ');
+			size_t start = i - 16;
+			for (size_t j = start; j < i; ++j) {
+				output->push_back(is_printable_ascii(data[j]) ? static_cast<char>(data[j]) : '.');
+			}
+			output->push_back('\n');
+		}
+
+		//if ((i % 16) == 0) {
+		//	// indent spaces
+		//	if (indent > 0) output->append(std::string(static_cast<size_t>(indent), ' '));
+		//	// address: 8 hex digits and two spaces after
+		//	// cast to unsigned for printf
+		//	unsigned addr_val = static_cast<unsigned>(startAddr + static_cast<uint32_t>(i));
+		//	int n = std::snprintf(buf, sizeof(buf), "%08x  ", addr_val);
+		//	output->append(buf, static_cast<size_t>(n));
+		//}
+
+		if ((i % 16) == 0) {
+			// indent spaces
+			if (indent > 0) output->append(std::string(static_cast<size_t>(indent), ' '));
+
+			uintptr_t addr = static_cast<uintptr_t>(startAddr) + static_cast<uintptr_t>(i);
+			std::string addr_str;
+			addr_str.resize(static_cast<size_t>(addr_width), '0');
+
+			uintptr_t tmp = addr;
+			for (int pos = addr_width - 1; pos >= 0; --pos) {
+				uint8_t nibble = static_cast<uint8_t>(tmp & 0xF);
+				const char* hex_digits = "0123456789ABCDEF";
+				addr_str[static_cast<size_t>(pos)] = hex_digits[nibble];
+				tmp >>= 4;
+			}
+			output->append(addr_str);
+			output->append("  ");
+		}
+
+		int n = std::snprintf(buf, sizeof(buf), "%02x ", data[i]);
+		output->append(buf, static_cast<size_t>(n));
+	}
+
+	// If last line wasn't complete, add padding for hex columns
+	if (size & 15) {
+		size_t padded_size = ((size - 1) | 15) + 1;
+		for (size_t j = size; j < padded_size; ++j) {
+			output->append("   "); // three chars for each missing byte ("xx ")
+		}
+	}
+
+	// Print ASCII for the final line (if any bytes exist)
+	if (size > 0) {
+		output->push_back(' ');
+		size_t base = (size - 1) & ~static_cast<size_t>(0xF); // start index of the last 16-block
+		for (size_t j = base; j < size; ++j) {
+			output->push_back(is_printable_ascii(data[j]) ? static_cast<char>(data[j]) : '.');
+		}
+	}
+}
+
 float GetRandomFloatInc(float low, float high) {
 	if (low == high) return low;
 	if (low > high) std::swap(low, high);
@@ -323,7 +491,7 @@ inline bool BTN(int c) { return (GetAsyncKeyState(c) & 0x8000); }
 #define PSP_BASE 0x08804000 // starts from
 uintptr_t PPSSPP_BASE = 0; // pointer to 1st byte elf
 #define PSPPOINTER(p)  ( (p) ? ((((uintptr_t)p) - PSP_BASE) + PPSSPP_BASE) : null ) // pPSP(ida) -> pPSP(win) (null saving)
-#define PSPTRANSLATE(p) ( (p) ? ((((uintptr_t)p) - PSP_BASE) - PPSSPP_BASE) : null ) // pPSP(win) -> pPSP(ida) (null saving)
+#define PSPTRANSLATE(p) ( (p) ? ((((uintptr_t)p) /*- PSP_BASE*/) - PPSSPP_BASE) : null ) // pPSP(win) -> pPSP(ida) (null saving)
 #define IDATRANSLATE(p) ((((uintptr_t)p) - PSP_BASE) + PPSSPP_BASE) /*PSPPOINTER(p)*/ // null non save
 
 //template<typename T> T inline EMUPOINTER(void* p) { return (T)(p ? PSPPOINTER(p) : null); } // need?
@@ -331,6 +499,7 @@ template<typename T> T inline EMUPOINTER(void* p) { return (T)(PSPPOINTER(p)); }
 template<typename T> T inline EMUPOINTER(uintptr_t p) { return EMUPOINTER<T>((void*)p); } // need?
 
 
+#pragma pack(push, 1)
 /* 507 */
 struct CControllerState
 {
@@ -407,6 +576,15 @@ struct CMatrix
 	CVuVector pos;
 	RwMatrix* m_pRwMat;
 };
+/* 528 */
+struct CMatrixAlign
+{
+	CMatrix matrix;
+	int field_44;
+	int m_nFlags;
+	int field_4C;
+};
+static_assert(sizeof(CMatrixAlign) == 0x50, "(sizeof(CMatrixAlign)"); // from lcs log too
 struct CPlaceable
 {
 	CMatrix m_pMat;
@@ -446,7 +624,18 @@ struct CRGBA
 	unsigned __int8 blue;
 	unsigned __int8 alpha;
 };
-struct RwTexDictionary;
+struct cRGB
+{
+	char r;
+	char g;
+	char b;
+};
+struct RwTexDictionary
+{
+	RwObject object;
+	RwLinkList textures__texturesInDict;
+	RwLLLink lInInstance;
+};
 struct RwRaster
 {
 	int unk1;
@@ -489,7 +678,7 @@ struct sPspGeometry
 	int numVerts;
 	float pos[3];
 	int unk2;
-	int offset;
+	int offset;// from begin struct to vertices
 	float unk3;
 };
 struct sPspGeometryMesh
@@ -529,6 +718,7 @@ struct RpClump
 	CAnimBlendClumpData* pClumpAnimDataPlugin;
 };
 #define RpAtomic_fromClump(ptr) ( (RpAtomic*) (((uint8_t*)ptr) - 0x1C) ) // RslElementGroupForAllElements + inElementGroupLink__inClump: link ptr - 0x1C = pAtomic*
+#define RwTexture_fromDictionary(ptr) ( (RwTexture*) (((uint8_t*)ptr) - 0x8) )
 struct AtomicExt
 {
 	__int16 modelId;
@@ -644,14 +834,305 @@ struct CPlayerInfo
 	char field_104[140];
 }; // size done
 
+/* 628 */
+enum ModelInfoType
+{
+	MITYPE_NA = 0,
+	MITYPE_SIMPLE = 1,
+	MITYPE_MLO = 2,
+	MITYPE_TIME = 3,
+	MITYPE_WEAPON = 4,
+	MITYPE_CLUMP = 5,
+	MITYPE_VEHICLE = 6,
+	MITYPE_PED = 7,
+	MITYPE_XTRACOMPS = 8,
+	MITYPE_HAND = 9,
+};
+enum eVehicleType
+{
+	VEHICLE_TYPE_CAR = 0x0,
+	VEHICLE_TYPE_BOAT = 0x1,
+	VEHICLE_TYPE_JETSKI = 0x2,
+	VEHICLE_TYPE_TRAIN = 0x3,
+	VEHICLE_TYPE_HELI = 0x4,
+	VEHICLE_TYPE_PLANE = 0x5,
+	VEHICLE_TYPE_BIKE = 0x6,
+	VEHICLE_TYPE_FERRY = 0x7,
+	VEHICLE_TYPE_BMX = 0x8,
+	VEHICLE_TYPE_QUAD = 0x9,
+	NUM_VEHICLE_TYPES = 0xA,
+};
+/* 634 */
+struct __declspec(align(1)) tVehicleSampleData
+{
+	int m_nAccelerationSampleIndex;
+	uint8_t m_nBank;
+	char _field_5[3];
+	int m_nHornSample;
+	int32_t m_nHornFrequency;
+	int32_t m_nSirenOrAlarmSample; // ?
+	int32_t m_nSirenOrAlarmFrequency;
+	uint8_t m_bDoorType;
+};
+struct CColModel;
+struct CBaseModelInfo
+{
+	int m_unkTimers[2];
+	int m_nameHashKey;
+	int m_chunkMdlFile;
+	char m_type;
+	char m_num2dEffects;
+	char ownsColModel;
+	char field_13;
+	CColModel* m_colModel;
+	__int16 m_2dEffectsID;
+	__int16 m_objectId;
+	__int16 m_refCount;
+	__int16 m_txdSlot;
+	__int16 m_interiorGroupIndex;
+	__int16 field_22;
+	void* vftable_MLO;
+};
+struct CElementGroupModelInfo
+{
+	CBaseModelInfo CBaseModelInfo;
+	RpClump* m_clump;
+	int m_animFileIndexOrName;
+};
+struct CVehicleModelInfo
+{
+	CElementGroupModelInfo CElementGroupModelInfo;
+	CRGBA m_aCurrentAvoidColours[2];
+	int m_pHandlingData; // tHandlingData
+	int m_pHandlingBike; // tBikeHandlingData
+	int m_pHandlingFlying; // tFlyingHandlingData
+	int m_pHandlingBoat; // tBoatHandlingData
+	int m_pHandlingJetski; // tJetskiHandlingData
+	int m_pHandling6atv; // t6atvHandlingData
+	float m_normalSplay;
+	eVehicleType m_vehicleType;
+	float m_wheelScale;
+	float m_wheelScaleRear;
+	CVuVector m_positions[15];
+	int m_compRules;
+	int m_steerAngle___m_bikeSteerAngle;
+	char m_gameName[8];
+	char m_nUnk160;
+	char m_nNumColourVariations;
+	char m_nNumScriptColourVariations;
+	char m_anColourVariationIndices[16];
+	char m_anScriptColourVariationIndices[4];
+	cRGB m_anLocalColoursTable[4];
+	char field_183;
+	CRGBA m_aCurrentColours[2];
+	int m_materials1[30];
+	int m_materials2[25];
+	RpAtomic** m_comps__m_extras;
+	int m_animFileIndexOrName;
+	__int16 m_wheelId_Or_m_planeLodId_union;
+	__int16 m_frequency;
+	char m_numDoors;
+	char m_vehicleClass;
+	char m_level;
+	char m_numComps;
+	char m_nLastChosenColourVariation;
+	char field_279[3];
+	int m_nFlags;
+	char field_280[4];
+	tVehicleSampleData m_SampleData;
+	char m_nRadioStation;
+	char field_29E;
+	char field_29F;
+};
+struct tPedColMat
+{
+	RpMaterial* material;
+	char colindex_field_4;
+	char _field_5[3];
+};
+struct CPedModelInfo
+{
+	CElementGroupModelInfo CElementGroupModelInfo;
+	int animGroup;
+	int pedType;
+	int pedStatType;
+	int carsDriveMask___m_carsCanDrive;
+	CColModel* pHitColModel;
+	char radio1;
+	char radio2;
+	char m_nLastChosenColourVariation;
+	char m_nNumColourVariations;
+	char m_nNumScriptColourVariations;
+	char m_anColourVariationIndices[64];
+	char m_anScriptColourVariationIndices[16];
+	cRGB m_anLocalColoursTable[9];
+	tPedColMat renderMaterials[6];
+	char gameName[8];
+	int field_EC;
+	int field_F0;
+	int field_F4;
+	int field_F8;
+};
+struct tSample
+{
+	int nOffset;
+	int nSize;
+	int nFrequency;
+};
+struct __declspec(align(4)) CPool
+{
+	void* m_Objects; // m_entries
+	unsigned __int8* m_ByteMap; // m_flags
+	int m_nSize; // m_size
+	int m_nFirstFree; // m_allocPtr
+	char name[16];
+};
+struct CEscalator
+{
+	CVuVector m_pos0;
+	CVuVector m_pos1;
+	CVuVector m_pos2;
+	CVuVector m_pos3;
+	CMatrixAlign m_matrix;
+	char m_bIsActive;
+	char m_bIsMovingDown;
+	char field_92[2];
+	int m_stepsCount;
+	float m_lowerEnd;
+	float m_upperEnd;
+	CVuVector m_midPoint;
+	float m_radius;
+	void* _0_m_pSteps;
+	void* _1_m_pSteps;
+	void* _2_m_pSteps;
+	void* _3_m_pSteps;
+	void* _4_m_pSteps;
+	void* _5_m_pSteps;
+	void* _6_m_pSteps;
+	void* _7_m_pSteps;
+	void* _8_m_pSteps;
+	void* _9_m_pSteps;
+	void* _10_m_pSteps;
+	void* _11_m_pSteps;
+	void* _12_m_pSteps;
+	void* _13_m_pSteps;
+	void* _14_m_pSteps;
+	void* _15_m_pSteps;
+	void* _16_m_pSteps;
+	void* _17_m_pSteps;
+	void* _18_m_pSteps;
+	void* _19_m_pSteps;
+	void* _20_m_pSteps;
+	void* _21_m_pSteps;
+	void* _22_m_pSteps;
+	void* _23_m_pSteps;
+	char field_114[43];
+	char field_13F;
+};
+struct CSphere
+{
+	//CVector center;
+	float x, y, z;
+	float radius;
+};
+struct CBox
+{
+	CVuVector min;
+	CVuVector max;
+};
+struct CColModel
+{
+	CSphere boundingSphere;
+	CBox boundingBox;
+	unsigned __int16 numBoxes;
+	unsigned __int16 numTriangles;
+	unsigned char numSpheres;
+	unsigned char numLines;
+	unsigned char numTriBBoxes;
+	char level__colStoreId;
+	//CColSphere* spheres;
+	//CColLine* lines;
+	//CColBox* boxes;
+	//CColTriBBox* triBBoxes;
+	//CompressedVector* vertices;
+	//CColTriangle* triangles;
+	int spheres;
+	int lines;
+	int boxes;
+	int triBBoxes;
+	int vertices;
+	int triangles;
+};
+struct CStreamingInfo
+{
+	CStreamingInfo* m_next;
+	CStreamingInfo* m_prev;
+	char m_loadState;
+	char m_flags;
+	__int16 m_nextID;
+	int m_position;
+	int m_size;
+};
+struct tCombatMove
+{
+	char field_0[32];
+	void* ptr_field_20;
+	void* ptr_field_24;
+	__int16 m_nDelta;
+	char m_nFlags;
+	char field_2B;
+	char flags_field_2C;
+	char field_2D[6];
+	char name[11];
+	char field_3E;
+	char field_3F;
+};
 
 
-#define CWorld_Players ((void*)IDATRANSLATE(0x08BDE4B0))
+//=================================================================================================== POOLS
+#define CPools_ms_pPtrNodePool ((CPool*)PSPPOINTER(*(uintptr_t**)IDATRANSLATE(0x08BADEF0))) // 12
+#define CPools_ms_pEntryInfoNodePool ((CPool*)PSPPOINTER(*(uintptr_t**)IDATRANSLATE(0x08BADEF4))) // 20
+#define CPools_ms_pPedPool ((CPool*)PSPPOINTER(*(uintptr_t**)IDATRANSLATE(0x08BADEF8))) // 3344
+#define CPools_ms_pVehiclePool ((CPool*)PSPPOINTER(*(uintptr_t**)IDATRANSLATE(0x08BADEFC))) // 2080
+#define CPools_ms_pBuildingPool ((CPool*)PSPPOINTER(*(uintptr_t**)IDATRANSLATE(0x08BADF00))) // 96
+#define CPools_ms_pTreadablePool ((CPool*)PSPPOINTER(*(uintptr_t**)IDATRANSLATE(0x08BADF04))) // 96
+#define CPools_ms_pObjectPool ((CPool*)PSPPOINTER(*(uintptr_t**)IDATRANSLATE(0x08BADF08))) // 544
+#define CPools_ms_pEmpirePool ((CPool*)PSPPOINTER(*(uintptr_t**)IDATRANSLATE(0x08BADF0C))) // 352
+#define CPools_ms_pDummyPool ((CPool*)PSPPOINTER(*(uintptr_t**)IDATRANSLATE(0x08BADF10))) // 96
+#define CPools_ms_pAudioScriptObjectPool ((CPool*)PSPPOINTER(*(uintptr_t**)IDATRANSLATE(0x08BADF14))) // 48
+#define CTexListStore_ms_pTexListPool ((CPool*)PSPPOINTER(*(uintptr_t**)IDATRANSLATE(0x08BB1260))) // 28
+#define CColStore_ms_pColPool ((CPool*)PSPPOINTER(*(uintptr_t**)IDATRANSLATE(0x08BA9E50))) // 72
+
+#define POOLFLAG_ID 0x7F
+#define POOLFLAG_ISFREE 0x80
+// get entity by pool handle
+inline void* CPools_GetAt(CPool* p, int32_t h, int32_t maxe) { return (h == -1) ? null : ((uint8_t*)PSPPOINTER(p->m_ByteMap))[h >> 8] == (h & 0xFF) ? &((uint8_t*)PSPPOINTER(p->m_Objects))[(h >> 8) * maxe] : null; }
+// get entity by array index (slot)
+inline void* CPools_GetSlot(CPool* p, int32_t i, int32_t maxentsize) { return p ? (void*)(PSPPOINTER(p->m_Objects) + (i * maxentsize)) : null; }
+// index (number object in pool (array index))
+inline int CPools_GetJustIndex(CPool* p, void* pE, int32_t maxe) { return pE ? (((uintptr_t)pE) - ((uintptr_t)PSPPOINTER(p->m_Objects))) / maxe : 0; }
+// index (pool handle)
+inline int CPools_GetIndex(CPool* p, void* pE, int32_t maxe) { int i = CPools_GetJustIndex(p, pE, maxe); return ((uint8_t*)PSPPOINTER(p->m_ByteMap))[i] + (i << 8); }
+// is slot free
+inline bool CPools_GetSlotIsFree(CPool* p, int32_t i) { return !!(((uint8_t*)PSPPOINTER(p->m_ByteMap))[i] & POOLFLAG_ISFREE); }
+
+
+#define CWorld_Players ((uint8_t*)IDATRANSLATE(0x08BDE4B0))
 #define CWorld_PlayerInFocus ((*(uint8_t*)IDATRANSLATE(0x08BB3BD8)))
 #define CPad_Pads ((CPad*)IDATRANSLATE(0x08BDE610))
+#define FrontEndMenuManager ((uint8_t*)IDATRANSLATE(0x08BC9100))
+#define FrontEndMenuManagerSettings ((uint8_t*)PSPPOINTER(*(uintptr_t**)IDATRANSLATE(0x08BB3454)))
 
+// MP
+#define cAdhoc_mspInst ((uint8_t*)PSPPOINTER(*(uintptr_t**)IDATRANSLATE(0x08BB344C)))
+#define cLobby_mspInst ((uint8_t*)PSPPOINTER(*(uintptr_t**)IDATRANSLATE(0x08BB3458)))
+#define cPeerManager_mspInst ((uint8_t*)PSPPOINTER(*(uintptr_t**)IDATRANSLATE(0x08BB3450)))
+#define TheMPGame ((uint8_t*)IDATRANSLATE(0x08BC8FC0))
+#define cNetSession_mspInst ((uint8_t*)PSPPOINTER(*(uintptr_t**)IDATRANSLATE(0x8BC9024)))
 
-
+#define CModelInfo_ms_modelInfoPtrs ((CBaseModelInfo**)IDATRANSLATE(*(uintptr_t**)IDATRANSLATE(0x08BB1D78)))
+#define CModelInfo_msNumModelInfos (*(uint32_t*)IDATRANSLATE(0x08BB3B48)) // ITS NUM, NOT POINTER!!!!
+inline CBaseModelInfo* GetModelInfo(int index) { return EMUPOINTER<CBaseModelInfo*>(CModelInfo_ms_modelInfoPtrs[index]); }
 int GetEntityType(CEntity* pEntity) { int m_type = ((pEntity->_CE_flags_E >> 1) & 0x07); return m_type; }
 void SetEntityType(CEntity* pEntity, int type) { pEntity->_CE_flags_E &= ~(0x07 << 1); pEntity->_CE_flags_E |= (type & 0x07) << 1; }
 int GetEntityStatus(CEntity* pEntity) { int m_status = ((pEntity->_CE_flags_E >> 4) & 0x0F) | ((pEntity->CE_flags_F & 0x01) << 4); return m_status; }
@@ -681,6 +1162,61 @@ CEntity* FindPlayerPed() { return EMUPOINTER<CEntity*>(((CPlayerInfo*)CWorld_Pla
 //	return { pos.x, pos.y, (pos.z == 0.0f && pos.x != 0.0f && pos.y != 0.0f) ? 12.0f : pos.z };
 //}
 
+class ModelInfoExt
+{
+public:
+	bool inited;
+	int index;
+	uint32_t hash;
+	std::string name; // br
+	//---EXT
+	//std::vector<CColModel*> allcolls; // ld steps
+
+	static std::vector<ModelInfoExt> modelInfoExt;
+	static void Init(const char* path)
+	{
+		std::vector<std::string> rows = FileReadAllLines(path);
+		int max_index = -1;
+		for (const auto& row : rows)
+		{
+			if (row.empty()) continue;
+			int index;
+			std::istringstream iss(row);
+			char comma;
+			if (iss >> index >> comma)
+				if (index > max_index)
+					max_index = index;
+		}
+		if (max_index >= 0)
+			modelInfoExt.resize(max_index + 1);
+		for (const auto& row : rows)
+		{
+			if (row.empty()) continue;
+			int index;
+			uint32_t hash;
+			std::string name;
+			std::istringstream iss(row);
+			char comma;
+			if (iss >> index >> comma >> std::hex >> hash >> comma >> name)
+			{
+				if (index >= 0 && index < modelInfoExt.size())
+				{
+					modelInfoExt[index].inited = true;
+					modelInfoExt[index].index = index;
+					modelInfoExt[index].hash = hash;
+					modelInfoExt[index].name = name;
+				}
+				else
+					throw std::out_of_range("Invalid index in ModelInfoExt data");
+			}
+		}
+
+		printf("ModelInfoExt: total %zu\n", modelInfoExt.size());
+	}
+};
+std::vector<ModelInfoExt> ModelInfoExt::modelInfoExt;
+ModelInfoExt* GetModelInfoExt(int mi) { return &ModelInfoExt::modelInfoExt[mi]; }
+
 void UpdPad()
 {
 	bool w = BTN('W');
@@ -707,20 +1243,2070 @@ void UpdPad()
 	*pUpdJal = 0; // disable pad update, todo reset recompiler cache?
 }
 
+typedef int8_t tMacAddr[6];
+struct tAdhocPeerData { // old tPeerData, todo put in Adhoc.h
+	tMacAddr macAddr;
+	int16_t nSelectedPeerModelID;
+	int16_t nTeamID; // eGameTeam
+};
+struct tListenAddr {
+	tMacAddr mac;
+	int16_t port; // uint16  pckt_info_peer ctor -1
+};
+struct tLobbyRemotePeer {
+	tListenAddr peerAddr;
+	int16_t nTeamID; // eGameTeam  old nGangID   recheck!!
+};
+struct tLobbyRemoteInfo { // old tMatchingEntry
+	union
+	{
+		struct
+		{
+			tLobbyRemotePeer m_nSelfAddr;
+			tAdhocPeerData m_nPeersConnInfo[7]; // players in lobby (6 rows, 7th dont see lobby) // slot 1 free, bug?
+			int32_t m_GameType; // eGameType
+			int32_t m_GameLocation; // eGameLocation
+			int32_t m_nScoreLimit;
+			int32_t m_nScoreCTFLimit;
+			// etc... 136
+		};
+		char pad[136];
+	};
+};
+struct tAdhocPlayerData {
+	tMacAddr m_PlayerMacAddr;
+	char m_szPlayerNickname[128];
+};
+struct tAdhocMatchingData {
+	int32_t nState; // eMatchingDataState
+	tMacAddr addr;
+	int8_t padA[2];
+	tLobbyRemoteInfo entry;
+	int32_t nUnkCount;
+};
+static_assert(sizeof(tAdhocMatchingData) == 152, "tAdhocMatchingData");
+#pragma pack(pop) //-----------------------------------------------------------------------------------------------------------------------------------------
+
+class CData
+{
+public:
+	std::vector<std::string> m_strings;
+
+	void Add(const char* szString) {
+		if (szString != nullptr)
+			m_strings.push_back(std::string(szString));
+	}
+
+	bool Store(const char* szPath) {
+		if (szPath == nullptr)
+			return false;
+		std::ofstream file(szPath);
+		if (!file.is_open())
+			return false;
+		for (const auto& str : m_strings) {
+			file << str << '\n';
+		}
+		file.close();
+		return true;
+	}
+
+	bool Restore(const char* szPath)
+	{
+		if (szPath == nullptr)
+			return false;
+		std::ifstream file(szPath);
+		if (!file.is_open())
+			return false;
+		m_strings.clear();
+		std::string line;
+		while (std::getline(file, line)) {
+			m_strings.push_back(line);
+		}
+		file.close();
+		return true;
+	}
+	size_t GetCount() const { return m_strings.size(); }
+	void Reset() { m_strings.clear(); }
+	const std::string& GetString(size_t index) const
+	{
+		static std::string empty;
+		if (index < m_strings.size())
+			return m_strings[index];
+		return empty;
+	}
+};
+
+CData channel1;
+CData channel2;
+
+void PrintIndent(int indent) { for (int i = 0; i < indent; ++i) putchar(' '); }
+void PrintMac(const tMacAddr& mac) {
+	printf("%02X:%02X:%02X:%02X:%02X:%02X",
+		(uint8_t)mac[0], (uint8_t)mac[1], (uint8_t)mac[2],
+		(uint8_t)mac[3], (uint8_t)mac[4], (uint8_t)mac[5]);
+}
+void PrintMacLine(int indent, const char* label, const tMacAddr& mac) {
+	PrintIndent(indent);
+	printf("%s: ", label);
+	PrintMac(mac);
+	printf("\n");
+}
+void PrintStringSafe(int indent, const char* label, const char* src, int maxlen) {
+	char buf[256];
+	size_t len = (maxlen < sizeof(buf) - 1) ? maxlen : sizeof(buf) - 1;
+	memcpy(buf, src, len);
+	buf[len] = '\0';
+	buf[sizeof(buf) - 1] = '\0';
+	PrintIndent(indent);
+	printf("%s: \"%s\"\n", label, buf);
+}
+
+class sReadSyncStream
+{
+public:
+	uint8_t sequence;
+	uint8_t m_pad1[3];
+	uint32_t m_pBuffer;
+	uint32_t m_pBufferEnd;
+};
+
+void* pMon = nil;
+void UpdateMon()
+{
+	sReadSyncStream* pStream = (sReadSyncStream*)pMon;
+	uintptr_t m_pBuffer = EMUPOINTER<uintptr_t>(pStream->m_pBuffer);
+	uintptr_t m_pBufferEnd = EMUPOINTER<uintptr_t>(pStream->m_pBufferEnd);
+
+	system("cls");
+	std::string packethex;
+	DataToHexString(10, m_pBuffer, (uint8_t*)m_pBuffer, (m_pBufferEnd - m_pBuffer), &packethex);
+	printf("%s\n\n", packethex.c_str());
+}
+
+void MakeIDCMLO()
+{
+	FILE* file = fopen("C:\\MLOPSPIDC.txt", "w");
+	for (int32_t i = 0; i < CModelInfo_msNumModelInfos; i++) {
+		uint32_t pMlo = (uint32_t)CModelInfo_ms_modelInfoPtrs[i]; // ppsspp
+		CBaseModelInfo* modelInfo = GetModelInfo(i);
+		ModelInfoExt* pInfoEx = GetModelInfoExt(i);
+		if (!modelInfo) continue;
+
+		const char* pSzType = "";
+		switch (modelInfo->m_type)
+		{
+			case MITYPE_SIMPLE:
+			{
+				pSzType = "CSimpleModelInfo";
+				break;
+			}
+			case MITYPE_MLO:
+			{
+				pSzType = "CMloModelInfo";
+				break;
+			}
+			case MITYPE_TIME:
+			{
+				pSzType = "CTimeModelInfo";
+				break;
+			}
+			case MITYPE_WEAPON:
+			{
+				pSzType = "CWeaponModelInfo";
+				break;
+			}
+			case MITYPE_CLUMP:
+			{
+				pSzType = "CElementGroupModelInfo"; // CClumpModelInfo
+				break;
+			}
+			case MITYPE_VEHICLE:
+			{
+				pSzType = "CVehicleModelInfo";
+				break;
+			}
+			case MITYPE_PED:
+			{
+				pSzType = "CPedModelInfo";
+				break;
+			}
+
+			default:
+			case MITYPE_NA:
+			case MITYPE_XTRACOMPS:
+			case MITYPE_HAND:
+			{
+				assert("false modelinfo");
+				break;
+			}
+		}
+		char buff[256];
+		//sprintf(buff, "SetType(%d, \"%s\");set_name(%d, form(\"Obj_0x%X\", 0x08BB1DA6), SN_AUTO);", pMlo, pSzType, pMlo);
+		sprintf(buff, "SetType(0x%X, \"%s\");set_name(0x%X, \"_%d__%s__%s\", SN_AUTO);",
+			pMlo, pSzType, pMlo, i, ClearStr(pInfoEx->name, "+-").c_str(), pSzType);
+		fprintf(file, "%s\n", buff);
+
+	}
+	fprintf(file, "Message(\"IDC Done\\n\");\n");
+	fclose(file);
+	printf("MLO DUMPED!\n");
+}
+
+void GEN_COMMENT(FILE* file, uint32_t pointerdata, const char* szComment, int type = 0)
+{
+	char* buff = (char*)malloc(512);
+	sprintf(buff, "set_cmt(0x%X, \"%s\", %d);", pointerdata, szComment, type);
+	fprintf(file, "%s\n", buff);
+	free(buff);
+}
+
+void GEN_FIX_OFFSET(FILE* file, uint32_t pointerdata, const char* szType, const char* szName, bool typeOnly = false, int arraysize = 0, bool nameOnly = false)
+{
+	char* buff = (char*)malloc(512);
+	if (arraysize > 0)
+		sprintf(buff, "MakeArray(0x%X, %d);", pointerdata, arraysize); // kek need before define each element as type
+	else
+	{
+		if (typeOnly)
+			sprintf(buff, "SetType(0x%X, \"%s\");", pointerdata, szType);
+		else if (nameOnly)
+			sprintf(buff, "set_name(0x%X, \"%s\", SN_AUTO);", pointerdata, ClearStr(szName, "+-").c_str());
+		else
+			sprintf(buff, "SetType(0x%X, \"%s\");set_name(0x%X, \"%s\", SN_AUTO);",
+				/*TYPE*/pointerdata, szType,  /*NAME*/ pointerdata, ClearStr(szName, "+-").c_str());
+	}
+	if(file)
+		fprintf(file, "%s\n", buff);
+	free(buff);
+}
+
+// TODO
+void Fix_RwObjectTyped(FILE* file, RwObject* tex, const char* szName, int type)
+{
+	char* buff = (char*)malloc(512);
+	if (type == 0) { // we RwTexture
+		RwTexture* rt = EMUPOINTER<RwTexture*>(tex);
+		// self fix
+		const char* pSzType = "RwTexture";
+		sprintf(buff, "%s_%s", szName, pSzType);
+		GEN_FIX_OFFSET(file, (uint32_t)tex, pSzType, buff);
+
+		// fix raster
+		if (rt->raster) {
+			Fix_RwObjectTyped(file, (RwObject*)rt->raster, szName, 1);
+		}
+
+		// fix dict (need?)
+
+	}
+	else if (type == 1) { // we RwRaster
+		//RwRaster* rr = EMUPOINTER<RwRaster*>(tex);
+		// self fix
+		const char* pSzType = "RwRaster";
+		sprintf(buff, "%s_%s", szName, pSzType);
+		GEN_FIX_OFFSET(file, (uint32_t)tex, pSzType, buff);
+
+		// display list
+		// data
+		int* data = OFFSET(EMUPOINTER<int*>(tex), 0x4, int*);
+		if (*data) {
+			sprintf(buff, "%s_%s_data", szName, pSzType);
+			GEN_FIX_OFFSET(file, (uint32_t)*data, nil, buff, false, 0, true);
+		}
+	}
+	free(buff);
+}
+
+// TODO
+void Fix_RpMaterial(FILE* file, RpMaterial* material, const char* szName = NULL)
+{
+	// fix self
+	char buff[256];
+	const char* pSzType = "RpMaterial";
+	sprintf(buff, "%s_%s", szName, pSzType);
+	GEN_FIX_OFFSET(file, (uint32_t)material, pSzType, buff);
+
+	// fix fields
+}
+
+/// arg object fake psp pointer non dll space
+void Fix_RwObject(FILE* file, RwObject* object, const char* szName = NULL, bool typeOnly = false)
+{
+	char* buff = (char*)malloc(512);
+	RwObject* realobject = EMUPOINTER<RwObject*>(object);
+	if (realobject->type == rpATOMIC) {
+		RpAtomic* atomic = (RpAtomic*)realobject;
+		printf("fix RpAtomic\n");
+
+		//---------------------- obj
+		// self fix
+		const char* pSzType = "RpAtomic";
+		sprintf(buff, "%s_%s", szName, pSzType);
+		GEN_FIX_OFFSET(file, (uint32_t)object, pSzType, buff);
+
+		//Fix_RwObject // object.parent
+		if (atomic->object.object.parent) {
+			Fix_RwObject(file, (RwObject*)atomic->object.object.parent, szName, typeOnly);
+		}
+
+		// todo lFrame
+
+		//-------------------------------
+
+		if (atomic->geometry) {
+			Fix_RwObject(file, (RwObject*)atomic->geometry, szName, typeOnly);
+		}
+		//RpGeometry* geo = EMUPOINTER<RpGeometry*>(atomic->geometry);
+
+		// clump disabled recursion loop owner
+		//if (atomic->clump) {
+		//	Fix_RwObject(file, (RwObject*)atomic->clump, szName, true); // not rename
+		//}
+
+		// pAtomicHAnimHierarchyPlugin
+		if (atomic->pAtomicHAnimHierarchyPlugin) {
+			RpHAnimHierarchy* pAtomicHAnimHierarchyPlugin = EMUPOINTER<RpHAnimHierarchy*>(atomic->pAtomicHAnimHierarchyPlugin);
+
+			// self
+			const char* pSzType = "RpHAnimHierarchy";
+			sprintf(buff, "%s_%s", szName, pSzType);
+			GEN_FIX_OFFSET(file, (uint32_t)atomic->pAtomicHAnimHierarchyPlugin, pSzType, buff);
+
+			// pCurrentAnim
+			if (pAtomicHAnimHierarchyPlugin->pCurrentAnim) {
+				// self
+				const char* pSzType = "RslTAnimAnimation";
+				sprintf(buff, "%s_%s", szName, pSzType);
+				GEN_FIX_OFFSET(file, (uint32_t)pAtomicHAnimHierarchyPlugin->pCurrentAnim, pSzType, buff);
+			}
+
+			// pNodeInfo
+			if (pAtomicHAnimHierarchyPlugin->pNodeInfo) {
+				// self
+				const char* pSzType = "HAnimNodeInfo";
+				sprintf(buff, "%s_%s", szName, pSzType);
+				GEN_FIX_OFFSET(file, (uint32_t)pAtomicHAnimHierarchyPlugin->pNodeInfo, pSzType, buff);
+			}
+		}
+	}
+	else if (realobject->type == rpCLUMP) {
+		RpClump* clump = (RpClump*)realobject;
+		printf("fix RpClump\n");
+
+		//---------------------- obj
+		// self fix
+		const char* pSzType = "RpClump";
+		sprintf(buff, "%s_%s", szName, pSzType);
+		GEN_FIX_OFFSET(file, (uint32_t)object, pSzType, buff);
+
+		// Fix fields
+		//Fix_RwObject // object.parent
+		if (clump->object.parent) {
+			Fix_RwObject(file, (RwObject*)clump->object.parent, szName, typeOnly);
+		}
+
+		// todo lFrame
+
+		//-------------------------------
+
+
+		//Fix_RwObject // for all atomics
+
+		RwLLLink* head = &clump->atomicList.link;
+		//debug("head : 0x%p\n", head); // field clump
+		RpAtomic a;
+		assert(((uint8_t*)&a) == ((uint8_t*)&a.inElementGroupLink - 0x1C)); // stru test
+
+		int i = 0;
+		//for (RwLinkList* link = EMUPOINTER<RwLinkList*>(clump->atomicList.link.next); link; link = EMUPOINTER<RwLinkList*>(link->link.next)) // wrong looping
+		RwLLLink* psplink = head->next;
+		for (RwLLLink* link = EMUPOINTER<RwLLLink*>(head->next); link != head; link = EMUPOINTER<RwLLLink*>(link->next)) // FORLIST
+		{
+			RpAtomic* atomic = RpAtomic_fromClump(link); // FORLIST
+			RpAtomic* pspatomic = RpAtomic_fromClump(psplink); // FORLIST
+			sprintf(buff, "%s_%d", szName, i);
+			Fix_RwObject(file, (RwObject*)pspatomic, buff, typeOnly); // orig psp pointer (fake)
+			////printf("ATOMIC!!! [%d] : 0x%p   lnk 0x%p\n", i++, atomic, link);
+			////printf("atomic: 0x%p %s\n", atomic, GetRwObjectDescByType(atomic->object.object.type));
+			//RpGeometry* geo = EMUPOINTER<RpGeometry*>(atomic->geometry);
+			
+			psplink = link->next; // or before real link upd
+			++i;
+		}
+
+		// TODO!! fix all anim hier
+		//fix // pClumpAnimDataPlugin
+		if (clump->pClumpAnimDataPlugin) {
+			//const char* pSzType = "CAnimBlendClumpData";
+			const char* pSzType = "CAnimBlendElementGroupData";
+			sprintf(buff, "%s_%s", szName, pSzType);
+			GEN_FIX_OFFSET(file, (uint32_t)clump->pClumpAnimDataPlugin, pSzType, buff);
+		}
+	}
+	else if (realobject->type == rpFRAME) {
+		//RwFrame* frame = (RwFrame*)realobject;
+		printf("fix RwFrame\n");
+
+		// self fix
+		const char* pSzType = "RwFrame";
+		sprintf(buff, "%s_%s", szName, pSzType);
+		GEN_FIX_OFFSET(file, (uint32_t)object, pSzType, buff);
+
+		// todo
+	}
+	else if (realobject->type == rpGEOMETRY) {
+		RpGeometry* geo = (RpGeometry*)realobject;
+		printf("fix RpGeometry\n");
+
+		// self fix
+		const char* pSzType = "RpGeometry";
+		sprintf(buff, "%s_%s", szName, pSzType);
+		GEN_FIX_OFFSET(file, (uint32_t)object, pSzType, buff);
+
+
+		//pSzType = "RpMaterial";
+		//sprintf(buff, "%s_%s", szName, pSzType);
+		//GEN_FIX_OFFSET(file, (uint32_t)object, pSzType, buff);
+
+		RpMaterial** mats = EMUPOINTER<RpMaterial**>(geo->matList.materials);
+		// arr name
+		sprintf(buff, "%s_RpMaterialArr", szName);
+		pSzType = "RpMaterial*";
+		GEN_FIX_OFFSET(file, (uint32_t)geo->matList.materials, pSzType, buff, false, 0, false);
+
+		for (int32_t i = 0; i < geo->matList.numMaterials; i++) {
+			RpMaterial* mat = mats[i]; // fake
+			if (mat) {
+				//pSzType = "RpMaterial";
+				//sprintf(buff, "%s_%d_%s", szName, i, pSzType);
+				//GEN_FIX_OFFSET(file, (uint32_t)mat, pSzType, buff);
+				sprintf(buff, "%s_RpMaterialArr_%d", szName, i);
+				Fix_RpMaterial(file, mat, buff);
+			}
+		}
+
+		// todo + GEN_FIX_OFFSET settype RpMaterial* before
+		// its broke name array (offset_XX)
+		//if(geo->matList.numMaterials)
+		//	GEN_FIX_OFFSET(file, (uint32_t)geo->matList.materials, nullptr, nullptr, false, geo->matList.numMaterials, false);
+
+
+		// Fix fields
+		if (geo->pSkinPlg) {
+			const char* pSzType = "RpSkin";
+			sprintf(buff, "%s_%s", szName, pSzType);
+			GEN_FIX_OFFSET(file, (uint32_t)geo->pSkinPlg, pSzType, buff);
+		}
+
+		//todo?
+	}
+	else if (realobject->type == rpTEXDICTIONARY) {
+		RwTexDictionary* dict = (RwTexDictionary*)realobject;
+		printf("fix RwTexDictionary\n");
+
+		// self fix
+		const char* pSzType = "RwTexDictionary";
+		sprintf(buff, "%s_%s", szName, pSzType);
+		GEN_FIX_OFFSET(file, (uint32_t)object, pSzType, buff);
+
+		// todo fix textures
+		RwLLLink* head = &dict->textures__texturesInDict.link;
+		int i = 0;
+		//for (RwLinkList* link = EMUPOINTER<RwLinkList*>(clump->atomicList.link.next); link; link = EMUPOINTER<RwLinkList*>(link->link.next)) // wrong looping
+		RwLLLink* psplink = head->next;
+		for (RwLLLink* link = EMUPOINTER<RwLLLink*>(head->next); link != head; link = EMUPOINTER<RwLLLink*>(link->next)) // FORLIST
+		{
+			RwTexture* tex = RwTexture_fromDictionary(link); // FORLIST
+			RwTexture* psptex = RwTexture_fromDictionary(psplink); // FORLIST
+			sprintf(buff, "%s_%s_%d", szName, pSzType, i);
+			Fix_RwObjectTyped(file, (RwObject*)psptex, buff, 0); // orig psp pointer (fake)
+
+			psplink = link->next; // or before real link upd
+			++i;
+		}
+
+	}
+	else {
+		assert(false && "unimpl");
+	}
+	free(buff);
+}
+
+void Fix_CColModel(FILE* file, CColModel* col, const char* szName)
+{
+	myassert(file && col && szName);
+	char* buff = (char*)malloc(512);
+
+	// self fix
+	const char* pSzType = "CColModel";
+	sprintf(buff, "%s_%s", szName, pSzType);
+	GEN_FIX_OFFSET(file, (uint32_t)col, pSzType, buff);
+
+	// fix fields
+	const char* pSzFmt = "%s_%s_%d";
+	CColModel* realcol = EMUPOINTER<CColModel*>(col);
+	if (realcol->spheres) { // +
+		for (int i = 0; i < realcol->numSpheres; i++) {
+			const char* pSzType = "CColSphere";
+			sprintf(buff, pSzFmt, szName, pSzType, i);
+			GEN_FIX_OFFSET(file, realcol->spheres + (i * 0x20), pSzType, buff);
+		}
+		if(realcol->numSpheres)
+			GEN_FIX_OFFSET(file, (uint32_t)realcol->spheres, nullptr, nullptr, false, realcol->numSpheres, false);
+	}
+	if (realcol->lines) { // +
+		for (int i = 0; i < realcol->numLines; i++) {
+			const char* pSzType = "CColLine";
+			sprintf(buff, pSzFmt, szName, pSzType, i);
+			GEN_FIX_OFFSET(file, realcol->lines + (i * 0x20), pSzType, buff);
+		}
+		if (realcol->numLines)
+			GEN_FIX_OFFSET(file, (uint32_t)realcol->lines, nullptr, nullptr, false, realcol->numLines, false);
+	}
+	if (realcol->boxes) { // +
+		for (int i = 0; i < realcol->numBoxes; i++) {
+			const char* pSzType = "CColBox";
+			sprintf(buff, pSzFmt, szName, pSzType, i);
+			GEN_FIX_OFFSET(file, realcol->boxes + (i * 0x30), pSzType, buff);
+		}
+		if (realcol->numBoxes)
+			GEN_FIX_OFFSET(file, (uint32_t)realcol->boxes, nullptr, nullptr, false, realcol->numBoxes, false);
+	}
+	if (realcol->triBBoxes) {
+		for (int i = 0; i < realcol->numTriBBoxes; i++) {
+			const char* pSzType = "CColTriBBox";
+			sprintf(buff, pSzFmt, szName, pSzType, i);
+			GEN_FIX_OFFSET(file, realcol->triBBoxes + (i * 0x10), pSzType, buff);
+		}
+		if (realcol->numTriBBoxes)
+			GEN_FIX_OFFSET(file, (uint32_t)realcol->triBBoxes, nullptr, nullptr, false, realcol->numTriBBoxes, false);
+	}
+	if (realcol->vertices) { // +
+		int numtristrip = realcol->numTriangles + 2; // 2 tri 4 vert
+		for (int i = 0; i < numtristrip; i++) {
+			const char* pSzType = "CompressedVector";
+			sprintf(buff, pSzFmt, szName, pSzType, i);
+			GEN_FIX_OFFSET(file, realcol->vertices + (i * 0x6), pSzType, buff);
+		}
+		if (numtristrip)
+			GEN_FIX_OFFSET(file, (uint32_t)realcol->vertices, nullptr, nullptr, false, numtristrip, false);
+	}
+	if (realcol->triangles) { // +
+		for (int i = 0; i < realcol->numTriangles; i++) {
+			const char* pSzType = "CColTriangle";
+			sprintf(buff, pSzFmt, szName, pSzType, i);
+			GEN_FIX_OFFSET(file, realcol->triangles + (i * 0x8), pSzType, buff);
+		}
+		if (realcol->numTriangles)
+			GEN_FIX_OFFSET(file, (uint32_t)realcol->triangles, nullptr, nullptr, false, realcol->numTriangles, false);
+	}
+	free(buff);
+}
+
+// TODO usage FixRwObject
+void Fix_CBaseModelInfo(FILE* file, CBaseModelInfo* modelInfo, ModelInfoExt* pInfoEx, int i)
+{
+	// FixList: CBaseModelInfo: (?m_dmaLinks, m_chunkMdlFile_clump, vftable_MLO), m_colModel
+	char buff[256];
+	if (modelInfo->m_colModel) {
+		//const char* pSzType = "CColModel";
+		//sprintf(buff, "_%d__%s__%s", i, ClearStr(pInfoEx->name, "+-").c_str(), pSzType);
+		sprintf(buff, "_%d__%s", i, ClearStr(pInfoEx->name, "+-").c_str());
+		Fix_CColModel(file, modelInfo->m_colModel, buff);
+	}
+}
+
+// TODO fix clump
+void Fix_CElementGroupModelInfo(FILE* file, CBaseModelInfo* modelInfo, ModelInfoExt* pInfoEx, int i)
+{
+	CElementGroupModelInfo* clumpmodelInfo = (CElementGroupModelInfo*)modelInfo;
+	char buff[256];
+	if (clumpmodelInfo->m_clump) {
+		//const char* pSzType = "RpClump"; // RslElementGroup
+		//sprintf(buff, "_%d__%s__%s", i, ClearStr(pInfoEx->name, "+-").c_str(), pSzType);
+		sprintf(buff, "_%d__%s", i, ClearStr(pInfoEx->name, "+-").c_str());
+		Fix_RwObject(file, (RwObject*)clumpmodelInfo->m_clump, buff);
+		//GEN_FIX_OFFSET(file, (uint32_t)clumpmodelInfo->m_clump, pSzType, buff);
+	}
+
+}
+
+void FixupMLOPATCHES()
+{
+	FILE* file = fopen("C:\\IDC\\MLOPSPIDCPATCHES.txt", "w");
+	for (int32_t i = 0; i < CModelInfo_msNumModelInfos; i++) {
+		uint32_t pMlo = (uint32_t)CModelInfo_ms_modelInfoPtrs[i]; // ppsspp
+		CBaseModelInfo* modelInfo = GetModelInfo(i);
+		ModelInfoExt* pInfoEx = GetModelInfoExt(i);
+		if (!modelInfo) continue;
+
+		printf("Fix_CBaseModelInfo %d\n", i);
+		Fix_CBaseModelInfo(file, modelInfo, pInfoEx, i);
+		switch (modelInfo->m_type)
+		{
+			case MITYPE_SIMPLE: // "CSimpleModelInfo"
+			{
+				char buff[256];
+				printf("fix  m_atomics_objects\n");
+				uint32_t* m_atomics_objects = OFFSET(modelInfo, 0x28, uint32_t*);
+				uint8_t m_numAtomics = *OFFSET(modelInfo, 0x38, uint8_t*);
+				if (m_numAtomics && *m_atomics_objects)
+				{
+					// self
+					const char* pSzType = "RpAtomic**";
+					uint32_t pointer = *m_atomics_objects;
+					sprintf(buff, "_%d__%s__atomics", i, ClearStr(pInfoEx->name, "+-").c_str());
+					GEN_FIX_OFFSET(file, pointer, pSzType, buff);
+
+					RpAtomic** atomics = EMUPOINTER<RpAtomic**>(*m_atomics_objects);
+					for (int j = 0; j < m_numAtomics; j++) {
+						if (!atomics[j]) continue;
+						const char* pSzType = "";
+						sprintf(buff, "_%d_%d_%s__%s_M2", i, j, ClearStr(pInfoEx->name, "+-").c_str(), pSzType);
+						Fix_RwObject(file, (RwObject*)atomics[j], buff);
+					}
+				}
+
+				// related model info
+
+				break;
+			}
+			case MITYPE_MLO: // "CMloModelInfo"
+			{
+				printf("MITYPE_CLUMP %d\n", i);
+				Fix_CElementGroupModelInfo(file, modelInfo, pInfoEx, i);
+
+				break;
+			}
+			case MITYPE_TIME: // "CTimeModelInfo"
+			{
+				break;
+			}
+			case MITYPE_WEAPON: // "CWeaponModelInfo"
+			{
+				break;
+			}
+			case MITYPE_CLUMP: // "CElementGroupModelInfo"
+			{
+				printf("MITYPE_CLUMP %d\n", i);
+				Fix_CElementGroupModelInfo(file, modelInfo, pInfoEx, i);
+				break;
+			}
+			case MITYPE_VEHICLE: // "CVehicleModelInfo"
+			{
+				printf("MITYPE_VEHICLE %d\n", i);
+				Fix_CElementGroupModelInfo(file, modelInfo, pInfoEx, i);
+
+				// CVehicleModelInfo: m_pHandlingData m_pHandlingBike m_pHandlingFlying m_pHandlingBoat m_pHandlingJetski m_pHandling6atv
+
+				char buff[256];
+				CVehicleModelInfo* vehmodelInfo = (CVehicleModelInfo*)modelInfo;
+
+				if (vehmodelInfo->m_pHandlingData) {
+					const char* pSzType = "tHandlingData";
+					uint32_t pointer = vehmodelInfo->m_pHandlingData;
+					sprintf(buff, "_%d__%s__%s", i, ClearStr(pInfoEx->name, "+-").c_str(), pSzType);
+					GEN_FIX_OFFSET(file, pointer, pSzType, buff);
+				}
+				if (vehmodelInfo->m_pHandlingBike) {
+					const char* pSzType = "tBikeHandlingData";
+					uint32_t pointer = vehmodelInfo->m_pHandlingBike;
+					sprintf(buff, "_%d__%s__%s", i, ClearStr(pInfoEx->name, "+-").c_str(), pSzType);
+					GEN_FIX_OFFSET(file, pointer, pSzType, buff);
+				}
+				if (vehmodelInfo->m_pHandlingFlying) {
+					const char* pSzType = "tFlyingHandlingData";
+					uint32_t pointer = vehmodelInfo->m_pHandlingFlying;
+					sprintf(buff, "_%d__%s__%s", i, ClearStr(pInfoEx->name, "+-").c_str(), pSzType);
+					GEN_FIX_OFFSET(file, pointer, pSzType, buff);
+				}
+				if (vehmodelInfo->m_pHandlingBoat) {
+					const char* pSzType = "tBoatHandlingData";
+					uint32_t pointer = vehmodelInfo->m_pHandlingBoat;
+					sprintf(buff, "_%d__%s__%s", i, ClearStr(pInfoEx->name, "+-").c_str(), pSzType);
+					GEN_FIX_OFFSET(file, pointer, pSzType, buff);
+				}
+				if (vehmodelInfo->m_pHandlingJetski) {
+					const char* pSzType = "tJetskiHandlingData";
+					uint32_t pointer = vehmodelInfo->m_pHandlingJetski;
+					sprintf(buff, "_%d__%s__%s", i, ClearStr(pInfoEx->name, "+-").c_str(), pSzType);
+					GEN_FIX_OFFSET(file, pointer, pSzType, buff);
+				}
+				if (vehmodelInfo->m_pHandling6atv) {
+					const char* pSzType = "t6atvHandlingData";
+					uint32_t pointer = vehmodelInfo->m_pHandling6atv;
+					sprintf(buff, "_%d__%s__%s", i, ClearStr(pInfoEx->name, "+-").c_str(), pSzType);
+					GEN_FIX_OFFSET(file, pointer, pSzType, buff);
+				}
+
+				// disabled by fixup in CElementGroupModelInfo in clump already this materials, double renaming
+				//// m_materials1
+				//for (int j = 0; j < 30; j++) {
+				//	if (vehmodelInfo->m_materials1[j]) {
+				//		const char* pSzType = "";
+				//		sprintf(buff, "_%d_%d_%s__%s", i, j, ClearStr(pInfoEx->name, "+-").c_str(), pSzType);
+				//		Fix_RpMaterial(file, (RpMaterial*)vehmodelInfo->m_materials1[j], buff);
+				//	}
+				//}
+
+				//// m_materials2
+				//for (int j = 0; j < 25; j++) {
+				//	if (vehmodelInfo->m_materials2[j]) {
+				//		const char* pSzType = "";
+				//		sprintf(buff, "_%d_%d_%s__%s_M1", i, j, ClearStr(pInfoEx->name, "+-").c_str(), pSzType);
+				//		Fix_RpMaterial(file, (RpMaterial*)vehmodelInfo->m_materials2[j], buff);
+				//	}
+				//}
+
+				printf("fix comps\n");
+				RpAtomic** extras = EMUPOINTER<RpAtomic**>(vehmodelInfo->m_comps__m_extras);
+				if (extras)
+				{
+					for (int j = 0; j < vehmodelInfo->m_numComps; j++) {
+						if (!extras[j]) continue;
+						const char* pSzType = "";
+						sprintf(buff, "_%d_%d_%s__%s_M2", i, j, ClearStr(pInfoEx->name, "+-").c_str(), pSzType);
+						Fix_RwObject(file, (RwObject*)extras[j], buff);
+					}
+				}
+				break;
+			}
+			case MITYPE_PED: // "CPedModelInfo"
+			{
+				printf("MITYPE_PED %d\n", i);
+				Fix_CElementGroupModelInfo(file, modelInfo, pInfoEx, i);
+
+				char buff[256];
+				CPedModelInfo* pedmodelInfo = (CPedModelInfo*)modelInfo;
+
+				if (pedmodelInfo->pHitColModel) {
+					//const char* pSzType = "CColModel";
+					//sprintf(buff, "_%d__%s__HitCol__%s", i, ClearStr(pInfoEx->name, "+-").c_str(), pSzType);
+					sprintf(buff, "_%d__%s__HitCol", i, ClearStr(pInfoEx->name, "+-").c_str());
+					Fix_CColModel(file, pedmodelInfo->pHitColModel, buff);
+				}
+
+				for (int j = 0; j < 6; j++) {
+					tPedColMat& renderMaterials = pedmodelInfo->renderMaterials[j];
+					const char* pSzType = "RpMaterial";
+					sprintf(buff, "_%d__%d__%s__%s", i, j, ClearStr(pInfoEx->name, "+-").c_str(), pSzType);
+					Fix_RpMaterial(file, renderMaterials.material, buff);
+				}
+
+				break;
+			}
+
+			default:
+			case MITYPE_NA:
+			case MITYPE_XTRACOMPS:
+			case MITYPE_HAND:
+			{
+				assert("false modelinfo");
+				break;
+			}
+		}
+	}
+
+	fprintf(file, "Message(\"IDC Done\\n\");\n");
+	fclose(file);
+	printf("MLOPATCHES DUMPED!\n");
+}
+
+void FixupMarkers()
+{
+	FILE* file = fopen("C:\\IDC\\MARKERS.txt", "w");
+	char buff[256];
+	RpClump** carr = EMUPOINTER<RpClump**>(*EMUPOINTER<int*>(0x08BB3E5C));
+	for (int i = 0; i < 9; i++) {
+		if (carr[i]) {
+			sprintf(buff, "_%d_marker", i);
+			Fix_RwObject(file, (RwObject*)carr[i], buff);
+		}
+	}
+	fprintf(file, "Message(\"IDC Done\\n\");\n");
+	fclose(file);
+	printf("FixupMarkers DUMPED!\n");
+}
+
+void FixupPools()
+{
+	//CPools::ms_pBuildingPool
+	//CPools::ms_pTreadablePool // empty
+	//CPools::ms_pDummyPool
+	//CPools::ms_pEntryInfoNodePool
+	//CPools::ms_pPtrNodePool
+
+	// fixup matrix rwmat
+	// entity rwobject
+
+	FILE* file = fopen("C:\\IDC\\POOLS.txt", "w");
+	char buff[256];
+
+
+	for (int32_t i = CPools_ms_pBuildingPool->m_nSize - 1; i >= 0; i--)
+	{
+		if (CPools_GetSlotIsFree(CPools_ms_pBuildingPool, i)) { continue; }
+		CEntity* e = (CEntity*)CPools_GetSlot(CPools_ms_pBuildingPool, i, 96);
+		if (e)
+		{
+			if (e->CPlaceable.m_pMat.m_pRwMat) {
+				const char* pSzType = "RwMatrix";
+				sprintf(buff, "_%d_RwMatrix_CPlaceable_BuildingPool", i);
+				GEN_FIX_OFFSET(file, (uint32_t)e->CPlaceable.m_pMat.m_pRwMat, pSzType, buff);
+			}
+
+			if (e->m_urwObject.m_rwObject) {
+				ModelInfoExt* pInfoEx = GetModelInfoExt(e->m_modelIndex);
+				sprintf(buff, "_%d__%s_BuildingPool", i, ClearStr(pInfoEx->name, "+-").c_str());
+				Fix_RwObject(file, e->m_urwObject.m_rwObject, buff);
+			}
+
+		}
+	}
+	for (int32_t i = CPools_ms_pTreadablePool->m_nSize - 1; i >= 0; i--)
+	{
+		if (CPools_GetSlotIsFree(CPools_ms_pTreadablePool, i)) { continue; }
+		CEntity* e = (CEntity*)CPools_GetSlot(CPools_ms_pTreadablePool, i, 96);
+		if (e)
+		{
+
+		}
+	}
+	for (int32_t i = CPools_ms_pDummyPool->m_nSize - 1; i >= 0; i--)
+	{
+		if (CPools_GetSlotIsFree(CPools_ms_pDummyPool, i)) { continue; }
+		CEntity* e = (CEntity*)CPools_GetSlot(CPools_ms_pDummyPool, i, 96);
+		if (e)
+		{
+
+		}
+	}
+	for (int32_t i = CTexListStore_ms_pTexListPool->m_nSize - 1; i >= 0; i--)
+	{
+		//if (CPools_GetSlotIsFree(CTexListStore_ms_pTexListPool, i)) { continue; }
+		uint32_t* e = (uint32_t*)CPools_GetSlot(CTexListStore_ms_pTexListPool, i, 28);
+		if (e)
+		{
+			char* name = OFFSET(e, 0x8, char*);
+			if (*e && name[0]) {
+
+				sprintf(buff, "_%d__%s_def_txd_pool", i, name);
+				Fix_RwObject(file, (RwObject*)*e, buff, false);
+				//GEN_FIX_OFFSET(file, (uint32_t)*e, pSzType, buff);
+			}
+
+			//printf("%s\n", e->name);
+		}
+	}
+	//for (int32_t i = CColStore_ms_pColPool->m_nSize - 1; i >= 0; i--)
+	//{
+	//	if (CPools_GetSlotIsFree(CColStore_ms_pColPool, i)) { continue; }
+	//	ColDef* c = (ColDef*)CPools_GetSlot(CColStore_ms_pColPool, i, 72);
+	//	if (c)
+	//	{
+	//		printf("col%d 0x%p  %s\n", i, c, c->name);
+	//	}
+	//}
+
+	fprintf(file, "Message(\"IDC Done\\n\");\n");
+	fclose(file);
+	printf("FixupPools DUMPED!\n");
+}
+
+bool HasReloc(uint32_t ptr, uint8_t* dtz = nil, bool dst = false)
+{
+	if (!ptr)
+		return false;
+	if(!dtz)
+		dtz = (uint8_t*)(*EMUPOINTER<int*>(0x08BB1D78)) - (0x0969AB70 - 0x0938A700); // default
+	//printf("dtz 0x%p ptr 0x%p\n", dtz, ptr);
+	static FILE* dtzfile = nil;
+	static std::vector<uint32_t> classes(14798);
+	static std::vector<uint32_t> funcs(23);
+	static std::vector<uint32_t> reloc(139992);
+
+	if (!dtzfile) {
+		dtzfile = fopen("GAME.dat", "rb");
+		if (!dtzfile) ExitProcess(0);
+		fseek(dtzfile, 0x0056B1DC, SEEK_SET); // classes
+		fread(classes.data(), sizeof(uint32_t), 14798, dtzfile);
+		fseek(dtzfile, 0x00579914, SEEK_SET); // funcs
+		fread(funcs.data(), sizeof(uint32_t), 23, dtzfile);
+		fseek(dtzfile, 0x00579970, SEEK_SET); // reloc
+		fread(reloc.data(), sizeof(uint32_t), 139992, dtzfile);
+		fclose(dtzfile);
+	}
+
+	for (int i = 0; i < 139992; i++) {
+		//printf("dptr 0x%p rel 0x%p mptr 0x%p\n", (dtz + reloc[i]), reloc[i], ptr);
+		if (dst && ptr == *(uint32_t*)(dtz + reloc[i]))
+			return true;
+		if (ptr == (uint32_t)(dtz + reloc[i]))
+			return true;
+	}
+	return false;
+}
+
+ //shrink remove data
+void test()
+{
+	//char* buff = (char*)malloc(1024*1024*10);
+	char* buff = (char*)malloc(0x6024D0*2);
+	FILE* dtzfile = fopen("GAME.dat", "rb");
+	int read = fread(buff, 1, 0x6024D0, dtzfile);
+	printf("0x%p\n", *(int*)&buff[0x6024D0-4]);
+	fclose(dtzfile);
+	free(buff);
+}
+
+//void test()
+//{
+//	printf("[LOG] Начало функции test()\n");
+//
+//	// Вычисляем размер для выделения памяти
+//	size_t alloc_size = 0x6024D0 * 2;
+//	printf("[LOG] Выделяем память размером: 0x%zx байт\n", alloc_size);
+//
+//	char* buff = (char*)malloc(alloc_size);
+//	if (buff == NULL) {
+//		printf("[ERROR] Не удалось выделить память!\n");
+//		return;
+//	}
+//	printf("[LOG] Память успешно выделена по адресу: %p\n", buff);
+//
+//	printf("[LOG] Открываем файл GAME.dat\n");
+//	FILE* dtzfile = fopen("GAME.dat", "rb");
+//	if (dtzfile == NULL) {
+//		printf("[ERROR] Не удалось открыть файл GAME.dat!\n");
+//		free(buff);
+//		return;
+//	}
+//	printf("[LOG] Файл успешно открыт\n");
+//
+//	size_t read_size = 0x6024D0;
+//	printf("[LOG] Читаем %zu байт из файла\n", read_size);
+//	size_t bytes_read = fread(buff, 1, read_size, dtzfile);
+//	printf("[LOG] Прочитано %zu байт\n", bytes_read);
+//
+//	if (bytes_read < read_size) {
+//		printf("[WARNING] Прочитано меньше байт, чем ожидалось!\n");
+//	}
+//
+//	// Вычисляем адрес для чтения значения
+//	size_t target_offset = 0x6024D0 - 4;
+//	printf("[LOG] Читаем значение по смещению: 0x%zx (адрес: %p)\n",
+//		target_offset, buff + target_offset);
+//
+//	int value = *(int*)&buff[target_offset];
+//	printf("0x%p\n", (void*)(intptr_t)value);
+//	printf("[LOG] Прочитанное значение: 0x%x (десятичное: %d)\n", value, value);
+//
+//	printf("[LOG] Закрываем файл\n");
+//	fclose(dtzfile);
+//
+//	printf("[LOG] Освобождаем память\n");
+//	free(buff);
+//
+//	printf("[LOG] Конец функции test()\n");
+//}
+//
+//void test2()
+//{
+//	char* buff = (char*)malloc(0x6024D0 * 2);
+//
+//	// Узнаем текущую директорию и путь к файлу
+//	char path[256];
+//	GetCurrentDirectoryA(256, path);
+//	printf("Текущая директория: %s\n", path);
+//	printf("Пытаемся открыть: %s\\GAME.dat\n", path);
+//
+//	// Проверяем существует ли файл
+//	FILE* dtzfile = fopen("GAME.dat", "rb");
+//	if (dtzfile == NULL) {
+//		printf("Файл GAME.dat НЕ НАЙДЕН в текущей директории!\n");
+//
+//		// Ищем файл в директории с программой
+//		char exe_path[256];
+//		GetModuleFileNameA(NULL, exe_path, 256);
+//		printf("Путь к EXE: %s\n", exe_path);
+//		free(buff);
+//		return;
+//	}
+//
+//	// Проверяем размер файла
+//	fseek(dtzfile, 0, SEEK_END);
+//	long size = ftell(dtzfile);
+//	fseek(dtzfile, 0, SEEK_SET);
+//
+//	printf("Размер файла: %ld байт (%.2f MB)\n", size, size / (1024.0 * 1024.0));
+//	printf("Ожидаемый размер: 6300880 байт (6.01 MB)\n");
+//
+//	if (size < 6300880) {
+//		printf("ФАЙЛ СЛИШКОМ МАЛЕНЬКИЙ! Нужен файл 6 МБ\n");
+//		fclose(dtzfile);
+//		free(buff);
+//		return;
+//	}
+//
+//	fread(buff, 1, 0x6024D0, dtzfile);
+//	printf("0x%p\n", *(int*)&buff[0x6024D0 - 4]);
+//
+//	fclose(dtzfile);
+//	free(buff);
+//}
+
+void GenRelocComs()
+{
+	FILE* file = fopen("C:\\COMENTS.txt", "w");
+	uint8_t* dtz = (uint8_t*)(*EMUPOINTER<int*>(0x08BB1D78)) - (0x0969AB70 - 0x0938A700);
+	//uint32_t* dclasses = (uint32_t*)(dtz + 0x0056B1DC); // 14798
+	//uint32_t* dfuncs = (uint32_t*)(dtz + 0x00579914); // 23
+	//uint32_t* dreloc = (uint32_t*)(dtz + 0x00579970); // 139992
+	//printf("dtz 0x%p realdtz 0x%p   0x%p 0x%p 0x%p\n", dtz, realdtz, dclasses, dfuncs, dreloc);
+
+	// not in ppsspp memory after shrink
+	FILE* dtzfile = fopen("GAME.dat", "rb");
+	if (!dtzfile) ExitProcess(0);
+	fseek(dtzfile, 0x0056B1DC, SEEK_SET); // classes
+	std::vector<uint32_t> classes(14798);
+	fread(classes.data(), sizeof(uint32_t), 14798, dtzfile);
+	fseek(dtzfile, 0x00579914, SEEK_SET); // funcs
+	std::vector<uint32_t> funcs(23);
+	fread(funcs.data(), sizeof(uint32_t), 23, dtzfile);
+	fseek(dtzfile, 0x00579970, SEEK_SET); // reloc
+	std::vector<uint32_t> reloc(139992*2);
+	fread(reloc.data(), 1, 139992 * 4, dtzfile);
+	fclose(dtzfile);
+
+	for (int i = 0; i < 14798; i++) {
+		GEN_COMMENT(file, (uint32_t)(dtz + classes[i]), "classes table", 0);
+	}
+	for (int i = 0; i < 23; i++) {
+		GEN_COMMENT(file, (uint32_t)(dtz + funcs[i]), "functions table", 0);
+		GEN_FIX_OFFSET(file, (uint32_t)(dtz + funcs[i]), "void*", nullptr, true, 0);
+	}
+	for (int i = 0; i < 139992; i++) {
+		GEN_COMMENT(file, (uint32_t)(dtz + reloc[i]), "relocate table", 0);
+		GEN_FIX_OFFSET(file, (uint32_t)(dtz + reloc[i]), "void*", nullptr, true, 0);
+	}
+
+	fprintf(file, "Message(\"IDC Done\\n\");\n");
+	fclose(file);
+	printf("GenRelocComs DUMPED!\n");
+}
+
+void FixupInter()
+{
+	FILE* file = fopen("C:\\IDC\\INTERS.txt", "w");
+	uint8_t* dtz = (uint8_t*)(*EMUPOINTER<int*>(0x08BB1D78)) - (0x0969AB70 - 0x0938A700);
+	char buff[256];
+
+	uint32_t pointer = 0x09401360 + 4 + 4;
+	for (int i = 0; i < 0x42; i++) {
+		uint32_t p = *EMUPOINTER<uint32_t*>(pointer);
+		const char* pSzType = "CInteriorInfo";
+		sprintf(buff, "_%d__interiorinfo", i);
+		GEN_FIX_OFFSET(file, p, pSzType, buff);
+		pointer += 8;
+	}
+	fprintf(file, "Message(\"IDC Done\\n\");\n");
+	fclose(file);
+	printf("FixupInter DUMPED!\n");
+}
+
+void FixupStatsTypes()
+{
+	FILE* file = fopen("C:\\IDC\\STATSTYPES.txt", "w");
+	uint8_t* dtz = (uint8_t*)(*EMUPOINTER<int*>(0x08BB1D78)) - (0x0969AB70 - 0x0938A700);
+	char buff[256];
+
+	// Stats
+	uint32_t* ptr = EMUPOINTER<uint32_t*>(0x097395E0);
+	for (int i = 0; i < 42; i++)
+	{
+		uint32_t p = ptr[i]; // fake
+		char* name = OFFSET(EMUPOINTER<char*>(p), 0x1A, char*);
+
+		const char* pSzType = "CPedStats";
+		sprintf(buff, "STATS_%s", name);
+		GEN_FIX_OFFSET(file, p, pSzType, buff);
+	}
+
+	// Types
+	ptr = EMUPOINTER<uint32_t*>(0x0973E870);
+	for (int i = 0; i < 23; i++)
+	{
+		uint32_t p = ptr[i]; // fake
+
+		const char* pSzType = "CPedType";
+		sprintf(buff, "_%d_pedtype", i);
+		GEN_FIX_OFFSET(file, p, pSzType, buff);
+	}
+
+	fprintf(file, "Message(\"IDC Done\\n\");\n");
+	fclose(file);
+	printf("FixupStats DUMPED!\n");
+}
+
+void FixupEtc()
+{
+	// fighting x2
+	// fontdef
+
+
+	FILE* file = fopen("C:\\IDC\\ETC.txt", "w");
+	//FILE* file = nil;
+	// DTZ 0x0938A700
+	uint8_t* dtz = (uint8_t*)(*EMUPOINTER<int*>(0x08BB1D78)) - (0x0969AB70 - 0x0938A700); // fake
+	char buff[512];
+
+#if 0 // streaming
+	uint32_t psi = 0x096B1530;
+	uint32_t ms_startLoadedList = psi + 0x9C;
+	uint32_t ps = *EMUPOINTER<uint32_t*>(ms_startLoadedList);
+	uint32_t ms_endLoadedList = psi + 0xA0;
+	uint32_t pe = *EMUPOINTER<uint32_t*>(ms_endLoadedList);
+	// end 096B15CC field ms_startLoadedList in streaming
+	printf("assert %d\n", ms_startLoadedList == 0x096B15CC);
+
+	int i = 0;
+	uint32_t tps = ps;
+	CStreamingInfo* rps = EMUPOINTER<CStreamingInfo*>(ps);
+	while (1)
+	{
+		printf("i %d me 0x%p  my next 0x%p\n", i++, tps, rps->m_next);
+
+		const char* pSzType = "CStreamingInfo";
+		sprintf(buff, "_%d_LoadedList_CStreamingInfo", i);
+		GEN_FIX_OFFSET(file, tps, pSzType, buff);
+
+		tps = (uint32_t)rps->m_next;
+		rps = EMUPOINTER<CStreamingInfo*>(tps);
+		if (tps == ms_startLoadedList) break;
+	}
+#endif
+
+#if 0 // anim
+	uint32_t inst = 0x0959A720;
+	uint32_t m_aAnimations = inst + 0x0001013C; // 985
+	uint32_t pm_aAnimations = *EMUPOINTER<uint32_t*>(m_aAnimations);
+	uint32_t m_aAnimBlocks = inst + 0x00010140; // 140
+	uint32_t pm_aAnimBlocks = *EMUPOINTER<uint32_t*>(m_aAnimBlocks);
+	uint32_t m_aAnimAssocGroups = inst + 0x0001014C; // 123
+	uint32_t pm_aAnimAssocGroups = *EMUPOINTER<uint32_t*>(m_aAnimAssocGroups);
+
+#if 0 // m_aAnimations->blendSequences->keyFrames
+	// m_aAnimation
+	uint8_t* rm_aAnimations = EMUPOINTER<uint8_t*>(pm_aAnimations);
+	for (uint32_t i = 0; i < 985; i++) // 0x28 CAnimBlendTree
+	{
+		//sprintf(buff, "C:\\IDC\\anim\\anim_%d.idc", i);
+		//printf("curr %s\n", buff);
+		//FILE* file = fopen(buff, "w");
+		uint8_t* curr = rm_aAnimations + (0x28 * i); // CAnimBlendTree
+		uint32_t currf = pm_aAnimations + (0x28 * i); // CAnimBlendTree
+		uint32_t pblendSequences = *OFFSET(curr, 0x0, uint32_t*); // CAnimBlendSequence
+		char* name = OFFSET(curr, 0x4, char*);
+		uint16_t numSequences = *OFFSET(curr, 0x1C, uint16_t*);
+
+		printf("curr animtree %d/985 %s, 0x%p numSequences %d  off 0x%p\n", i, name, currf, numSequences, currf - (uint32_t)dtz);
+		if (pblendSequences)
+		{
+			//myassert(HasReloc(OFFSET(currf, 0x0, uint32_t)));
+			if (!HasReloc(OFFSET(currf, 0x0, uint32_t))) continue;
+
+			// self
+			//const char* pSzType = "CAnimBlendTree";
+			//sprintf(buff, "_%d_LoadedList_CStreamingInfo", i);
+			//GEN_FIX_OFFSET(file, tps, pSzType, buff);
+
+			// blendSequences
+			uint8_t* rblendSequences = EMUPOINTER<uint8_t*>(pblendSequences); // CAnimBlendSequence
+			for (uint32_t j = 0; j < numSequences; j++) {
+				uint32_t currSF = pblendSequences + (0xC * j);
+				uint8_t* currS = rblendSequences + (0xC * j);
+
+				const char* pSzType = "CAnimBlendSequence";
+				sprintf(buff, "_%s_%d_CAnimBlendSequence", name, j);
+				GEN_FIX_OFFSET(file, currSF, pSzType, buff);
+
+				uint16_t numFrames = *OFFSET(currS, 0x2, uint16_t*);
+				uint32_t keyFrames = *OFFSET(currS, 0x4, uint32_t*);
+				uint8_t* rkeyFrames = EMUPOINTER<uint8_t*>(keyFrames);
+
+				//printf("  curr seq %d 0x%p numFrames %d  off 0x%p\n", j, currSF, numFrames, keyFrames - (uint32_t)dtz);
+				if (HasReloc(OFFSET(currSF, 0x4, uint32_t))) // filter out pointer fields, someone can have trash
+				{
+					//myassert(HasReloc(OFFSET(currSF, 0x4, uint32_t)));
+					for (uint32_t k = 0; k < numFrames; k++) {
+						uint32_t currKFF = keyFrames + (0xA * k);
+						uint8_t* currKF = rkeyFrames + (0xA * k);
+
+						const char* pSzType = "KeyFrame";
+						sprintf(buff, "_%s_%d_CAnimBlendSequence_%d_KeyFrame", name, j, k);
+						GEN_FIX_OFFSET(file, currKFF, pSzType, buff);
+					}
+					if (numFrames)
+						GEN_FIX_OFFSET(file, keyFrames, nullptr, nullptr, false, numFrames, false);
+				}
+				else {
+					printf("  skip curr seq %d 0x%p numFrames %d reason no in reloc table trash in memory\n", j, currSF, numFrames);
+				}
+			}
+			if (numSequences)
+				GEN_FIX_OFFSET(file, pblendSequences, nullptr, nullptr, false, numSequences, false);
+		}
+		else {
+			printf("%s has no %p blendSequences 0x%p\n", name, pblendSequences, currf); // why
+		}
+		//GEN_FIX_OFFSET
+		//channel1.Add(name);
+		//if (name[0]) {
+		//	printf("%d %s\n", i, name);
+		//}
+		//fprintf(file, "Message(\"IDC Done\\n\");\n");
+		//fclose(file);
+		//break;
+	}
+	//channel1.Store("C:\\IDC\\m_aAnimations_psp.txt");
+	//channel1.Reset();
+#endif
+
+#if 0
+	// m_aAnimBlocks
+	uint8_t* rm_aAnimBlocks = EMUPOINTER<uint8_t*>(pm_aAnimBlocks);
+	for (uint32_t i = 0; i < 140; i++) // 0x2C CAnimBlock
+	{
+		uint8_t* curr = rm_aAnimBlocks + (0x2C * i);
+		char* name = OFFSET(curr, 0x0, char*);
+		//channel1.Add(name);
+		if (name[0]) {
+			printf("%d %s\n", i, name);
+		}
+	}
+	//channel1.Store("C:\\IDC\\m_aAnimBlocks_psp.txt");
+	//channel1.Reset();
+#endif
+
+#if 1
+	// m_aAnimAssocGroups
+	uint8_t* rm_aAnimAssocGroups = EMUPOINTER<uint8_t*>(pm_aAnimAssocGroups);
+	for (uint32_t i = 0; i < 123; i++) // 0x14 CAnimBlendAssocGroup
+	{
+		uint8_t* curr = rm_aAnimAssocGroups + (0x14 * i);
+		uint32_t currF = pm_aAnimAssocGroups + (0x14 * i);
+		uint32_t m_aAssociationArray = *OFFSET(curr, 0x4, uint32_t*);
+		uint32_t numAssociations = *OFFSET(curr, 0x8, uint32_t*);
+
+		bool rel = HasReloc(OFFSET(currF, 0x4, uint32_t));
+		//if (rel)
+		{
+			//printf("YES assoc ok reloc\n");
+			uint8_t* rm_aAssociationArray = EMUPOINTER<uint8_t*>(m_aAssociationArray);
+			for (int j = 0; j < numAssociations; j++) {
+				uint8_t* currAA = rm_aAssociationArray + (0x44 * j);
+				uint32_t currAAF = m_aAssociationArray + (0x44 * j);
+
+
+				const char* pSzType = "CAnimBlendAssociation";
+				sprintf(buff, "%s_%d__%d_AnimAssocGroups_CAnimBlendAssociation", rel ? "" : "DYNAMIC_NONDTZ", i, j);
+				GEN_FIX_OFFSET(file, currAAF, pSzType, buff);
+
+				uint32_t m_iNumAnimBlendNodes = *OFFSET(currAA, 0x18, uint32_t*); // CAnimBlendNode 0x20
+				uint32_t m_pAnimBlendNodes = *OFFSET(currAA, 0x1C, uint32_t*);
+				uint8_t* rm_pAnimBlendNodes = EMUPOINTER<uint8_t*>(m_pAnimBlendNodes);
+				for (int k = 0; k < m_iNumAnimBlendNodes; k++) {
+					uint8_t* currBF = rm_pAnimBlendNodes + (0x20 * k);
+					uint32_t currBFF = m_pAnimBlendNodes + (0x20 * k);
+
+					const char* pSzType = "CAnimBlendNode";
+					sprintf(buff, "%s_%d__%d_AnimAssocGroups_CAnimBlendAssociation_%d_CAnimBlendNode", rel ? "" : "DYNAMIC_NONDTZ", i, j, k);
+					GEN_FIX_OFFSET(file, currBFF, pSzType, buff);
+				}
+				if (m_iNumAnimBlendNodes)
+					GEN_FIX_OFFSET(file, m_pAnimBlendNodes, nullptr, nullptr, false, m_iNumAnimBlendNodes, false);
+			}
+			if (numAssociations)
+				GEN_FIX_OFFSET(file, m_aAssociationArray, nullptr, nullptr, false, numAssociations, false);
+		}
+		//else {
+		//	printf("NO in reloc\n");
+		//}
+
+
+		//char* name = OFFSET(curr, 0x0, char*);
+		//channel1.Add(name);
+		//if (name[0]) {
+		//	printf("%d %s\n", i, name);
+		//}
+	}
+#endif
+
+#endif
+
+	// weatherlist
+#if 0
+	const char* w[] = {
+		"WEATHER_SUNNY",
+		"WEATHER_CLOUDY",
+		"WEATHER_RAINY",
+		"WEATHER_FOGGY",
+		"WEATHER_EXTRA_SUNNY",
+		"WEATHER_HURRICANE",
+		"WEATHER_EXTRACOLOURS",
+		"WEATHER_ULTRASUNNY",
+	};
+
+	uint16_t* p = EMUPOINTER<uint16_t*>(0x095DA378);
+	for (int i = 0; i < 256; i += 4) {
+		printf("%s, %s, %s, %s,\n", w[p[i]], w[p[i + 1]], w[p[i + 2]], w[p[i + 3]]);
+	}
+
+#endif
+
+	// radar tex
+#if 0
+	uint32_t* radarCompressedTextures = EMUPOINTER<uint32_t*>(0x0989738C);
+	for (int i = 0; i < 64; i++) {
+		sprintf(buff, "radarCompressedTextures_%d_texture", i);
+		GEN_FIX_OFFSET(file, radarCompressedTextures[i], nil, buff, false, 0, true);
+	}
+#endif
+
+	if (file) {
+		fprintf(file, "Message(\"IDC Done\\n\");\n");
+		fclose(file);
+	}
+	printf("FixupEtc DUMPED!\n");
+}
+
+void TestModelInfo()
+{
+	//CSimpleModelInfo* miwithatomics = nil;
+	//for (int32_t i = 0; i < CModelInfo_msNumModelInfos; i++) {
+	//	CBaseModelInfo* modelInfo = GetModelInfo(i);
+	//	if (modelInfo && modelInfo->m_type == MITYPE_SIMPLE && ((CSimpleModelInfo*)modelInfo)->m_atomics_objects)
+	//	{
+	//		miwithatomics = ((CSimpleModelInfo*)modelInfo);
+	//		break;
+	//	}
+	//}
+	//if (!miwithatomics)
+	//	return;
+
+	for (int32_t i = 0; i < CModelInfo_msNumModelInfos; i++) {
+		CBaseModelInfo* modelInfo = GetModelInfo(i);
+		ModelInfoExt* pInfoEx = GetModelInfoExt(i);
+		if (!modelInfo) continue;
+
+
+
+		//continue; //------------------------------------------------------
+
+
+
+		//if (modelInfo->m_type == MITYPE_SIMPLE)
+		//{
+		//	//CSimpleModelInfo* mi = (CSimpleModelInfo*)modelInfo;
+		//	//RpAtomic** at = EMUPOINTER<RpAtomic**>(mi->m_atomics_objects);
+		//	////if(mi->m_numAtomics)
+		//	////	printf("mi %d: simple m_numAtomics %d at  0x%p, 1st 0xp\n", i, mi->m_numAtomics, mi->m_atomics_objects/*, EMUPOINTER<RpAtomic*>(at[0])*/);
+		//	////GetModelInfoExt(i)->allcolls.push_back(modelInfo->m_colModel);
+		//	////if (!at)
+		//	//{
+		//	//	mi->m_atomics_objects = miwithatomics->m_atomics_objects; // ps2 ptr
+		//	//	mi->m_numAtomics = miwithatomics->m_numAtomics;
+
+		//	//	//mi->m_atomics_objects = (RwObject**)0x1234567;
+		//	//	//mi->m_numAtomics = 7777;
+		//	//	printf("%d patched\n", i);
+		//	//}
+		//}
+
+		switch (modelInfo->m_type)
+		{
+			case MITYPE_VEHICLE:
+			{
+				tVehicleSampleData* m_SampleData = OFFSET(modelInfo, 0x284, tVehicleSampleData*);
+				//printf("[%d] - m_nAccelerationSampleIndex:%d m_nHornSample:%d m_nSirenOrAlarmSample:%d\n", i, m_SampleData->m_nAccelerationSampleIndex, m_SampleData->m_nHornSample, m_SampleData->m_nSirenOrAlarmSample);
+				printf("%s %d %d %d %d %d %d %d\n", pInfoEx->name.c_str(), m_SampleData->m_nAccelerationSampleIndex, m_SampleData->m_nBank, 
+					m_SampleData->m_nHornSample, m_SampleData->m_nHornFrequency, m_SampleData->m_nSirenOrAlarmSample,
+					m_SampleData->m_nSirenOrAlarmFrequency, m_SampleData->m_bDoorType);
+				break;
+
+
+				void* m_pHandlingData = EMUPOINTER<void*>(*OFFSET(modelInfo, 0x38, uint32_t*));
+				void* m_pHandlingBike = EMUPOINTER<void*>(*OFFSET(modelInfo, 0x3C, uint32_t*));
+				void* m_pHandlingFlying = EMUPOINTER<void*>(*OFFSET(modelInfo, 0x40, uint32_t*));
+				void* m_pHandlingBoat = EMUPOINTER<void*>(*OFFSET(modelInfo, 0x44, uint32_t*));
+				void* m_pHandlingJetski = EMUPOINTER<void*>(*OFFSET(modelInfo, 0x48, uint32_t*));
+				void* m_pHandling6atv = EMUPOINTER<void*>(*OFFSET(modelInfo, 0x4C, uint32_t*));
+				//printf("%d -> HandlingData 0x%p HandlingBike 0x%p HandlingFlying 0x%p HandlingBoat 0x%p HandlingJetski 0x%p pHandling6atv 0x%p\n",
+				//	i, m_pHandlingData, m_pHandlingBike, m_pHandlingFlying, m_pHandlingBoat, m_pHandlingJetski, m_pHandling6atv);
+
+				uint8_t& _96 = *OFFSET(m_pHandlingData, 0x96, uint8_t*);
+				uint8_t& _97 = *OFFSET(m_pHandlingData, 0x97, uint8_t*);
+				uint32_t& _9C = *OFFSET(m_pHandlingData, 0x97, uint32_t*);
+				float& _f9C = *OFFSET(m_pHandlingData, 0x97, float*);
+				printf("%d -> _96 %d  _97 %d  _9C %d  _f9C %f\n", i, _96, _97, _9C, _f9C);
+
+				float& fDragMult = *OFFSET(m_pHandlingData, 0x98, float*);
+				float& fMass = *OFFSET(m_pHandlingData, 0xBC, float*);
+				float& _64 = *OFFSET(m_pHandlingData, 0x64, float*);
+				printf("%d -> fDragMult %f  fMass %f %f \n\n", i, fDragMult, fMass, _64);
+				fMass = 255000.0f;
+				//CVehicleModelInfo* vmi = (CVehicleModelInfo*)modelInfo;
+				//char* tBounceData = EMUPOINTER<char*>(*(uint32_t*)(((char*)vmi) + (0x44)));
+				//float* fBoatVolumeDistribution = (float*)(tBounceData ? (tBounceData + 0x40) : null);
+				//float* scaleMax = (float*)(tBounceData ? (tBounceData + 0x70) : null);
+				//float* scaleMin = (float*)(tBounceData ? (tBounceData + 0x80) : null);
+				//printf("mi %d, 0x%p\n", i, vmi);
+				//printf("mi %d, 0x%p 0x%p\n", i, vmi, fBoatVolumeDistribution);
+				//if (fBoatVolumeDistribution) { printf("mi %d, %f %f %f %f %f %f %f %f %f\n", i,
+				//	fBoatVolumeDistribution[0], fBoatVolumeDistribution[1], fBoatVolumeDistribution[2],
+				//	fBoatVolumeDistribution[3], fBoatVolumeDistribution[4], fBoatVolumeDistribution[5],
+				//	fBoatVolumeDistribution[6], fBoatVolumeDistribution[7], fBoatVolumeDistribution[8]
+				//);
+				//if (fBoatVolumeDistribution) {
+				//	//printf("mi %d %s\n", i, (fBoatVolumeDistribution[8] == 0.6f ? "fBoatVolumeDistributionSpeed" : "fBoatVolumeDistribution"));
+				//	printf("mi %d  MAX %f %f %f    MIN %f %f %f\n", i, scaleMax[0], scaleMax[1], scaleMax[2],
+				//		scaleMin[0], scaleMin[1], scaleMin[2]);
+				//}
+
+				//printf("mi %d, 0x%p %s, t %d ws %f\n", i, vmi, vmi->m_gameName, vmi->m_vehicleType,  vmi->m_wheelScale);
+				break;
+			}
+		}
+	}
+}
+
+void* GetPointer() {
+	void* p = NULL;
+	if (scanf("%p", &p) != 1) return NULL;
+		//if (scanf("0x%p", &p) != 1) return NULL;
+	return p;
+}
+
+void DumpSfx()
+{
+	//FILE* file = fopen("C:\\SFXPSP.txt", "w");
+	tSample* gSampleDataTable = EMUPOINTER<tSample*>(*EMUPOINTER<int*>(0x08BADD98));
+	for (int i = 0; i < 7780; i++) {
+		//fprintf(file, "[%d] nOffset:%d  nSize:%d  nFrequency:%d\n", i, gSampleDataTable[i].nOffset, gSampleDataTable[i].nSize, gSampleDataTable[i].nFrequency);
+		printf("[%d] nOffset:%d  nSize:%d  nFrequency:%d\n", i, gSampleDataTable[i].nOffset, gSampleDataTable[i].nSize, gSampleDataTable[i].nFrequency);
+	}
+	//fclose(file);
+	printf("SFX DUMPED!\n");
+}
+
+void NOP(void* p, int size) {
+	for (int i = 0; i < size; i++) {
+		((uint8_t*)p)[i] = 0x0;
+	}
+}
+
+void PatchNoMPCars()
+{
+	//printf("PatchNoMPCars\n");
+	{
+		*EMUPOINTER<int*>(0x08AC50B8) = 0x0; // no CCarCtrl::GenerateRandomCars();
+		//*EMUPOINTER<int*>(0x08AC50C0) = 0x0; // no CRoadBlocks::GenerateRoadBlocks();
+		//*EMUPOINTER<int*>(0x08AC4F70) = 0x0; // no CPopulation::Update(true);
+		//*EMUPOINTER<int*>(0x08933EC8) = 0x0; // no sync
+		//NOP(EMUPOINTER<int*>(0x08B4969C), 0x08B496D8 - 0x08B4969C);
+	}
+}
+
+void LogZone(int id, int ackdt)
+{
+	static std::vector<std::pair<int, int>> idMaxAckdt;
+	auto it = std::find_if(idMaxAckdt.begin(), idMaxAckdt.end(),
+		[id](const std::pair<int, int>& element) { return element.first == id; });
+
+	if (it != idMaxAckdt.end())
+	{
+		if (ackdt > it->second)
+			it->second = ackdt;
+	}
+	else {
+		idMaxAckdt.push_back(std::make_pair(id, ackdt));
+	}
+
+	std::cout << "ID: " << id << ", ackdt: ";
+	auto currentIt = std::find_if(idMaxAckdt.begin(), idMaxAckdt.end(),
+		[id](const std::pair<int, int>& element) { return element.first == id; });
+
+	if (currentIt != idMaxAckdt.end())
+	{
+		std::cout << currentIt->second << std::endl;
+	}
+	else
+	{
+		std::cout << "не найден" << std::endl;
+	}
+}
+
+void TestPool()
+{
+	for (int32_t i = CPools_ms_pObjectPool->m_nSize - 1; i >= 0; i--)
+	{
+		if (CPools_GetSlotIsFree(CPools_ms_pObjectPool, i)) { continue; }
+		CEntity* e = (CEntity*)CPools_GetSlot(CPools_ms_pObjectPool, i, 544);
+		if (e)
+		{
+			uint8_t CE_0_07_flags_A   = *OFFSET(e, 0x48, uint8_t*);
+			uint8_t CE_1_815_flags_B  = *OFFSET(e, 0x49, uint8_t*);
+			uint8_t CE_2_1623_flags_C = *OFFSET(e, 0x4A, uint8_t*);
+			uint8_t CE_3_2431_flags_D = *OFFSET(e, 0x4B, uint8_t*);
+			uint8_t CE_4_3239_flags_E = *OFFSET(e, 0x4C, uint8_t*);
+			uint8_t CE_5_4047_flags_F = *OFFSET(e, 0x4D, uint8_t*);
+			uint8_t CE_6_4855_flags_G = *OFFSET(e, 0x4E, uint8_t*);
+			uint8_t CE_7_5663_flags_H = *OFFSET(e, 0x4F, uint8_t*);
+			bool bStreamBIGBuilding = GET_BIT(CE_3_2431_flags_D, 0);
+			bool bIsSubway = GET_BIT(CE_4_3239_flags_E, 3);
+			bool bIsStatic = GET_BIT(CE_1_815_flags_B, 3);
+			//if (bStreamBIGBuilding) // LOD
+			//	printf("bStreamBIGBuilding 1 %d %s\n", e->m_modelIndex, GetModelInfoExt(e->m_modelIndex)->name.c_str());
+			//if (bIsSubway)
+			//	printf("bIsSubway 1 %d %s\n", e->m_modelIndex, GetModelInfoExt(e->m_modelIndex)->name.c_str()); // noone
+
+			int micrate = 7306;
+			//if(e->m_modelIndex == micrate && bIsStatic)
+			//	printf("bIsStatic 1 %d %s\n", e->m_modelIndex, GetModelInfoExt(e->m_modelIndex)->name.c_str());
+
+			if (e->m_modelIndex == micrate) {
+				int m_pAttachedTo = *OFFSET(e, 0x1C0, int*);
+
+				printf("bIsStatic %d %d %s att:0x%p\n", bIsStatic, e->m_modelIndex, GetModelInfoExt(e->m_modelIndex)->name.c_str(), m_pAttachedTo);
+
+			}
+		}
+	}
+
+	//for (int32_t i = CPools_ms_pBuildingPool->m_nSize - 1; i >= 0; i--)
+	//{
+	//	if (CPools_GetSlotIsFree(CPools_ms_pBuildingPool, i)) { continue; }
+	//	CEntity* e = (CEntity*)CPools_GetSlot(CPools_ms_pBuildingPool, i, 96);
+	//	if (e)
+	//	{
+
+	//		uint8_t CE_3_2431_flags_D = *OFFSET(e, 0x4B, uint8_t*);
+	//		uint8_t CE_4_3239_flags_E = *OFFSET(e, 0x4C, uint8_t*);
+	//		bool bStreamBIGBuilding = GET_BIT(CE_3_2431_flags_D, 0);
+	//		bool bIsSubway = GET_BIT(CE_4_3239_flags_E, 3);
+	//		//if (bStreamBIGBuilding) // LOD
+	//		//	printf("bStreamBIGBuilding 1 %d %s\n", e->m_modelIndex, GetModelInfoExt(e->m_modelIndex)->name.c_str());
+	//		if (bIsSubway)
+	//			printf("bIsSubway 1 %d %s\n", e->m_modelIndex, GetModelInfoExt(e->m_modelIndex)->name.c_str()); // noone
+	//	}
+	//}
+	//printf("TestPool end\n");
+}
+
+void DumpEscalators()
+{
+	FILE* file = fopen("C:\\IDC\\dtzhater.txt", "w");
+	int NumEscalators = *EMUPOINTER<int*>(0x08BB3F18);
+	CEscalator* aArray = EMUPOINTER<CEscalator*>(*EMUPOINTER<int*>(0x08BB3F1C));
+	for (int i = 0; i < NumEscalators; i++) {
+		fprintf(file, "pos0 %f %f %f  pos1 %f %f %f  pos2 %f %f %f  pos3 %f %f %f  m_bIsMovingDown %s %d\n",
+			aArray[i].m_pos0.x, aArray[i].m_pos0.y, aArray[i].m_pos0.z,
+			aArray[i].m_pos1.x, aArray[i].m_pos1.y, aArray[i].m_pos1.z,
+			aArray[i].m_pos2.x, aArray[i].m_pos2.y, aArray[i].m_pos2.z,
+			aArray[i].m_pos3.x, aArray[i].m_pos3.y, aArray[i].m_pos3.z,
+			aArray[i].m_bIsMovingDown ? "true" : "false", aArray[i].m_stepsCount);
+	}
+	fclose(file);
+	printf("DumpEscalators DUMPED!\n");
+}
+
+void DumpCombat()
+{
+	FILE* file = fopen("C:\\IDC\\combat.txt", "w");
+	int num = 0x68;
+	uint8_t* pCombatMoves = EMUPOINTER<uint8_t*>(0x095DEC00);
+
+	for (int i = 0; i < num; i++) {
+		uint8_t* pCurr = pCombatMoves + (0x40 * i);
+		char* pName = (char*)(pCurr + 0x33);
+		if(pName[0])
+			fprintf(file, "%d %s\n", i, pName);
+		else
+			fprintf(file, "%d ---\n", i, pName);
+	}
+	fclose(file);
+	printf("DumpCombat DUMPED!\n");
+}
+
+void DumpSfx2()
+{
+	int* aEngineSounds = EMUPOINTER<int*>(0x08B7AC98);
+	int* aEngineSoundsMG = EMUPOINTER<int*>(0x08B820F0);
+	int* gOneShotCol = EMUPOINTER<int*>(0x08B81218);
+	//printf("aEngineSounds\n");
+	//for (int x = 0; x < 24 * 2; x += 2) {
+	//	printf("%d, %d\n", aEngineSounds[x], aEngineSounds[x + 1]);
+	//}
+	printf("aEngineSoundsMG\n");
+	for (int x = 0; x < 24 * 2; x += 2) {
+		printf("%d, %d\n", aEngineSoundsMG[x], aEngineSoundsMG[x + 1]);
+	}
+	//printf("\ngOneShotCol\n");
+	//for (int x = 0; x < 35; x++) {
+	//	printf("%d\n", gOneShotCol[x]);
+	//}
+}
+
+void Test()
+{
+	CEntity* p = FindPlayerPed();
+	CEntity* v = EMUPOINTER<CEntity*>(*OFFSET(p, 0x480, int*));
+	if (v) {
+		CRGBA* c = OFFSET(v, 0x224, CRGBA*);
+		CRGBA r = { 255, 0, 0, 0};
+		c[0] = r; // no alpha
+		c[1] = r;
+		//strcpy(c, "\xFF\xFF\xFF\0\xFF\xFF\xFF\0");
+	}
+}
+
+
+void OnBtn()
+{
+	//TestPool();
+	//MakeIDCMLO();
+	//FixupMLOPATCHES();
+	//FixupMarkers();
+	//FixupPools();
+	//DumpEscalators();
+	//GenRelocComs();
+	//FixupInter();
+	//FixupStatsTypes();
+	//FixupEtc();
+	//DumpCombat();
+	//DumpSfx2();
+	Test();
+	printf("OnBtn end\n");
+	return;
+	TestModelInfo();
+	DumpSfx();
+
+
+}
+
+const char* GetElementType(uint8_t* pElement)
+{
+	uint32_t vft = *OFFSET(pElement, 0x6C, uint32_t*);
+	switch (vft)
+	{
+		case 0x08BA7BA0:
+			return "sBike";
+		case 0x08BA7080:
+			return "sPickup";
+		case 0x08BA63F8:
+			return "sPed";
+		case 0x08BA4AD0:
+			return "sPlayer";
+		case 0x08BA6BB0:
+			return "sAutomobile";
+		default:
+			printf("GetElementType 0x%X\n", vft);
+			return "UNKNOWN TODO";
+	}
+	return nil;
+}
+
+bool bPatchMp = false;
 void UpdMP()
 {
+	*EMUPOINTER<int*>(0x8BB2534) = rand() % 6; // SetNewLineAdd/SetDropShadowPosition ?
+
+
+	if(bPatchMp)
+		PatchNoMPCars(); // prevent restore patch from load state
+
+	//uint32_t* C3dMarkers_m_pRslElementGroupArray = *EMUPOINTER<uint32_t**>(0x08BB3E5C);
+	//printf("\n");
+	//printf("%p \n", C3dMarkers_m_pRslElementGroupArray);
+	//for (int32_t i = 0; i < 10; i++) // 9
+	//{
+	//	uint32_t* pAtomic = EMUPOINTER<uint32_t*>(C3dMarkers_m_pRslElementGroupArray[i]);
+	//	printf(" %d -> 0x%p\n", i, pAtomic ? pAtomic : 0);
+	//}
+
+
+	bool& gIsMultiplayerGame = *EMUPOINTER<bool*>(0x08BB01B8);
+	bool& gDeveloperFlag = *EMUPOINTER<bool*>(0x08BB2DBC);
+	float& CTimer_ms_fTimeStepNonClipped = *EMUPOINTER<float*>(0x08BB3B64);
+
+	gDeveloperFlag = true; // allow mp start at only host
 	// dis timeout
+	*EMUPOINTER<char*>(0x08AC45B0) = 1; // MULTI_ABORT_PLAYER_COUNT
+	//if(cNetSession_mspInst) *OFFSET(cNetSession_mspInst, 0x68, uint32_t*) = 1; // m_nPeerCount unlock update send + simsch
+	*EMUPOINTER<int*>(0x08ADB41C) = 0x0; // unlock update send + simsch // same + orgi count
+	*EMUPOINTER<int*>(0x08AC4768) = 0x0; // abort 15 sec
+	*EMUPOINTER<int*>(0x08ADB6AC) = 0x0; // no update timout function
+
+	//*EMUPOINTER<int*>(0x0898B858 + 0x0) = 0x0; // allow mp cheats
+	//*EMUPOINTER<int*>(0x0898B858 + 0x4) = 0x0;
+	//*EMUPOINTER<int*>(0x0898B858 + 0x8) = 0x0;
+	//*EMUPOINTER<int*>(0x0898B858 + 0xC) = 0x0;
+	//*EMUPOINTER<int*>(0x0898B858 + 0x10) = 0x0;
+	// MULTI_TIME_OUT_4  08AC475C
+
+	if(*EMUPOINTER<int*>(0x08BB1AC8))
+	{
+		return;
+
+		const char* a[] = {
+			"STREAMSTATE_NOTLOADED",
+			"STREAMSTATE_LOADED",
+			"STREAMSTATE_INQUEUE",
+			"STREAMSTATE_READING", // channel is reading
+			"STREAMSTATE_STARTED", // first part loaded
+		};
+		void* CStreaming_mspInst = EMUPOINTER<void*>(*EMUPOINTER<int*>(0x08BB1AC8));
+		if (!*OFFSET(CStreaming_mspInst, 0x98, int*)) return;
+		CStreamingInfo* ms_aInfoForModel = EMUPOINTER<CStreamingInfo*>(*OFFSET(CStreaming_mspInst, 0x98, int*));
+		for (int i = 0+199; i < 200; ++i)
+		printf("\r%3d stream %d 0x%p (%-20s)", i, ms_aInfoForModel[i].m_loadState,
+			OFFSET(*OFFSET(CStreaming_mspInst, 0x98, int*), (sizeof(CStreamingInfo)*i)+4+4, void*),
+			a[ms_aInfoForModel[i].m_loadState]);
+
+		return;
+	}
+
+	if (BTN('G'))
+	{
+		printf("cAdhoc_mspInst: PC:0x%p PSP:0x%p\n", cAdhoc_mspInst, *(uintptr_t**)IDATRANSLATE(0x08BB344C));
+		printf("cLobby_mspInst: PC:0x%p PSP:0x%p\n", cLobby_mspInst, *(uintptr_t**)IDATRANSLATE(0x08BB3458));
+		printf("cPeerManager_mspInst: PC:0x%p PSP:0x%p\n", cPeerManager_mspInst, *(uintptr_t**)IDATRANSLATE(0x08BB3450));
+		printf("TheMPGame: PC:0x%p PSP:0x%p\n", TheMPGame, 0x08BC8FC0);
+		printf("cNetSession_mspInst: PC:0x%p PSP:0x%p\n\n", cNetSession_mspInst, *(uintptr_t**)IDATRANSLATE(0x8BC9024));
+		Sleep(500);
+
+		{
+			OnBtn();
+		}
+	}
+
+
+	// Zones
+	{
+		//uint8_t* Rb_Tree_m_ZoneManager_m_mZones = OFFSET(TheMPGame, 0x74, uint8_t*); // Rb_Tree
+		//uint8_t* pHeader = EMUPOINTER<uint8_t*>(*(int*)Rb_Tree_m_ZoneManager_m_mZones); // TheMPGame.m_ZoneManager.m_mZones(Rb_Tree).header(Rb_Node)
+		////int size = *(int*)(Rb_Tree_m_ZoneManager_m_mZones + 4);
+		//int size = *OFFSET(Rb_Tree_m_ZoneManager_m_mZones, 0x4, int*);
+		//printf("pHeader: 0x%p, %d\n", pHeader, size); // sz4
+		//printf("PPSSPP_BASE: 0x%p\n", PPSSPP_BASE);
+
+		uint8_t* Rb_Tree_m_ZoneManager_m_mZones = OFFSET(TheMPGame, 0x74, uint8_t*); // host ptr на Rb_Tree
+		int header_raw = *(int*)OFFSET(Rb_Tree_m_ZoneManager_m_mZones, 0x0, int*);     // raw ppsspp pointer (header)
+		int size = *(int*)OFFSET(Rb_Tree_m_ZoneManager_m_mZones, 0x4, int*);
+		//printf("pHeader_raw: 0x%08X, size: %d\n", header_raw, size);
+		//printf("PPSSPP_BASE: 0x%p\n", PPSSPP_BASE);
+
+		int node_raw = 0;
+		if (header_raw) {
+			uint8_t* host_header = EMUPOINTER<uint8_t*>(header_raw);
+			node_raw = *OFFSET(host_header, 0x08, int*); // header->left (raw)
+		}
+
+		int iter = 0;
+		while (node_raw && node_raw != header_raw) {
+			// host pointer к текущему узлу
+			uint8_t* host_node = EMUPOINTER<uint8_t*>(node_raw);
+
+			// элемент (wrapper ptr) — raw
+			int elem_raw = *OFFSET(host_node, 0x14, int*);
+			uint8_t* host_elem = elem_raw ? EMUPOINTER<uint8_t*>(elem_raw) : nullptr;
+			//printf("elem_raw: 0x%08X, host_elem: %p\n", elem_raw, host_elem);
+
+			if (host_elem) {
+				uint8_t* pZone = host_elem;
+				int16_t zone_id = *OFFSET(pZone, 0x0, int16_t*);
+
+				// log ack
+				//{
+				//	uint8_t* m_vAck = OFFSET(pZone, 0x30, uint8_t*);
+				//	int pStart = (*(int*)(m_vAck + 0));
+				//	int pEnd = (*(int*)(m_vAck + 4));
+				//	LogZone(zone_id, (pEnd - pStart));
+				//	printf("ID: %d ackDT %d\n", zone_id, (pEnd - pStart));
+				//}
+
+				// elements
+				{
+					uint32_t m_nCurTime = *OFFSET(pZone, 0x4, uint32_t*);
+					uint16_t m_nBasis = *OFFSET(pZone, 0xA, uint16_t*);
+					uint32_t* m_vElementsS = EMUPOINTER<uint32_t*>(*OFFSET(pZone, 0x18, uint32_t*));
+					uint32_t* m_vElementsE = EMUPOINTER<uint32_t*>(*OFFSET(pZone, 0x18 + 0x4, uint32_t*));
+					int elems = m_vElementsE - m_vElementsS;
+					printf("zone 0x%p ID: %d m_nCurTime %d  m_nBasis %d elems %d\n", elem_raw, zone_id, m_nCurTime, m_nBasis, elems);
+					for (int i = 0; i < elems; i++) {
+						int pelem = m_vElementsS[i];
+						uint8_t* realelem = pelem ? EMUPOINTER<uint8_t*>(pelem) : nullptr;
+						if (realelem) {
+							uint8_t m_nOwnerID = *OFFSET(realelem, 0x3, uint8_t*);
+							uint16_t m_nID = *OFFSET(realelem, 0x8, uint16_t*);
+							uint16_t m_nTime = *OFFSET(realelem, 0xA, uint16_t*);
+							uint32_t m_pEntity = *OFFSET(realelem, 0x68, uint32_t*);
+							uint16_t m_nSelfPeerID = *OFFSET(cNetSession_mspInst, 0x34, uint16_t*);
+							//if(m_nOwnerID != m_nSelfPeerID)
+							printf("  %s m_nID %d  m_nTime %d m_pEntity 0x%p, m_nOwnerID %d, m_nSelfPeerID %d\n",
+								GetElementType(realelem), m_nID, m_nTime, m_pEntity, m_nOwnerID, m_nSelfPeerID);
+						}
+					}
+				}
+
+			}
+
+			// successor (работаем с raw адресами)
+			int next_raw = 0;
+			int right_raw = *OFFSET(host_node, 0x0C, int*);
+			if (right_raw) {
+				// successor = minimum(right)
+				int cur_raw = right_raw;
+				for (;;) {
+					uint8_t* host_cur = EMUPOINTER<uint8_t*>(cur_raw);
+					int left_raw = *OFFSET(host_cur, 0x08, int*);
+					if (!left_raw) break;
+					cur_raw = left_raw;
+				}
+				next_raw = cur_raw;
+			}
+			else {
+				// climb up until we come from left
+				int cur_raw = node_raw;
+				int parent_raw = *OFFSET(EMUPOINTER<uint8_t*>(cur_raw), 0x04, int*);
+				while (parent_raw) {
+					uint8_t* host_parent = EMUPOINTER<uint8_t*>(parent_raw);
+					int parent_right_raw = *(int*)OFFSET(host_parent, 0x0C, int*);
+					if (cur_raw != parent_right_raw) break;
+					cur_raw = parent_raw;
+					parent_raw = *OFFSET(host_parent, 0x04, int*);
+				}
+				next_raw = parent_raw; // может быть header_raw или 0
+			}
+
+			node_raw = next_raw;
+
+			if (++iter > size + 8) {
+				printf("rb_foreach: abort, iterations > size\n");
+				break;
+			}
+		}
+	}
+
+	//printf("CTimer_ms_fTimeStepNonClipped: %f\n", CTimer_ms_fTimeStepNonClipped);
+
+	//if (BTN('T')) // smon
+	//{
+	//	printf("Enter ppsspp pointer: ");
+	//	pMon = EMUPOINTER<void*>(GetPointer());
+	//	printf("enter: %p\n", pMon);
+	//}
+
+	//if (pMon != nil)
+	//	UpdateMon();
+
+	if (cAdhoc_mspInst)
+	{
+		tLobbyRemoteInfo* pMatchingInfoEntry = EMUPOINTER<tLobbyRemoteInfo*>(*OFFSET(cAdhoc_mspInst, 0x18, uint32_t*));
+
+		tAdhocPlayerData* aMatchingPlayersInfo = OFFSET(cAdhoc_mspInst, 0x484, tAdhocPlayerData*); // мак и ник
+		tAdhocMatchingData* aMatchingInfo = OFFSET(cAdhoc_mspInst, 0x5C, tAdhocMatchingData*); // slave массив юзеров
+		tAdhocMatchingData* aMatchingInfoRecv = OFFSET(cAdhoc_mspInst, 0x834, tAdhocMatchingData*); // 1st массив юзеров
+
+		if (aMatchingInfoRecv) {
+			// print lobbies
+			for (int i = 0; i < 7; i++) // по всем лобби // если я хостер и мой стейт 5 в лобби то в aMatchingInfoRecv нет инфо о соседних лобби
+			{
+				tLobbyRemoteInfo& lobby = aMatchingInfo[i].entry;
+				if (aMatchingInfo[i].nState == 0) continue; // ADHOC_PEER_DISCONNECTED free lobby slot
+				// state 2 can loin for him
+				printf("[%d] aMatchingInfoRecv[i].nState %d \n", i, aMatchingInfo[i].nState);
+
+				//aMatchingInfo[i].nState = 0;
+
+				int nPlayerCount = 0;
+				for (int peerIdx = 0; peerIdx < 7; peerIdx++) // по всем пирам в этом лобби
+				{
+					tAdhocPeerData* pPeer = &lobby.m_nPeersConnInfo[peerIdx];
+					if (memcmp(pPeer->macAddr, "\xFF\xFF\xFF\xFF\xFF\xFF", 6) == 0)
+						continue;
+					nPlayerCount++;
+				}
+				printf("      players %d\n", nPlayerCount);
+			}
+
+
+
+			//for (int i = 0; i < 7; i++) // по всем лобби
+			//{
+			//	tLobbyRemoteInfo& lobby = aMatchingInfoRecv[i].entry;
+			//	printf("[%d] aMatchingInfoRecv[i].nState %d \n", i, aMatchingInfoRecv[i].nState);
+			//	for (int j = 0; j < 7; j++)
+			//	{
+			//		//lobby.m_nPeersConnInfo
+			//	}
+			//}
+			printf("\n");
+		}
+
+		if (pMatchingInfoEntry) {
+			auto& mac = pMatchingInfoEntry->m_nSelfAddr.peerAddr.mac;
+			//printf("pMatchingInfoEntry: 0x%p\n", pMatchingInfoEntry);
+			//printf("mac: %02X:%02X:%02X:%02X:%02X:%02X\n",
+			//	(uint8_t)mac[0], (uint8_t)mac[1], (uint8_t)mac[2],
+			//	(uint8_t)mac[3], (uint8_t)mac[4], (uint8_t)mac[5]);
+
+		}
+
+		if (pMon != nil)
+			UpdateMon();
+		else
+			if (cNetSession_mspInst)
+			{
+				char* m_Timer = OFFSET(cNetSession_mspInst, 0x38, char*);
+				float fDeltaS = *OFFSET(m_Timer, 0x1C, float*);
+				float fDeltaMs = *OFFSET(m_Timer, 0x20, float*);
+				printf("fDeltaS: %f, fDeltaMs: %f\n", fDeltaS, fDeltaMs);
+				void* m_fAccTimeStep = OFFSET(TheMPGame, 0xEC, void*);
+				void* m_fTimeStep = OFFSET(TheMPGame, 0xE4, void*);
+				int& m_nLagValue = *OFFSET(TheMPGame, 0x54, int*);
+				printf("m_nLagValue: %d\n", m_nLagValue);
+				//if (*(int*)m_fAccTimeStep < 60'000) *(int*)m_fAccTimeStep = 60'000;
+				//printf("m_fAccTimeStep: %f %d, m_fTimeStep: %f %d\n", *(float*)m_fAccTimeStep, *(int*)m_fAccTimeStep, *(float*)m_fTimeStep, *(int*)m_fTimeStep);
+			}
+
+
+		//if (BTN('G')) {
+		//	if (pMatchingInfoEntry) {
+		//		printf("pMatchingInfoEntry (ptr): 0x%p\n", pMatchingInfoEntry);
+		//		PrintMacLine(2, "pMatchingInfoEntry.self.mac", pMatchingInfoEntry->m_nSelfAddr.peerAddr.mac);
+		//		PrintIndent(2); printf("pMatchingInfoEntry.self.port: %d\n", pMatchingInfoEntry->m_nSelfAddr.peerAddr.port);
+		//		PrintIndent(2); printf("pMatchingInfoEntry.self.teamID: %d\n", pMatchingInfoEntry->m_nSelfAddr.nTeamID);
+
+		//		// peers in lobby
+		//		for (int pi = 0; pi < 7; ++pi) {
+		//			PrintIndent(2);
+		//			printf("m_nPeersConnInfo[%d]:\n", pi);
+		//			PrintMacLine(6, "mac", pMatchingInfoEntry->m_nPeersConnInfo[pi].macAddr);
+		//			PrintIndent(6);
+		//			printf("nSelectedPeerModelID: %d\n", pMatchingInfoEntry->m_nPeersConnInfo[pi].nSelectedPeerModelID);
+		//			PrintIndent(6);
+		//			printf("nTeamID: %d\n", pMatchingInfoEntry->m_nPeersConnInfo[pi].nTeamID);
+		//		}
+
+		//		// other entry fields
+		//		PrintIndent(2); printf("GameType: %d\n", pMatchingInfoEntry->m_GameType);
+		//		PrintIndent(2); printf("GameLocation: %d\n", pMatchingInfoEntry->m_GameLocation);
+		//		PrintIndent(2); printf("ScoreLimit: %d\n", pMatchingInfoEntry->m_nScoreLimit);
+		//		PrintIndent(2); printf("ScoreCTFLimit: %d\n", pMatchingInfoEntry->m_nScoreCTFLimit);
+		//	}
+		//	else {
+		//		printf("pMatchingInfoEntry == NULL\n");
+		//	}
+		//	printf("\n\n");
+
+
+		//	// aMatchingInfo (если есть)
+		//	if (aMatchingInfo) {
+		//		printf("aMatchingInfo (offset 0x5C): 0x%p\n", aMatchingInfo);
+		//		for (int i = 0; i < 7; ++i) {
+		//			tAdhocMatchingData& md = aMatchingInfo[i];
+		//			printf("m_aMatchingInfo[%d]: 0x%p\n", i, &md);
+		//			PrintMacLine(4, "addr", md.addr);
+		//			PrintIndent(4); printf("nState: %d\n", md.nState);
+		//			PrintIndent(4); printf("nUnkCount: %d\n", md.nUnkCount);
+
+		//			// вложенный entry
+		//			tLobbyRemoteInfo& ent = md.entry;
+		//			PrintIndent(4); printf("entry.self.peerAddr.mac: ");
+		//			PrintMac(ent.m_nSelfAddr.peerAddr.mac); printf("\n");
+		//			PrintIndent(4); printf("entry.self.peerAddr.port: %d\n", ent.m_nSelfAddr.peerAddr.port);
+		//			PrintIndent(4); printf("entry.self.nTeamID: %d\n", ent.m_nSelfAddr.nTeamID);
+
+		//			// peers в entry
+		//			for (int j = 0; j < 7; ++j) {
+		//				PrintIndent(6);
+		//				printf("entry.m_nPeersConnInfo[%d]: ", j);
+		//				PrintMac(ent.m_nPeersConnInfo[j].macAddr); printf("  selModel=%d team=%d\n",
+		//					ent.m_nPeersConnInfo[j].nSelectedPeerModelID, ent.m_nPeersConnInfo[j].nTeamID);
+		//			}
+		//		}
+		//	}
+		//	else {
+		//		printf("aMatchingInfo == NULL\n");
+		//	}
+		//	printf("\n\n");
+
+
+		//	// m_aMatchingInfoRecv (recv array) — основной, который у тебя в структуре
+		//	if (m_aMatchingInfoRecv) {
+		//		printf("m_aMatchingInfoRecv (offset 0x834): 0x%p\n", m_aMatchingInfoRecv);
+		//		for (int i = 0; i < 7; ++i) {
+		//			tAdhocMatchingData& recv = m_aMatchingInfoRecv[i];
+		//			printf("m_aMatchingInfoRecv[%d]:\n", i);
+		//			PrintMacLine(4, "addr", recv.addr);
+		//			PrintIndent(4); printf("nState: %d\n", recv.nState);
+		//			PrintIndent(4); printf("nUnkCount: %d\n", recv.nUnkCount);
+
+		//			// entry внутри recv
+		//			tLobbyRemoteInfo& ent = recv.entry;
+		//			PrintIndent(4); printf("entry.self.peerAddr.mac: ");
+		//			PrintMac(ent.m_nSelfAddr.peerAddr.mac); printf("\n");
+		//			PrintIndent(4); printf("entry.self.peerAddr.port: %d\n", ent.m_nSelfAddr.peerAddr.port);
+		//			PrintIndent(4); printf("entry.self.nTeamID: %d\n", ent.m_nSelfAddr.nTeamID);
+		//			PrintIndent(4); printf("entry.GameType: %d\n", ent.m_GameType);
+		//			PrintIndent(4); printf("entry.GameLocation: %d\n", ent.m_GameLocation);
+		//			PrintIndent(4); printf("entry.ScoreLimit: %d\n", ent.m_nScoreLimit);
+		//			PrintIndent(4); printf("entry.ScoreCTFLimit: %d\n", ent.m_nScoreCTFLimit);
+
+		//			// peers внутри entry
+		//			for (int j = 0; j < 7; ++j) {
+		//				PrintIndent(6);
+		//				printf("entry.m_nPeersConnInfo[%d]: ", j);
+		//				PrintMac(ent.m_nPeersConnInfo[j].macAddr); printf("  selModel=%d team=%d\n",
+		//					ent.m_nPeersConnInfo[j].nSelectedPeerModelID, ent.m_nPeersConnInfo[j].nTeamID);
+		//			}
+		//		}
+		//	}
+		//	else {
+		//		printf("m_aMatchingInfoRecv == NULL\n");
+		//	}
+		//	printf("\n\n");
+
+
+		//	// m_aMatchingPlayersInfo (игроки) — mac + nickname
+		//	if (aMatchingPlayersInfo) {
+		//		printf("m_aMatchingPlayersInfo (offset 0x484): 0x%p\n", aMatchingPlayersInfo);
+		//		for (int i = 0; i < 7; ++i) {
+		//			tAdhocPlayerData& pd = aMatchingPlayersInfo[i];
+		//			printf("m_aMatchingPlayersInfo[%d]:\n", i);
+		//			PrintMacLine(4, "m_PlayerMacAddr", pd.m_PlayerMacAddr);
+		//			PrintStringSafe(4, "m_szPlayerNickname", pd.m_szPlayerNickname, sizeof(pd.m_szPlayerNickname));
+		//		}
+		//	}
+		//	else {
+		//		printf("m_aMatchingPlayersInfo == NULL\n");
+		//	}
+
+		//	printf("------ end matching info ------\n\n\n\n\n\n\n\n\n\n");
+		//}
+	}
 }
 
 void UpdTest1()
 {
 	CEntity* pPlayer = FindPlayerPed();
-	printf("pPlayer: 0x%p\n", pPlayer);
+	//printf("pPlayer: 0x%p\n", pPlayer);
 	if (!pPlayer)
 		return;
 	RpClump* pClump = EMUPOINTER<RpClump*>(pPlayer->m_urwObject.m_rpClump);
 	//printf("rwobj type id: %d %s\n", rwo->type, rwo->type == rpATOMIC ? "atomic" : "clump");
-	printf("pClump: 0x%p %s\n", pClump, GetRwObjectDescByType(pClump->object.type));
+	//printf("pClump: 0x%p %s\n", pClump, GetRwObjectDescByType(pClump->object.type));
 
 
 	RwLLLink* head = &pClump->atomicList.link;
@@ -734,7 +3320,7 @@ void UpdTest1()
 	{
 		RpAtomic* atomic = RpAtomic_fromClump(link); // FORLIST
 		//printf("ATOMIC!!! [%d] : 0x%p   lnk 0x%p\n", i++, atomic, link);
-		printf("atomic: 0x%p %s\n", atomic, GetRwObjectDescByType(atomic->object.object.type));
+		//printf("atomic: 0x%p %s\n", atomic, GetRwObjectDescByType(atomic->object.object.type));
 		RpGeometry* geo = EMUPOINTER<RpGeometry*>(atomic->geometry);
 		//float s = GetRandomFloatInc(0.5f, 2.5f);
 		float s = 1.2f;
@@ -742,12 +3328,24 @@ void UpdTest1()
 		//geo->msPspGeometry.scale[1] = s;
 		//geo->msPspGeometry.scale[2] = s;
 		//geo->msPspGeometryMesh.matID -= -1;
-		geo->msPspGeometry.numStrips = 5;
+		//geo->msPspGeometry.numStrips = 5;
 		//geo->msPspGeometry.pos[0] = 2.3f;
 		//geo->msPspGeometry.pos[1] = 2.3f;
 		//geo->msPspGeometry.pos[2] = 2.3f;
-		geo->msPspGeometryMesh.numTriangles = 0;
-		printf("geo->msPspGeometry: 0x%X\n", &geo->msPspGeometry);
+		//geo->msPspGeometryMesh.numTriangles = 0;
+		static bool _=0;
+		if(!_){_^=1;
+
+			//sPspGeometry* header = (sPspGeometry*)(geo+1); // old geo stru
+			sPspGeometry* header = &geo->msPspGeometry;
+			sPspGeometryMesh* strip = (sPspGeometryMesh*)(header+1);
+			uint8_t* after = (uint8_t*)(strip+1);
+			//printf("geo->msPspGeometry: 0x%X\n", &geo->msPspGeometry);
+			printf("geo->msPspGeometry: 0x%X\n", header);
+			printf("geo->sPspGeometryMesh: 0x%X\n", strip);
+			printf("after: 0x%X\n", after);
+			printf("offset %d   0x%X\n", header->offset, OFFSET(header, header->offset, uint8_t*));
+		}
 	}
 
 
@@ -773,12 +3371,215 @@ void UpdTest1()
 	//}
 }
 
+tCombatMove* GetCombatMovie(uint32_t n)
+{
+	uint8_t* pCombatMoves = EMUPOINTER<uint8_t*>(*EMUPOINTER<uint32_t*>(0x08BAA5B0));
+	uint8_t* pMovesData = EMUPOINTER<uint8_t*>(*OFFSET(pCombatMoves, 0x8, uint32_t*));
+	uint32_t numMoves = *OFFSET(pCombatMoves, 0x8 + 0x4, uint32_t*); // 0x68
+	myassert(n < numMoves);
+	return (tCombatMove*)(pMovesData + (0x40 * n));
+
+	//for (uint32_t i = 0; i < numMoves; i++) {
+	//	uint8_t* pCurr = pMovesData + (0x40 * i);
+	//	char* pName = (char*)(pCurr + 0x33);
+	//}
+}
+
+void LogCombat()
+{
+	CEntity* pPed = FindPlayerPed();
+	if (!pPed) return;
+	//uint8_t* pMyCombatMgr = OFFSET(pPed, 0x7E0, uint8_t*); // sizeof(0x2C) // unused for playerped??
+	uint8_t* m_nPlayerCombatInfo = EMUPOINTER<uint8_t*>(*OFFSET(pPed, 0xCDC, uint32_t*)); // sizeof(0x18B0)
+	uint8_t* m_nPlayerCombatMgr = OFFSET(m_nPlayerCombatInfo, 0x4, uint8_t*); // sizeof(0x94)
+	//printf("m_fStamina: %f\n", *OFFSET(m_nPlayerCombatMgr, 0x0, float*));
+	//*OFFSET(m_nPlayerCombatMgr, 0x0, float*) = 0.0f;
+	uint8_t& index = *OFFSET(m_nPlayerCombatMgr, 0x8, uint8_t*);
+	uint8_t& flagsA = *OFFSET(m_nPlayerCombatMgr, 0x9, uint8_t*);
+	uint8_t& flagsB = *OFFSET(m_nPlayerCombatMgr, 0xA, uint8_t*);
+	uint8_t& flagsC = *OFFSET(m_nPlayerCombatMgr, 0xB, uint8_t*);
+	//flagsB = 0;
+	//index = 0; // kek walk
+	//printf("index: %d\n", index);
+	//printf("flags: %d %d %d\n", flagsA, flagsB, flagsC);
+	uint32_t pfakemgr = OFFSET(*OFFSET(pPed, 0xCDC, uint32_t*), 0x4, uint32_t);
+	printf("current movie %d %s 0x%p\n", index, GetCombatMovie(index)->name, OFFSET(pfakemgr, 0x8, uint32_t));
+	printf("fs: %f\n", *OFFSET(m_nPlayerCombatMgr, 0x0, float*));
+
+	uint8_t* pCapPed = EMUPOINTER<uint8_t*>(*OFFSET(pPed, 0x81C, uint32_t*));
+	if (pCapPed) {
+		//printf("capped: 0x%p\n", pCapPed);
+		uint8_t* pCapPedCombatMgr = OFFSET(pCapPed, 0x7E0, uint8_t*); // sizeof(0x2C) // unused for playerped??
+		//printf("capindex: %d\n", *OFFSET(pCapPedCombatMgr, 0x8, uint8_t*));
+		//printf("capflags: %d %d %d\n", *OFFSET(pCapPedCombatMgr, 0x9, uint8_t*), *OFFSET(pCapPedCombatMgr, 0xA, uint8_t*), *OFFSET(pCapPedCombatMgr, 0xB, uint8_t*));
+	}
+
+
+
+	return; //---------!!
+	uint8_t* m_CombatManager = OFFSET(pPed, 0x7E0, uint8_t*); // sizeof(0x2C)
+	uint8_t* m_pPlayerCombat = OFFSET(pPed, 0xCDC, uint8_t*); // sizeof(0x2C)
+	//float& m_fStamina = *OFFSET(m_CombatManager, 0x0, float*);
+	//m_fStamina = 0;
+	//*(int*)m_pPlayerCombat = 0; // crash
+	uint8_t* m_nPlayerCombat2 = EMUPOINTER<uint8_t*>(*(int*)m_pPlayerCombat); // sizeof(0x18B0)
+	uint8_t* m_nPlayerCombat3 = OFFSET(m_nPlayerCombat2, 0x4, uint8_t*); // sizeof(0x94)
+	//memset(m_nPlayerCombat3, 0, 0x24);
+
+	//printf("pPed: 0x%p\n", pPed);
+	//printf("m_CombatManager.m_fStamina: %f  0x%p\n", m_fStamina, &m_fStamina);
+	//printf("m_CombatManager.m_fStamina: 0x%p\n", OFFSET(m_CombatManager, 0x0, float*));
+	printf("PC: 0x%p\n", m_CombatManager);
+	printf("PLC: 0x%p\n", m_nPlayerCombat3);
+	printf("m_fStamina: %f\n", *OFFSET(m_nPlayerCombat3, 0x0, float*));
+	*OFFSET(m_nPlayerCombat3, 0x0, float*) = 0.0f;
+	//printf("\n");
+}
+
+void LogH()
+{
+	CEntity* e = FindPlayerPed();
+	if (e)
+		printf("%f %f %f\n", e->CPlaceable.m_pMat.pos.x, e->CPlaceable.m_pMat.pos.y, e->CPlaceable.m_pMat.pos.z);
+}
+
+void LogMenu()
+{
+	auto cMenuItemVT = [&](uint32_t vt) {
+		switch (vt)
+		{
+			case 0x08BA6098:
+				return "cMenuItemBase";
+			case 0x08BA8018:
+				return "cMenuItem";
+			case 0x08BA4FE8:
+				return "cMenuItemScrolling";
+			case 0x08BA5758:
+				return "cMenuItemRadioIcons";
+			case 0x08BA59C0:
+				return "cMenuItemImage";
+			case 0x08BA5FA8:
+				return "cMenuItemMultiState";
+			case 0x08BA6020:
+				return "cMenuItemCustomMap";
+			case 0x08BA61D8:
+				return "cMenuItemSlider";
+			case 0x08BA8850:
+				return "cMenuItemMultiplayer";
+			case 0x08BA8A68:
+				return "cMenuItemControlPad";
+			case 0x08BA8AE0:
+				return "cMenuItemCustomTracks";
+			case 0x0:
+				return "NULLPTR";
+		}
+
+		return "UNKNOWN";
+	};
+
+	auto Log_cMenuItem = [&](uint8_t* pPspThis) {
+		if (!pPspThis)
+			return;
+		uint8_t* pThis = EMUPOINTER<uint8_t*>(pPspThis);
+		//printf("    pPspThis 0x%p\n", pPspThis);
+
+		uint8_t* pStrStart = EMUPOINTER<uint8_t*>(*OFFSET(pThis, 0, uint8_t**)); // ptr to 1st list field (ptr to start)
+		uint32_t& startX = *OFFSET(pThis, 0xC, uint32_t*);
+		uint32_t& startY = *OFFSET(pThis, 0x10, uint32_t*);
+		uint32_t& sizeX = *OFFSET(pThis, 0x14, uint32_t*);
+		uint32_t& sizeY = *OFFSET(pThis, 0x18, uint32_t*);
+		float& f_field_1C = *OFFSET(pThis, 0x1C, float*);
+		bool& bShouldRender = *OFFSET(pThis, 0x20, bool*);
+		uint32_t& vt = *OFFSET(pThis, 0x24, uint32_t*);
+
+		//startX = rand() % 500;
+		//startY = rand() % 500;
+		//bShouldRender = rand() % 2;
+
+		printf("    NAME %s\n", pStrStart);
+		printf("    vt %s\n", cMenuItemVT(vt));
+	};
+
+	auto Log_cMenuItems = [&](uint8_t* pPspThis){
+		if (!pPspThis)
+			return;
+		uint8_t* pThis = EMUPOINTER<uint8_t*>(pPspThis);
+		//printf("pPspThis 0x%p\n", pPspThis);
+
+		uint8_t* pStrStart = EMUPOINTER<uint8_t*>(*OFFSET(pThis, 0, uint8_t**)); // ptr to 1st list field (ptr to start)
+		uint8_t* pStrStart2 = EMUPOINTER<uint8_t*>(*OFFSET(pThis, 0x18, uint8_t**));
+		uint8_t* m_vecItems_Start = EMUPOINTER<uint8_t*>(*OFFSET(pThis, 0x24, uint8_t**)); // ptr to 1st list field
+		uint8_t* m_vecItems_End = EMUPOINTER<uint8_t*>(*OFFSET(pThis, 0x28, uint8_t**)); // ptr to 2st list field
+		uint8_t nItemSize = 4; // void*
+
+		//pStrStart[0] = '_';
+		//pStrStart2[0] = '_';
+		printf("  NAME %s\n", pStrStart);
+		printf("  NAME2 %s\n", pStrStart2);
+		printf("  m_vecItems Size %d\n", (m_vecItems_End - m_vecItems_Start) / nItemSize);
+
+		uint8_t* node = m_vecItems_Start;
+		while (node != m_vecItems_End)
+		{
+			uint8_t* pItem = (uint8_t*)*(uint32_t*)node;
+			Log_cMenuItem(pItem);
+			node += nItemSize;
+		}
+	};
+
+	uint8_t* pMasterPSP = *OFFSET(FrontEndMenuManager, 0, uint8_t**);
+	uint8_t* m_vecScreens_StartPSP = EMUPOINTER<uint8_t*>(*OFFSET(FrontEndMenuManager, 4, uint8_t**));
+	uint8_t* m_vecScreens_EndPSP = EMUPOINTER<uint8_t*>(*OFFSET(FrontEndMenuManager, 8, uint8_t**));
+	uint8_t* m_vecMenuNavigationHints_StartPSP = EMUPOINTER<uint8_t*>(*OFFSET(FrontEndMenuManager, 16, uint8_t**));
+	uint8_t* m_vecMenuNavigationHints_EndPSP = EMUPOINTER<uint8_t*>(*OFFSET(FrontEndMenuManager, 20, uint8_t**));
+	uint8_t nItemSize = 4; // void*
+
+	Log_cMenuItems(pMasterPSP);
+	//printf("0x%p\n", pMasterPSP);
+
+	uint8_t* node = m_vecScreens_StartPSP;
+	while (node != m_vecScreens_EndPSP)
+	{
+		uint8_t* pItem = (uint8_t*)*(uint32_t*)node;
+		Log_cMenuItems(pItem);
+		node += nItemSize;
+	}
+
+	node = m_vecMenuNavigationHints_StartPSP;
+	while (node != m_vecMenuNavigationHints_EndPSP)
+	{
+		uint8_t* pItem = (uint8_t*)*(uint32_t*)node;
+		Log_cMenuItems(pItem);
+		node += nItemSize;
+	}
+}
+
 bool quit = false;
+void MainUpd()
+{
+	//LogCombat();
+	//LogH();
+
+	if (BTN('T'))
+	{
+		LogMenu();
+		//TestModelInfo();
+		Sleep(500);
+	}
+
+	//if (bPatchMp) {
+	//	bPatchMp = false;
+	//	PatchNoMPCars(); // once, load state restore patch!!
+	//	if (BTN('R'))
+	//		quit = true;
+	//}
+}
+
 void PluginInit()
 {
 	U_SetCurrentDirectory();
 	InitConsole();
-
+	ModelInfoExt::Init("C:\\PSPVCSMODELS.txt");
 }
 
 void PluginLoop()
@@ -803,13 +3604,20 @@ void PluginLoop()
 		return;
 	//printf("find: 0x%X\n", PPSSPP_BASE);
 	if (strcmp(EMUPOINTER<char*>(0x08BB153C), "ULUS10160") != 0) { // ppsspp disable asserts
-		printf("assert failed\n");
+		//printf("assert failed\n");
 		return;
 	}
+	static bool once = false;
+	if (!once) {
+		once = true;
+		printf("PPSSPP_BASE: 0x%p\n", PPSSPP_BASE);
+	}
 
-	UpdPad();
-	UpdMP();
-	UpdTest1();
+	//Once();
+	//UpdPad();
+	UpdMP();  //-----------------------------
+	MainUpd();
+	//UpdTest1();
 
 	//printf("%s\n", PSPPOINTER(0x08BB153C));
 	//printf("%s\n", PSPPOINTER(0x08BAD5C0));
@@ -818,8 +3626,11 @@ void PluginLoop()
 
 DWORD CALLBACK ThreadEntry(LPVOID)
 {
-	if(BTN(VK_SHIFT))
+	if (!BTN(VK_SHIFT))
 		return TRUE;
+
+	if (BTN(VK_CONTROL))
+		bPatchMp = true;
 
 	//WaitElf();
 	PluginInit();
